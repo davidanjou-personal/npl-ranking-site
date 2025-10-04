@@ -47,6 +47,39 @@ export type Database = {
         }
         Relationships: []
       }
+      import_history: {
+        Row: {
+          created_at: string
+          error_log: Json | null
+          failed_rows: number
+          file_name: string
+          id: string
+          imported_by: string
+          successful_rows: number
+          total_rows: number
+        }
+        Insert: {
+          created_at?: string
+          error_log?: Json | null
+          failed_rows: number
+          file_name: string
+          id?: string
+          imported_by: string
+          successful_rows: number
+          total_rows: number
+        }
+        Update: {
+          created_at?: string
+          error_log?: Json | null
+          failed_rows?: number
+          file_name?: string
+          id?: string
+          imported_by?: string
+          successful_rows?: number
+          total_rows?: number
+        }
+        Relationships: []
+      }
       match_results: {
         Row: {
           created_at: string | null
@@ -174,6 +207,7 @@ export type Database = {
           gender: string
           id: string
           name: string
+          player_code: string | null
           updated_at: string | null
         }
         Insert: {
@@ -182,6 +216,7 @@ export type Database = {
           gender: string
           id?: string
           name: string
+          player_code?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -190,6 +225,7 @@ export type Database = {
           gender?: string
           id?: string
           name?: string
+          player_code?: string | null
           updated_at?: string | null
         }
         Relationships: []
@@ -241,7 +277,26 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      active_player_rankings: {
+        Row: {
+          category: Database["public"]["Enums"]["player_category"] | null
+          created_at: string | null
+          id: string | null
+          player_id: string | null
+          rank: number | null
+          total_points: number | null
+          updated_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "player_rankings_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       create_audit_log: {
@@ -253,6 +308,20 @@ export type Database = {
           _table_name: string
         }
         Returns: undefined
+      }
+      get_player_ranking_summary: {
+        Args: {
+          p_category: Database["public"]["Enums"]["player_category"]
+          p_player_id: string
+        }
+        Returns: {
+          active_points: number
+          active_rank: number
+          expiring_points: number
+          lifetime_points: number
+          lifetime_rank: number
+          next_expiry_date: string
+        }[]
       }
       has_role: {
         Args: {
