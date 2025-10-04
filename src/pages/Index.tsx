@@ -13,13 +13,13 @@ const Index = () => {
         style={{ background: "var(--gradient-hero)" }}
       >
         <div className="container mx-auto text-center">
-          <Trophy className="h-20 w-20 text-secondary mx-auto mb-6" />
+          <Trophy className="h-20 w-20 text-white mx-auto mb-6" />
           <h1 className="text-6xl font-bold text-primary-foreground mb-6">
-            Pickleball World Rankings
+            National Pickleball League
           </h1>
           <p className="text-xl text-primary-foreground/90 mb-8 max-w-2xl mx-auto">
-            The official ranking system for pickleball players worldwide. Track performance, 
-            compare standings, and follow the journey to becoming a champion.
+            Australia's premier pickleball competition. Track team standings, player performance, 
+            and follow the best place to play pickleball in Australia.
           </p>
           <Link to="/rankings">
             <Button size="lg" variant="secondary" className="text-lg px-8 py-6">
@@ -113,7 +113,7 @@ const Index = () => {
 
       <footer className="border-t py-8 px-4 bg-card">
         <div className="container mx-auto text-center text-muted-foreground">
-          <p>&copy; 2025 Pickleball World Rankings. All rights reserved.</p>
+          <p>&copy; 2025 National Pickleball League. All rights reserved.</p>
         </div>
       </footer>
     </div>

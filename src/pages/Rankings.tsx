@@ -98,10 +98,10 @@ export default function Rankings() {
       >
         <div className="container mx-auto text-center">
           <h1 className="text-5xl font-bold text-primary-foreground mb-4">
-            World Rankings
+            NPL Rankings
           </h1>
           <p className="text-xl text-primary-foreground/90">
-            Official Pickleball Player Rankings Across All Categories
+            Official National Pickleball League Player Rankings
           </p>
         </div>
       </div>
