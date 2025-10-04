@@ -14,16 +14,226 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      match_results: {
+        Row: {
+          created_at: string | null
+          finishing_position: Database["public"]["Enums"]["finishing_position"]
+          id: string
+          match_id: string | null
+          opponent_id: string | null
+          player_id: string | null
+          points_awarded: number
+        }
+        Insert: {
+          created_at?: string | null
+          finishing_position: Database["public"]["Enums"]["finishing_position"]
+          id?: string
+          match_id?: string | null
+          opponent_id?: string | null
+          player_id?: string | null
+          points_awarded?: number
+        }
+        Update: {
+          created_at?: string | null
+          finishing_position?: Database["public"]["Enums"]["finishing_position"]
+          id?: string
+          match_id?: string | null
+          opponent_id?: string | null
+          player_id?: string | null
+          points_awarded?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "match_results_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "match_results_opponent_id_fkey"
+            columns: ["opponent_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "match_results_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      matches: {
+        Row: {
+          category: Database["public"]["Enums"]["player_category"]
+          created_at: string | null
+          created_by: string | null
+          id: string
+          match_date: string
+          tier: Database["public"]["Enums"]["tournament_tier"]
+          tournament_name: string
+        }
+        Insert: {
+          category: Database["public"]["Enums"]["player_category"]
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          match_date: string
+          tier?: Database["public"]["Enums"]["tournament_tier"]
+          tournament_name: string
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["player_category"]
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          match_date?: string
+          tier?: Database["public"]["Enums"]["tournament_tier"]
+          tournament_name?: string
+        }
+        Relationships: []
+      }
+      player_rankings: {
+        Row: {
+          category: Database["public"]["Enums"]["player_category"]
+          created_at: string
+          id: string
+          player_id: string
+          rank: number | null
+          total_points: number
+          updated_at: string
+        }
+        Insert: {
+          category: Database["public"]["Enums"]["player_category"]
+          created_at?: string
+          id?: string
+          player_id: string
+          rank?: number | null
+          total_points?: number
+          updated_at?: string
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["player_category"]
+          created_at?: string
+          id?: string
+          player_id?: string
+          rank?: number | null
+          total_points?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "player_rankings_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      players: {
+        Row: {
+          country: string
+          created_at: string | null
+          gender: string
+          id: string
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          country: string
+          created_at?: string | null
+          gender: string
+          id?: string
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          country?: string
+          created_at?: string | null
+          gender?: string
+          id?: string
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string | null
+          email: string
+          full_name: string | null
+          id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          full_name?: string | null
+          id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          full_name?: string | null
+          id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      update_player_rankings: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
+      finishing_position:
+        | "winner"
+        | "second"
+        | "third"
+        | "fourth"
+        | "quarterfinalist"
+        | "round_of_16"
+        | "event_win"
+      match_result: "win" | "loss"
+      player_category:
+        | "mens_singles"
+        | "womens_singles"
+        | "mens_doubles"
+        | "womens_doubles"
+        | "mixed_doubles"
+      tournament_tier: "tier1" | "tier2" | "tier3" | "tier4"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +360,26 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+      finishing_position: [
+        "winner",
+        "second",
+        "third",
+        "fourth",
+        "quarterfinalist",
+        "round_of_16",
+        "event_win",
+      ],
+      match_result: ["win", "loss"],
+      player_category: [
+        "mens_singles",
+        "womens_singles",
+        "mens_doubles",
+        "womens_doubles",
+        "mixed_doubles",
+      ],
+      tournament_tier: ["tier1", "tier2", "tier3", "tier4"],
+    },
   },
 } as const
