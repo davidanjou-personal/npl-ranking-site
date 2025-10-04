@@ -204,27 +204,39 @@ export type Database = {
         Row: {
           country: string
           created_at: string | null
+          date_of_birth: string | null
+          dupr_id: string | null
+          email: string | null
           gender: string
           id: string
           name: string
+          nationality: string | null
           player_code: string | null
           updated_at: string | null
         }
         Insert: {
           country: string
           created_at?: string | null
+          date_of_birth?: string | null
+          dupr_id?: string | null
+          email?: string | null
           gender: string
           id?: string
           name: string
+          nationality?: string | null
           player_code?: string | null
           updated_at?: string | null
         }
         Update: {
           country?: string
           created_at?: string | null
+          date_of_birth?: string | null
+          dupr_id?: string | null
+          email?: string | null
           gender?: string
           id?: string
           name?: string
+          nationality?: string | null
           player_code?: string | null
           updated_at?: string | null
         }

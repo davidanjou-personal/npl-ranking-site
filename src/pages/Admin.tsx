@@ -38,6 +38,9 @@ export default function Admin() {
   const [players, setPlayers] = useState<any[]>([]);
   const [playerResultCount, setPlayerResultCount] = useState(8);
   const [matches, setMatches] = useState<any[]>([]);
+  const [bulkImportFile, setBulkImportFile] = useState<File | null>(null);
+  const [duplicates, setDuplicates] = useState<any[]>([]);
+  const [resolutions, setResolutions] = useState<Record<string, string>>({});
 
   useEffect(() => {
     checkAdminAccess();
@@ -109,6 +112,10 @@ export default function Admin() {
       country: formData.get("country") as string,
       gender: formData.get("gender") as "male" | "female",
       player_code: formData.get("player_code") as string || null,
+      email: formData.get("email") as string || null,
+      date_of_birth: formData.get("date_of_birth") as string || null,
+      nationality: formData.get("nationality") as string || null,
+      dupr_id: formData.get("dupr_id") as string || null,
     };
 
     const validation = playerSchema.safeParse(playerData);
@@ -287,6 +294,27 @@ export default function Admin() {
                     <p className="text-xs text-muted-foreground">Unique identifier for bulk imports</p>
                   </div>
 
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email (Optional)</Label>
+                    <Input id="email" name="email" type="email" placeholder="player@example.com" />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="date_of_birth">Date of Birth (Optional)</Label>
+                    <Input id="date_of_birth" name="date_of_birth" type="date" />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="nationality">Nationality (Optional)</Label>
+                    <Input id="nationality" name="nationality" maxLength={100} placeholder="e.g., Australian" />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="dupr_id">DUPR ID (Optional)</Label>
+                    <Input id="dupr_id" name="dupr_id" maxLength={50} placeholder="e.g., 12345" />
+                    <p className="text-xs text-muted-foreground">Dynamic Universal Pickleball Rating ID</p>
+                  </div>
+
                   <Button type="submit" className="w-full">Add Player</Button>
                 </form>
               </CardContent>
@@ -419,62 +447,208 @@ export default function Admin() {
                   <div className="rounded-lg border bg-muted/30 p-4">
                     <h3 className="font-semibold mb-2">CSV Format Required:</h3>
                     <pre className="text-xs bg-background p-3 rounded overflow-x-auto">
-player_code,player_name,country,gender,category,points,event_date
-NPL001,John Doe,AUS,male,mens_singles,1000,2025-01-15
-NPL002,Jane Smith,AUS,female,womens_singles,800,2025-01-15
+player_name,player_code,country,gender,category,points,event_date,email,date_of_birth,nationality,dupr_id
+John Doe,NPL001,AUS,male,mens_singles,1000,2025-01-15,john@example.com,1990-05-15,Australian,12345
+Jane Smith,,AUS,female,womens_singles,800,2025-01-15,,,,
                     </pre>
                     <ul className="text-sm space-y-1 mt-3 text-muted-foreground">
-                      <li>• <strong>player_code</strong>: Unique identifier (will create or match existing players)</li>
+                      <li>• <strong>player_name</strong>: (Required) Player's full name</li>
+                      <li>• <strong>player_code</strong>: (Optional) Unique identifier for matching</li>
                       <li>• <strong>category</strong>: mens_singles, womens_singles, mens_doubles, womens_doubles, mixed_doubles</li>
                       <li>• <strong>gender</strong>: male or female</li>
                       <li>• <strong>event_date</strong>: YYYY-MM-DD format (for 12-month rolling points)</li>
+                      <li>• <strong>email, date_of_birth, nationality, dupr_id</strong>: (Optional) Additional player information</li>
+                      <li>• System will detect duplicate names and ask for confirmation</li>
                     </ul>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="bulk-file">Upload CSV File</Label>
-                    <Input 
-                      id="bulk-file" 
-                      type="file" 
-                      accept=".csv,.xlsx,.xls"
-                      onChange={async (e) => {
-                        const file = e.target.files?.[0];
-                        if (!file) return;
+                  {duplicates.length === 0 && (
+                    <div className="space-y-2">
+                      <Label htmlFor="bulk-file">Upload CSV File</Label>
+                      <Input 
+                        id="bulk-file" 
+                        type="file" 
+                        accept=".csv"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
 
-                        const formData = new FormData();
-                        formData.append('file', file);
-
-                        toast({
-                          title: "Processing...",
-                          description: "Importing data, please wait...",
-                        });
-
-                        try {
-                          const { data, error } = await supabase.functions.invoke('bulk-import-rankings', {
-                            body: formData,
-                          });
-
-                          if (error) throw error;
+                          setBulkImportFile(file);
+                          const formData = new FormData();
+                          formData.append('file', file);
 
                           toast({
-                            title: "Import Complete",
-                            description: `Successfully imported ${data.successful} records. ${data.failed} failed.`,
+                            title: "Processing...",
+                            description: "Checking for duplicates...",
                           });
 
-                          fetchPlayers();
-                          fetchMatches();
-                        } catch (error: any) {
+                          try {
+                            const { data, error } = await supabase.functions.invoke('bulk-import-rankings', {
+                              body: formData,
+                            });
+
+                            if (error) throw error;
+
+                            // Check if duplicates need resolution
+                            if (data.needs_resolution) {
+                              setDuplicates(data.duplicates);
+                              toast({
+                                title: "Duplicates Found",
+                                description: `Found ${data.duplicates.length} potential duplicate(s). Please review and confirm.`,
+                              });
+                              return;
+                            }
+
+                            // Success - no duplicates
+                            toast({
+                              title: "Import Complete",
+                              description: `Successfully imported ${data.successful} records. ${data.failed} failed.`,
+                            });
+
+                            fetchPlayers();
+                            fetchMatches();
+                            e.target.value = '';
+                          } catch (error: any) {
+                            toast({
+                              variant: "destructive",
+                              title: "Import Failed",
+                              description: error.message || "Failed to import data",
+                            });
+                            e.target.value = '';
+                          }
+                        }}
+                      />
+                    </div>
+                  )}
+
+                  {duplicates.length > 0 && (
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h3 className="font-semibold">Resolve Duplicate Players</h3>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setDuplicates([]);
+                            setResolutions({});
+                            setBulkImportFile(null);
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+
+                      <div className="rounded-lg border bg-warning/10 p-4">
+                        <p className="text-sm text-muted-foreground">
+                          Found {duplicates.length} player(s) with matching names. Please confirm if they're the same player or create new entries.
+                        </p>
+                      </div>
+
+                      {duplicates.map((dup: any) => (
+                        <Card key={dup.csv_row}>
+                          <CardHeader>
+                            <CardTitle className="text-base">
+                              Row {dup.csv_row}: {dup.csv_name}
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent className="space-y-3">
+                            <Label>Choose action:</Label>
+                            {dup.existing_players.map((player: any) => (
+                              <div key={player.id} className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-muted/50">
+                                <input
+                                  type="radio"
+                                  name={`resolution_row_${dup.csv_row}`}
+                                  value={player.id}
+                                  checked={resolutions[`row_${dup.csv_row - 2}`] === player.id}
+                                  onChange={() => setResolutions({
+                                    ...resolutions,
+                                    [`row_${dup.csv_row - 2}`]: player.id
+                                  })}
+                                  className="w-4 h-4"
+                                />
+                                <Label className="cursor-pointer flex-1">
+                                  Use existing: <strong>{player.name}</strong>
+                                  <span className="text-sm text-muted-foreground ml-2">
+                                    ({player.country}{player.player_code ? `, Code: ${player.player_code}` : ''}{player.email ? `, Email: ${player.email}` : ''})
+                                  </span>
+                                </Label>
+                              </div>
+                            ))}
+                            <div className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-muted/50">
+                              <input
+                                type="radio"
+                                name={`resolution_row_${dup.csv_row}`}
+                                value="new"
+                                checked={resolutions[`row_${dup.csv_row - 2}`] === 'new'}
+                                onChange={() => setResolutions({
+                                  ...resolutions,
+                                  [`row_${dup.csv_row - 2}`]: 'new'
+                                })}
+                                className="w-4 h-4"
+                              />
+                              <Label className="cursor-pointer">
+                                Create new player
+                              </Label>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+
+                      <Button
+                        className="w-full"
+                        disabled={Object.keys(resolutions).length !== duplicates.length}
+                        onClick={async () => {
+                          if (!bulkImportFile) return;
+
+                          // Filter out "new" entries (they'll be created automatically)
+                          const finalResolutions: Record<string, string> = {};
+                          Object.entries(resolutions).forEach(([key, value]) => {
+                            if (value !== 'new') {
+                              finalResolutions[key] = value;
+                            }
+                          });
+
+                          const formData = new FormData();
+                          formData.append('file', bulkImportFile);
+                          formData.append('duplicateResolutions', JSON.stringify(finalResolutions));
+
                           toast({
-                            variant: "destructive",
-                            title: "Import Failed",
-                            description: error.message || "Failed to import data",
+                            title: "Processing...",
+                            description: "Importing with resolved duplicates...",
                           });
-                        }
 
-                        e.target.value = '';
-                      }}
-                    />
-                  </div>
+                          try {
+                            const { data, error } = await supabase.functions.invoke('bulk-import-rankings', {
+                              body: formData,
+                            });
+
+                            if (error) throw error;
+
+                            toast({
+                              title: "Import Complete",
+                              description: `Successfully imported ${data.successful} records. ${data.failed} failed.`,
+                            });
+
+                            setDuplicates([]);
+                            setResolutions({});
+                            setBulkImportFile(null);
+                            fetchPlayers();
+                            fetchMatches();
+                          } catch (error: any) {
+                            toast({
+                              variant: "destructive",
+                              title: "Import Failed",
+                              description: error.message || "Failed to import data",
+                            });
+                          }
+                        }}
+                      >
+                        {Object.keys(resolutions).length !== duplicates.length 
+                          ? `Select action for all ${duplicates.length} duplicate(s)` 
+                          : 'Proceed with Import'}
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>

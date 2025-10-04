@@ -8,13 +8,29 @@ const corsHeaders = {
 };
 
 interface ImportRecord {
-  player_code: string;
+  player_code?: string;
   player_name: string;
   country: string;
   gender: 'male' | 'female';
   category: string;
   points: number;
   event_date: string;
+  email?: string;
+  date_of_birth?: string;
+  nationality?: string;
+  dupr_id?: string;
+}
+
+interface DuplicateMatch {
+  csv_row: number;
+  csv_name: string;
+  existing_players: Array<{
+    id: string;
+    name: string;
+    player_code?: string;
+    email?: string;
+    country: string;
+  }>;
 }
 
 serve(async (req) => {
@@ -52,6 +68,8 @@ serve(async (req) => {
     // Parse form data
     const formData = await req.formData();
     const file = formData.get('file') as File;
+    const duplicateResolutions = formData.get('duplicateResolutions');
+    const resolutionMap = duplicateResolutions ? JSON.parse(duplicateResolutions as string) : null;
     
     if (!file) {
       throw new Error('No file provided');
@@ -65,6 +83,7 @@ serve(async (req) => {
     }
 
     // Parse CSV (skip header)
+    // Expected format: player_name,player_code,country,gender,category,points,event_date,email,date_of_birth,nationality,dupr_id
     const records: ImportRecord[] = [];
     for (let i = 1; i < lines.length; i++) {
       const line = lines[i].trim();
@@ -74,14 +93,53 @@ serve(async (req) => {
       if (cols.length < 7) continue;
 
       records.push({
-        player_code: cols[0],
-        player_name: cols[1],
-        country: cols[2],
+        player_name: cols[0] || '',
+        player_code: cols[1] || undefined,
+        country: cols[2] || '',
         gender: cols[3] as 'male' | 'female',
-        category: cols[4],
+        category: cols[4] || '',
         points: parseInt(cols[5]) || 0,
-        event_date: cols[6],
+        event_date: cols[6] || '',
+        email: cols[7] || undefined,
+        date_of_birth: cols[8] || undefined,
+        nationality: cols[9] || undefined,
+        dupr_id: cols[10] || undefined,
       });
+    }
+
+    // If no resolutions provided, check for duplicates and return them
+    if (!resolutionMap) {
+      const duplicates: DuplicateMatch[] = [];
+      
+      for (let i = 0; i < records.length; i++) {
+        const record = records[i];
+        
+        // Check for existing players with same name (case-insensitive)
+        const { data: existingPlayers } = await supabaseClient
+          .from('players')
+          .select('id, name, player_code, email, country')
+          .ilike('name', record.player_name);
+
+        if (existingPlayers && existingPlayers.length > 0) {
+          duplicates.push({
+            csv_row: i + 2, // +2 because: +1 for 0-index, +1 for header row
+            csv_name: record.player_name,
+            existing_players: existingPlayers,
+          });
+        }
+      }
+
+      // If duplicates found, return them for user resolution
+      if (duplicates.length > 0) {
+        return new Response(
+          JSON.stringify({
+            needs_resolution: true,
+            duplicates,
+            total_records: records.length,
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
     }
 
     let successful = 0;
@@ -89,41 +147,77 @@ serve(async (req) => {
     const errors: any[] = [];
 
     // Process each record
-    for (const record of records) {
+    for (let i = 0; i < records.length; i++) {
+      const record = records[i];
       try {
         // Validate record
-        if (!record.player_code || !record.player_name) {
-          throw new Error('Missing required fields');
+        if (!record.player_name) {
+          throw new Error('Player name is required');
         }
 
-        // Check if player exists by code
+        // Determine player ID
         let playerId: string;
-        const { data: existingPlayer } = await supabaseClient
-          .from('players')
-          .select('id')
-          .eq('player_code', record.player_code)
-          .maybeSingle();
-
-        if (existingPlayer) {
-          playerId = existingPlayer.id;
+        const rowKey = `row_${i}`;
+        
+        // Check if user provided resolution for this row
+        if (resolutionMap && resolutionMap[rowKey]) {
+          playerId = resolutionMap[rowKey];
         } else {
-          // Create new player
-          const { data: newPlayer, error: playerError } = await supabaseClient
-            .from('players')
-            .insert({
-              name: record.player_name,
-              country: record.country,
-              gender: record.gender,
-              player_code: record.player_code,
-            })
-            .select('id')
-            .single();
-
-          if (playerError || !newPlayer) {
-            throw playerError || new Error('Failed to create player');
+          // Try to find existing player by player_code, dupr_id, or email
+          let existingPlayer = null;
+          
+          if (record.player_code) {
+            const { data } = await supabaseClient
+              .from('players')
+              .select('id')
+              .eq('player_code', record.player_code)
+              .maybeSingle();
+            existingPlayer = data;
+          }
+          
+          if (!existingPlayer && record.dupr_id) {
+            const { data } = await supabaseClient
+              .from('players')
+              .select('id')
+              .eq('dupr_id', record.dupr_id)
+              .maybeSingle();
+            existingPlayer = data;
+          }
+          
+          if (!existingPlayer && record.email) {
+            const { data } = await supabaseClient
+              .from('players')
+              .select('id')
+              .eq('email', record.email)
+              .maybeSingle();
+            existingPlayer = data;
           }
 
-          playerId = newPlayer.id;
+          if (existingPlayer) {
+            playerId = existingPlayer.id;
+          } else {
+            // Create new player
+            const { data: newPlayer, error: playerError } = await supabaseClient
+              .from('players')
+              .insert({
+                name: record.player_name,
+                country: record.country,
+                gender: record.gender,
+                player_code: record.player_code || null,
+                email: record.email || null,
+                date_of_birth: record.date_of_birth || null,
+                nationality: record.nationality || null,
+                dupr_id: record.dupr_id || null,
+              })
+              .select('id')
+              .single();
+
+            if (playerError || !newPlayer) {
+              throw playerError || new Error('Failed to create player');
+            }
+
+            playerId = newPlayer.id;
+          }
         }
 
         // Create a match entry for this import
