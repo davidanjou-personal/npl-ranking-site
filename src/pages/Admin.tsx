@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { z } from "zod";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Download } from "lucide-react";
 
 const playerSchema = z.object({
   name: z.string().min(1, "Name is required").max(100),
@@ -101,6 +101,48 @@ export default function Admin() {
       .order("match_date", { ascending: false });
     
     if (data) setMatches(data);
+  };
+
+  const downloadCSVTemplate = () => {
+    const headers = [
+      'player_name',
+      'player_code',
+      'country',
+      'gender',
+      'category',
+      'points',
+      'event_date',
+      'email',
+      'date_of_birth',
+      'nationality',
+      'dupr_id'
+    ];
+    
+    const sampleRows = [
+      ['John Doe', 'NPL001', 'AUS', 'male', 'mens_singles', '1000', '2025-01-15', 'john@example.com', '1990-05-15', 'Australian', '12345'],
+      ['Jane Smith', '', 'AUS', 'female', 'womens_singles', '800', '2025-01-15', '', '', '', ''],
+    ];
+
+    const csvContent = [
+      headers.join(','),
+      ...sampleRows.map(row => row.join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'bulk_import_template.csv');
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    toast({
+      title: "Template Downloaded",
+      description: "CSV template has been downloaded successfully.",
+    });
   };
 
   const handleAddPlayer = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -440,7 +482,17 @@ export default function Admin() {
           <TabsContent value="bulk-import">
             <Card>
               <CardHeader>
-                <CardTitle>Bulk Import Rankings</CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle>Bulk Import Rankings</CardTitle>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={downloadCSVTemplate}
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Download Template
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
