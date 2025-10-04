@@ -35,27 +35,55 @@ const getRankIcon = (rank: number) => {
 export default function Rankings() {
   const [players, setPlayers] = useState<PlayerRanking[]>([]);
   const [loading, setLoading] = useState(true);
+  const [viewMode, setViewMode] = useState<'current' | 'lifetime'>('current');
 
   useEffect(() => {
     fetchPlayers();
-  }, []);
+  }, [viewMode]);
 
   const fetchPlayers = async () => {
-    const { data, error } = await supabase
-      .from("player_rankings")
-      .select(`
-        *,
-        players (
-          name,
-          country,
-          gender
-        )
-      `)
-      .order("category")
-      .order("rank");
+    if (viewMode === 'current') {
+      // Fetch from active_player_rankings view
+      const { data, error } = await supabase
+        .from('active_player_rankings' as any)
+        .select('*')
+        .order("category")
+        .order("rank");
 
-    if (!error && data) {
-      setPlayers(data as PlayerRanking[]);
+      if (!error && data) {
+        // Fetch player details separately
+        const playerIds = [...new Set(data.map((d: any) => d.player_id))];
+        const { data: playersData } = await supabase
+          .from('players')
+          .select('id, name, country')
+          .in('id', playerIds);
+
+        const playersMap = new Map(playersData?.map(p => [p.id, p]) || []);
+        
+        const enrichedData = data.map((item: any) => ({
+          ...item,
+          players: playersMap.get(item.player_id),
+        }));
+        
+        setPlayers(enrichedData as PlayerRanking[]);
+      }
+    } else {
+      // Fetch from player_rankings table
+      const { data, error } = await supabase
+        .from('player_rankings')
+        .select(`
+          *,
+          players (
+            name,
+            country
+          )
+        `)
+        .order("category")
+        .order("rank");
+
+      if (!error && data) {
+        setPlayers(data as any);
+      }
     }
     setLoading(false);
   };
@@ -107,6 +135,31 @@ export default function Rankings() {
       </div>
 
       <div className="container mx-auto px-4 py-12">
+        <div className="flex justify-center mb-8">
+          <div className="inline-flex rounded-lg border bg-muted p-1">
+            <button
+              onClick={() => setViewMode('current')}
+              className={`px-6 py-2 rounded-md text-sm font-medium transition-colors ${
+                viewMode === 'current'
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              Current (12-month)
+            </button>
+            <button
+              onClick={() => setViewMode('lifetime')}
+              className={`px-6 py-2 rounded-md text-sm font-medium transition-colors ${
+                viewMode === 'lifetime'
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              All-Time
+            </button>
+          </div>
+        </div>
+
         {loading ? (
           <div className="text-center py-12">
             <p className="text-muted-foreground">Loading rankings...</p>

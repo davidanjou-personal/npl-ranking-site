@@ -16,6 +16,7 @@ const playerSchema = z.object({
   name: z.string().min(1, "Name is required").max(100),
   country: z.string().min(1, "Country is required").max(100),
   gender: z.enum(["male", "female"]),
+  player_code: z.string().optional(),
 });
 
 const matchSchema = z.object({
@@ -107,6 +108,7 @@ export default function Admin() {
       name: formData.get("name") as string,
       country: formData.get("country") as string,
       gender: formData.get("gender") as "male" | "female",
+      player_code: formData.get("player_code") as string || null,
     };
 
     const validation = playerSchema.safeParse(playerData);
@@ -242,9 +244,10 @@ export default function Admin() {
         <h1 className="text-4xl font-bold mb-8 text-foreground">Admin Dashboard</h1>
 
         <Tabs defaultValue="add-player" className="w-full">
-          <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 mb-8">
+          <TabsList className="grid w-full grid-cols-1 sm:grid-cols-4 mb-8">
             <TabsTrigger value="add-player">Add Player</TabsTrigger>
             <TabsTrigger value="add-result">Record Match Result</TabsTrigger>
+            <TabsTrigger value="bulk-import">Bulk Import</TabsTrigger>
             <TabsTrigger value="view-matches">View Matches</TabsTrigger>
           </TabsList>
 
@@ -276,6 +279,12 @@ export default function Admin() {
                         <SelectItem value="female">Female</SelectItem>
                       </SelectContent>
                     </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="player_code">Player Code (Optional)</Label>
+                    <Input id="player_code" name="player_code" maxLength={50} placeholder="e.g., NPL001" />
+                    <p className="text-xs text-muted-foreground">Unique identifier for bulk imports</p>
                   </div>
 
                   <Button type="submit" className="w-full">Add Player</Button>
@@ -396,6 +405,77 @@ export default function Admin() {
 
                   <Button type="submit" className="w-full">Record Result</Button>
                 </form>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="bulk-import">
+            <Card>
+              <CardHeader>
+                <CardTitle>Bulk Import Rankings</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="rounded-lg border bg-muted/30 p-4">
+                    <h3 className="font-semibold mb-2">CSV Format Required:</h3>
+                    <pre className="text-xs bg-background p-3 rounded overflow-x-auto">
+player_code,player_name,country,gender,category,points,event_date
+NPL001,John Doe,AUS,male,mens_singles,1000,2025-01-15
+NPL002,Jane Smith,AUS,female,womens_singles,800,2025-01-15
+                    </pre>
+                    <ul className="text-sm space-y-1 mt-3 text-muted-foreground">
+                      <li>• <strong>player_code</strong>: Unique identifier (will create or match existing players)</li>
+                      <li>• <strong>category</strong>: mens_singles, womens_singles, mens_doubles, womens_doubles, mixed_doubles</li>
+                      <li>• <strong>gender</strong>: male or female</li>
+                      <li>• <strong>event_date</strong>: YYYY-MM-DD format (for 12-month rolling points)</li>
+                    </ul>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="bulk-file">Upload CSV File</Label>
+                    <Input 
+                      id="bulk-file" 
+                      type="file" 
+                      accept=".csv,.xlsx,.xls"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+
+                        const formData = new FormData();
+                        formData.append('file', file);
+
+                        toast({
+                          title: "Processing...",
+                          description: "Importing data, please wait...",
+                        });
+
+                        try {
+                          const { data, error } = await supabase.functions.invoke('bulk-import-rankings', {
+                            body: formData,
+                          });
+
+                          if (error) throw error;
+
+                          toast({
+                            title: "Import Complete",
+                            description: `Successfully imported ${data.successful} records. ${data.failed} failed.`,
+                          });
+
+                          fetchPlayers();
+                          fetchMatches();
+                        } catch (error: any) {
+                          toast({
+                            variant: "destructive",
+                            title: "Import Failed",
+                            description: error.message || "Failed to import data",
+                          });
+                        }
+
+                        e.target.value = '';
+                      }}
+                    />
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
