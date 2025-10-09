@@ -710,6 +710,56 @@ serve(async (req) => {
       console.log(`Batch ${batchIdx + 1} complete. Success: ${successful}, Failed: ${failed}`);
     }
 
+    // Rebuild player_rankings from match_results to avoid drift/double counting
+    console.log('Rebuilding player_rankings from match_results...');
+    const { data: results, error: resErr } = await supabaseClient
+      .from('match_results')
+      .select('player_id, points_awarded, matches!inner(category)');
+    if (resErr) {
+      console.error('Failed to load match_results for rebuild:', resErr);
+    } else {
+      const totalsMap = new Map<string, number>();
+      for (const r of (results as any[]) || []) {
+        const category = (r as any).matches?.category;
+        if (!category) continue;
+        const key = `${(r as any).player_id}|${category}`;
+        const pts = Number((r as any).points_awarded) || 0;
+        totalsMap.set(key, (totalsMap.get(key) || 0) + pts);
+      }
+
+      // Remove stale player_rankings rows that no longer have results
+      const { data: existingPR } = await supabaseClient
+        .from('player_rankings')
+        .select('id, player_id, category');
+
+      const keepKeys = new Set(totalsMap.keys());
+      const deleteIds: string[] = [];
+      for (const row of (existingPR as any[]) || []) {
+        const key = `${row.player_id}|${row.category}`;
+        if (!keepKeys.has(key)) deleteIds.push(row.id);
+      }
+      if (deleteIds.length > 0) {
+        console.log('Deleting stale player_rankings rows:', deleteIds.length);
+        await supabaseClient.from('player_rankings').delete().in('id', deleteIds);
+      }
+
+      // Upsert fresh totals
+      const upsertRows = Array.from(totalsMap.entries()).map(([key, total_points]) => {
+        const [player_id, category] = key.split('|');
+        return { player_id, category, total_points } as any;
+      });
+      if (upsertRows.length > 0) {
+        const { error: upErr } = await supabaseClient
+          .from('player_rankings')
+          .upsert(upsertRows, { onConflict: 'player_id,category' });
+        if (upErr) {
+          console.error('Failed to upsert player_rankings:', upErr);
+        } else {
+          await supabaseClient.rpc('update_player_rankings');
+        }
+      }
+    }
+
     // Log import history
     await supabaseClient.from('import_history').insert({
       imported_by: user.id,

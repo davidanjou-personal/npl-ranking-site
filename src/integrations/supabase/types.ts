@@ -298,7 +298,7 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "player_rankings_player_id_fkey"
+            foreignKeyName: "match_results_player_id_fkey"
             columns: ["player_id"]
             isOneToOne: false
             referencedRelation: "players"
