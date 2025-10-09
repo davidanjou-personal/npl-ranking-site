@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { Navigation } from "@/components/Navigation";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
@@ -86,27 +87,31 @@ export default function Rankings() {
   };
 
   const PlayerRow = ({ player }: { player: PlayerRanking }) => (
-    <div
-      className="flex items-center gap-4 p-4 rounded-lg transition-all hover:shadow-[var(--shadow-hover)]"
-      style={{ 
-        background: "var(--gradient-card)",
-        boxShadow: "var(--shadow-card)"
-      }}
-    >
-      <div className="flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 text-primary font-bold text-xl">
-        {getRankIcon(player.rank) || `#${player.rank}`}
+    <Link to={`/player/${player.player_id}`}>
+      <div
+        className="flex items-center gap-4 p-4 rounded-lg transition-all hover:shadow-[var(--shadow-hover)] cursor-pointer"
+        style={{ 
+          background: "var(--gradient-card)",
+          boxShadow: "var(--shadow-card)"
+        }}
+      >
+        <div className="flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 text-primary font-bold text-xl">
+          {getRankIcon(player.rank) || `#${player.rank}`}
+        </div>
+        
+        <div className="flex-1">
+          <h3 className="text-lg font-bold text-foreground hover:text-primary transition-colors">
+            {player.players?.name ?? 'Unknown Player'}
+          </h3>
+          <p className="text-sm text-muted-foreground">{player.players?.country ?? 'Unknown'}</p>
+        </div>
+        
+        <div className="text-right">
+          <p className="text-2xl font-bold text-secondary">{player.total_points}</p>
+          <p className="text-xs text-muted-foreground">points</p>
+        </div>
       </div>
-      
-      <div className="flex-1">
-        <h3 className="text-lg font-bold text-foreground">{player.players?.name ?? 'Unknown Player'}</h3>
-        <p className="text-sm text-muted-foreground">{player.players?.country ?? 'Unknown'}</p>
-      </div>
-      
-      <div className="text-right">
-        <p className="text-2xl font-bold text-secondary">{player.total_points}</p>
-        <p className="text-xs text-muted-foreground">points</p>
-      </div>
-    </div>
+    </Link>
   );
 
   return (
