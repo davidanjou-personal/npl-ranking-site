@@ -211,16 +211,42 @@ serve(async (req) => {
 
     // If no resolutions provided, check for duplicates and return them
     if (!resolutionMap) {
+      console.log('Starting duplicate check for', records.length, 'records');
+      
+      // OPTIMIZATION: Fetch ALL existing players in ONE query instead of checking each record
+      const { data: allPlayers, error: playersError } = await supabaseClient
+        .from('players')
+        .select('id, name, player_code, email, country, date_of_birth, nationality, dupr_id');
+
+      if (playersError) {
+        throw new Error('Failed to fetch existing players: ' + playersError.message);
+      }
+
+      console.log('Fetched', allPlayers?.length || 0, 'existing players from database');
+
+      // Build an in-memory lookup map for fast duplicate detection
+      // Key: normalized lowercase name -> Array of matching players
+      const playersByName = new Map<string, typeof allPlayers>();
+      
+      if (allPlayers) {
+        for (const player of allPlayers) {
+          const normalizedName = player.name.toLowerCase().trim();
+          const existing = playersByName.get(normalizedName) || [];
+          existing.push(player);
+          playersByName.set(normalizedName, existing);
+        }
+      }
+
+      console.log('Built lookup map with', playersByName.size, 'unique normalized names');
+
+      // Check each record against the in-memory map (fast lookups)
       const duplicates: DuplicateMatch[] = [];
       
       for (let i = 0; i < records.length; i++) {
         const record = records[i];
+        const normalizedName = record.player_name.toLowerCase().trim();
         
-        // Check for existing players with same name (case-insensitive)
-        const { data: existingPlayers } = await supabaseClient
-          .from('players')
-          .select('id, name, player_code, email, country, date_of_birth, nationality, dupr_id')
-          .ilike('name', record.player_name);
+        const existingPlayers = playersByName.get(normalizedName);
 
         if (existingPlayers && existingPlayers.length > 0) {
           duplicates.push({
@@ -238,6 +264,8 @@ serve(async (req) => {
           });
         }
       }
+
+      console.log('Found', duplicates.length, 'duplicate matches');
 
       // If duplicates found, return them for user resolution
       if (duplicates.length > 0) {
