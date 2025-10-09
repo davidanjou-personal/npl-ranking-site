@@ -210,7 +210,6 @@ export type Database = {
           gender: string
           id: string
           name: string
-          nationality: string | null
           player_code: string | null
           updated_at: string | null
         }
@@ -223,7 +222,6 @@ export type Database = {
           gender: string
           id?: string
           name: string
-          nationality?: string | null
           player_code?: string | null
           updated_at?: string | null
         }
@@ -236,7 +234,6 @@ export type Database = {
           gender?: string
           id?: string
           name?: string
-          nationality?: string | null
           player_code?: string | null
           updated_at?: string | null
         }

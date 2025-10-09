@@ -18,31 +18,28 @@ interface ImportRecord {
   event_date: string;
   email?: string;
   date_of_birth?: string;
-  nationality?: string;
   dupr_id?: string;
 }
 
 interface DuplicateMatch {
   csv_row: number;
   csv_name: string;
-  csv_data: {
-    player_code?: string;
-    email?: string;
-    country: string;
-    date_of_birth?: string;
-    nationality?: string;
-    dupr_id?: string;
-  };
-  existing_players: Array<{
-    id: string;
-    name: string;
-    player_code?: string;
-    email?: string;
-    country: string;
-    date_of_birth?: string;
-    nationality?: string;
-    dupr_id?: string;
-  }>;
+    csv_data: {
+      player_code?: string;
+      email?: string;
+      country: string;
+      date_of_birth?: string;
+      dupr_id?: string;
+    };
+    existing_players: Array<{
+      id: string;
+      name: string;
+      player_code?: string;
+      email?: string;
+      country: string;
+      date_of_birth?: string;
+      dupr_id?: string;
+    }>;
 }
 
 // Normalization helpers
@@ -207,14 +204,13 @@ serve(async (req) => {
     const columnAliases: Record<string, string[]> = {
       'player_name': ['player_name', 'name'],
       'player_code': ['player_code', 'code', 'id'],
-      'country': ['country', 'nationality'],
+      'country': ['country', 'nationality'], // nationality is an alias for country
       'gender': ['gender'],
       'category': ['category'],
       'points': ['points'],
       'event_date': ['event_date', 'date', 'match_date'],
       'email': ['email'],
       'date_of_birth': ['date_of_birth', 'dob', 'birthdate'],
-      'nationality': ['nationality'],
       'dupr_id': ['dupr_id'],
     };
 
@@ -254,14 +250,13 @@ serve(async (req) => {
         };
 
         const playerName = getCol('player_name') || '';
-        const countryVal = getCol('country') || getCol('nationality') || '';
+        const countryVal = getCol('country') || ''; // nationality alias handled in columnAliases
         const genderVal = getCol('gender');
         const categoryVal = getCol('category');
         const pointsVal = getCol('points');
         const eventDateVal = getCol('event_date');
         const emailVal = getCol('email');
         const dobVal = getCol('date_of_birth');
-        const nationalityVal = getCol('nationality');
         const duprIdVal = getCol('dupr_id');
         const playerCodeVal = getCol('player_code');
 
@@ -280,7 +275,6 @@ serve(async (req) => {
           event_date: eventDate ?? '',
           email: emailVal || undefined,
           date_of_birth: dob ?? undefined,
-          nationality: nationalityVal || undefined,
           dupr_id: duprIdVal || undefined,
         });
       } catch (err: any) {
@@ -301,7 +295,7 @@ serve(async (req) => {
       // OPTIMIZATION: Fetch ALL existing players in ONE query instead of checking each record
       const { data: allPlayers, error: playersError } = await supabaseClient
         .from('players')
-        .select('id, name, player_code, email, country, date_of_birth, nationality, dupr_id');
+        .select('id, name, player_code, email, country, date_of_birth, dupr_id');
 
       if (playersError) {
         throw new Error('Failed to fetch existing players: ' + playersError.message);
@@ -342,7 +336,6 @@ serve(async (req) => {
               email: record.email,
               country: record.country,
               date_of_birth: record.date_of_birth,
-              nationality: record.nationality,
               dupr_id: record.dupr_id,
             },
             existing_players: existingPlayers,
@@ -418,7 +411,6 @@ serve(async (req) => {
             if (record.player_code) updateData.player_code = record.player_code;
             if (record.email) updateData.email = record.email;
             if (record.date_of_birth) updateData.date_of_birth = record.date_of_birth;
-            if (record.nationality) updateData.nationality = record.nationality;
             if (record.dupr_id) updateData.dupr_id = record.dupr_id;
             if (record.country) updateData.country = record.country;
             if (record.gender) updateData.gender = record.gender;
@@ -491,7 +483,6 @@ serve(async (req) => {
                 player_code: record.player_code || null,
                 email: record.email || null,
                 date_of_birth: record.date_of_birth || null,
-                nationality: record.nationality || null,
                 dupr_id: record.dupr_id || null,
               })
               .select('id')
