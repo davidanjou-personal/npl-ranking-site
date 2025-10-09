@@ -623,40 +623,109 @@ Jane Smith,,AUS,female,womens_singles,800,2025-01-15,,,,
 
                       <div className="rounded-lg border bg-warning/10 p-4">
                         <p className="text-sm text-muted-foreground">
-                          Found {duplicates.length} player(s) with matching names. Please confirm if they're the same player or create new entries.
+                          Found {duplicates.length} player(s) with matching names. For each duplicate:
                         </p>
+                        <ul className="text-sm text-muted-foreground mt-2 ml-4 space-y-1">
+                          <li>• <strong>Use existing (no changes)</strong> - Keep the current player data unchanged</li>
+                          <li>• <strong>Update existing with new data</strong> - Merge CSV data into existing player (adds/updates fields like email, DOB, etc.)</li>
+                          <li>• <strong>Create new player</strong> - Add as a separate player with the same name</li>
+                        </ul>
                       </div>
 
-                      {duplicates.map((dup: any) => (
+                      {duplicates.map((dup: any) => {
+                        const csvData = dup.csv_data || {};
+                        return (
                         <Card key={dup.csv_row}>
                           <CardHeader>
                             <CardTitle className="text-base">
                               Row {dup.csv_row}: {dup.csv_name}
                             </CardTitle>
+                            <div className="text-sm text-muted-foreground mt-2">
+                              <strong>New data from CSV:</strong>
+                              <div className="ml-4 mt-1">
+                                {csvData.player_code && <div>• Code: {csvData.player_code}</div>}
+                                {csvData.email && <div>• Email: {csvData.email}</div>}
+                                {csvData.date_of_birth && <div>• DOB: {csvData.date_of_birth}</div>}
+                                {csvData.nationality && <div>• Nationality: {csvData.nationality}</div>}
+                                {csvData.dupr_id && <div>• DUPR ID: {csvData.dupr_id}</div>}
+                                {csvData.country && <div>• Country: {csvData.country}</div>}
+                              </div>
+                            </div>
                           </CardHeader>
                           <CardContent className="space-y-3">
                             <Label>Choose action:</Label>
-                            {dup.existing_players.map((player: any) => (
-                              <div key={player.id} className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-muted/50">
-                                <input
-                                  type="radio"
-                                  name={`resolution_row_${dup.csv_row}`}
-                                  value={player.id}
-                                  checked={resolutions[`row_${dup.csv_row - 2}`] === player.id}
-                                  onChange={() => setResolutions({
-                                    ...resolutions,
-                                    [`row_${dup.csv_row - 2}`]: player.id
-                                  })}
-                                  className="w-4 h-4"
-                                />
-                                <Label className="cursor-pointer flex-1">
-                                  Use existing: <strong>{player.name}</strong>
-                                  <span className="text-sm text-muted-foreground ml-2">
-                                    ({player.country}{player.player_code ? `, Code: ${player.player_code}` : ''}{player.email ? `, Email: ${player.email}` : ''})
-                                  </span>
-                                </Label>
+                            {dup.existing_players.map((player: any) => {
+                              const hasNewData = 
+                                (csvData.player_code && csvData.player_code !== player.player_code) ||
+                                (csvData.email && csvData.email !== player.email) ||
+                                (csvData.date_of_birth && csvData.date_of_birth !== player.date_of_birth) ||
+                                (csvData.nationality && csvData.nationality !== player.nationality) ||
+                                (csvData.dupr_id && csvData.dupr_id !== player.dupr_id) ||
+                                (csvData.country && csvData.country !== player.country);
+                              
+                              return (
+                              <div key={player.id} className="space-y-2">
+                                <div className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-muted/50">
+                                  <input
+                                    type="radio"
+                                    name={`resolution_row_${dup.csv_row}`}
+                                    value={player.id}
+                                    checked={resolutions[`row_${dup.csv_row - 2}`] === player.id}
+                                    onChange={() => setResolutions({
+                                      ...resolutions,
+                                      [`row_${dup.csv_row - 2}`]: player.id
+                                    })}
+                                    className="w-4 h-4"
+                                  />
+                                  <Label className="cursor-pointer flex-1">
+                                    Use existing (no changes): <strong>{player.name}</strong>
+                                    <span className="text-sm text-muted-foreground ml-2">
+                                      ({player.country}{player.player_code ? `, Code: ${player.player_code}` : ''}{player.email ? `, Email: ${player.email}` : ''})
+                                    </span>
+                                  </Label>
+                                </div>
+                                {hasNewData && (
+                                  <div className="flex items-start space-x-2 p-3 border rounded-lg hover:bg-muted/50 bg-blue-50/50 dark:bg-blue-950/20">
+                                    <input
+                                      type="radio"
+                                      name={`resolution_row_${dup.csv_row}`}
+                                      value={`merge_${player.id}`}
+                                      checked={resolutions[`row_${dup.csv_row - 2}`] === `merge_${player.id}`}
+                                      onChange={() => setResolutions({
+                                        ...resolutions,
+                                        [`row_${dup.csv_row - 2}`]: `merge_${player.id}`
+                                      })}
+                                      className="w-4 h-4 mt-1"
+                                    />
+                                    <Label className="cursor-pointer flex-1">
+                                      <div className="font-medium">Update existing with new data</div>
+                                      <div className="text-xs text-muted-foreground mt-1">
+                                        <strong>Will update:</strong>
+                                        {csvData.player_code && csvData.player_code !== player.player_code && (
+                                          <div className="ml-2">• Code: {player.player_code || '(empty)'} → {csvData.player_code}</div>
+                                        )}
+                                        {csvData.email && csvData.email !== player.email && (
+                                          <div className="ml-2">• Email: {player.email || '(empty)'} → {csvData.email}</div>
+                                        )}
+                                        {csvData.date_of_birth && csvData.date_of_birth !== player.date_of_birth && (
+                                          <div className="ml-2">• DOB: {player.date_of_birth || '(empty)'} → {csvData.date_of_birth}</div>
+                                        )}
+                                        {csvData.nationality && csvData.nationality !== player.nationality && (
+                                          <div className="ml-2">• Nationality: {player.nationality || '(empty)'} → {csvData.nationality}</div>
+                                        )}
+                                        {csvData.dupr_id && csvData.dupr_id !== player.dupr_id && (
+                                          <div className="ml-2">• DUPR ID: {player.dupr_id || '(empty)'} → {csvData.dupr_id}</div>
+                                        )}
+                                        {csvData.country && csvData.country !== player.country && (
+                                          <div className="ml-2">• Country: {player.country} → {csvData.country}</div>
+                                        )}
+                                      </div>
+                                    </Label>
+                                  </div>
+                                )}
                               </div>
-                            ))}
+                            );
+                            })}
                             <div className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-muted/50">
                               <input
                                 type="radio"
@@ -670,13 +739,13 @@ Jane Smith,,AUS,female,womens_singles,800,2025-01-15,,,,
                                 className="w-4 h-4"
                               />
                               <Label className="cursor-pointer">
-                                Create new player
+                                Create new player (separate entry)
                               </Label>
                             </div>
                           </CardContent>
                         </Card>
-                      ))}
-
+                      );
+                      })}
                       <Button
                         className="w-full"
                         disabled={Object.keys(resolutions).length !== duplicates.length}

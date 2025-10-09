@@ -25,12 +25,23 @@ interface ImportRecord {
 interface DuplicateMatch {
   csv_row: number;
   csv_name: string;
+  csv_data: {
+    player_code?: string;
+    email?: string;
+    country: string;
+    date_of_birth?: string;
+    nationality?: string;
+    dupr_id?: string;
+  };
   existing_players: Array<{
     id: string;
     name: string;
     player_code?: string;
     email?: string;
     country: string;
+    date_of_birth?: string;
+    nationality?: string;
+    dupr_id?: string;
   }>;
 }
 
@@ -207,13 +218,21 @@ serve(async (req) => {
         // Check for existing players with same name (case-insensitive)
         const { data: existingPlayers } = await supabaseClient
           .from('players')
-          .select('id, name, player_code, email, country')
+          .select('id, name, player_code, email, country, date_of_birth, nationality, dupr_id')
           .ilike('name', record.player_name);
 
         if (existingPlayers && existingPlayers.length > 0) {
           duplicates.push({
             csv_row: i + 2, // +2 because: +1 for 0-index, +1 for header row
             csv_name: record.player_name,
+            csv_data: {
+              player_code: record.player_code,
+              email: record.email,
+              country: record.country,
+              date_of_birth: record.date_of_birth,
+              nationality: record.nationality,
+              dupr_id: record.dupr_id,
+            },
             existing_players: existingPlayers,
           });
         }
@@ -262,7 +281,37 @@ serve(async (req) => {
         
         // Check if user provided resolution for this row
         if (resolutionMap && resolutionMap[rowKey]) {
-          playerId = resolutionMap[rowKey];
+          const resolution = resolutionMap[rowKey];
+          
+          // Check if this is a merge operation (format: "merge_PLAYER_ID")
+          if (resolution.startsWith('merge_')) {
+            playerId = resolution.replace('merge_', '');
+            
+            // Build update object with only non-empty new values
+            const updateData: any = {};
+            if (record.player_code) updateData.player_code = record.player_code;
+            if (record.email) updateData.email = record.email;
+            if (record.date_of_birth) updateData.date_of_birth = record.date_of_birth;
+            if (record.nationality) updateData.nationality = record.nationality;
+            if (record.dupr_id) updateData.dupr_id = record.dupr_id;
+            if (record.country) updateData.country = record.country;
+            if (record.gender) updateData.gender = record.gender;
+            
+            // Update existing player if there's new data
+            if (Object.keys(updateData).length > 0) {
+              const { error: updateError } = await supabaseClient
+                .from('players')
+                .update(updateData)
+                .eq('id', playerId);
+              
+              if (updateError) {
+                throw updateError;
+              }
+            }
+          } else {
+            // Regular resolution: use existing player ID or 'new' for new player
+            playerId = resolution;
+          }
         } else {
           // Try to find existing player by player_code, dupr_id, or email
           let existingPlayer = null;
