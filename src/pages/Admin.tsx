@@ -559,8 +559,12 @@ Jane Smith,,AUS,female,womens_singles,800,2025-01-15,,,,
                           });
 
                           try {
+                            const csvText = await bulkImportFile.text();
                             const { data, error } = await supabase.functions.invoke('bulk-import-rankings', {
-                              body: formData,
+                              body: {
+                                csvText,
+                                fileName: bulkImportFile.name,
+                              },
                             });
 
                             if (error) throw error;
@@ -687,9 +691,7 @@ Jane Smith,,AUS,female,womens_singles,800,2025-01-15,,,,
                             }
                           });
 
-                          const formData = new FormData();
-                          formData.append('file', bulkImportFile);
-                          formData.append('duplicateResolutions', JSON.stringify(finalResolutions));
+                          const csvText = await bulkImportFile.text();
 
                           toast({
                             title: "Processing...",
@@ -698,7 +700,11 @@ Jane Smith,,AUS,female,womens_singles,800,2025-01-15,,,,
 
                           try {
                             const { data, error } = await supabase.functions.invoke('bulk-import-rankings', {
-                              body: formData,
+                              body: {
+                                csvText,
+                                fileName: bulkImportFile.name,
+                                duplicateResolutions: finalResolutions,
+                              },
                             });
 
                             if (error) throw error;

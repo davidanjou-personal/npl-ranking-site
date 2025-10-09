@@ -5,6 +5,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.38.4';
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
 interface ImportRecord {
@@ -65,18 +66,35 @@ serve(async (req) => {
       throw new Error('Admin access required');
     }
 
-    // Parse form data
-    const formData = await req.formData();
-    const file = formData.get('file') as File;
-    const duplicateResolutions = formData.get('duplicateResolutions');
-    const resolutionMap = duplicateResolutions ? JSON.parse(duplicateResolutions as string) : null;
-    
-    if (!file) {
-      throw new Error('No file provided');
+    // Support both JSON (csvText) and multipart/form-data (file)
+    const contentType = req.headers.get('content-type') || '';
+    let csvText = '';
+    let fileName = 'upload.csv';
+    let resolutionMap: Record<string, string> | null = null;
+
+    if (contentType.includes('application/json')) {
+      const payload = await req.json();
+      csvText = (payload.csvText ?? '').toString();
+      fileName = (payload.fileName ?? fileName).toString();
+      resolutionMap = payload.duplicateResolutions ?? null;
+      if (!csvText) {
+        throw new Error('No CSV content provided');
+      }
+    } else {
+      // Parse form data
+      const formData = await req.formData();
+      const file = formData.get('file') as File | null;
+      const duplicateResolutions = formData.get('duplicateResolutions');
+      resolutionMap = duplicateResolutions ? JSON.parse(duplicateResolutions as string) : null;
+
+      if (!file) {
+        throw new Error('No file provided');
+      }
+      csvText = await file.text();
+      fileName = file.name || fileName;
     }
 
-    const text = await file.text();
-    const lines = text.split('\n').filter(line => line.trim());
+    const lines = csvText.split('\n').filter(line => line.trim());
     
     if (lines.length < 2) {
       throw new Error('File is empty or has no data rows');
@@ -224,7 +242,7 @@ serve(async (req) => {
         const { data: match, error: matchError } = await supabaseClient
           .from('matches')
           .insert({
-            tournament_name: `Bulk Import - ${file.name}`,
+            tournament_name: `Bulk Import - ${fileName}`,
             match_date: record.event_date,
             category: record.category,
             tier: 'tier4', // Default tier for bulk imports
@@ -264,7 +282,7 @@ serve(async (req) => {
     // Log import history
     await supabaseClient.from('import_history').insert({
       imported_by: user.id,
-      file_name: file.name,
+      file_name: fileName,
       total_rows: records.length,
       successful_rows: successful,
       failed_rows: failed,
