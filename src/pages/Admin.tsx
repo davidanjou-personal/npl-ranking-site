@@ -75,6 +75,18 @@ export default function Admin() {
     setResolutions(newResolutions);
   }, [duplicates, resolutions]);
 
+  const isExactMatch = useCallback((dup: any) => {
+    const csvData = dup.csv_data || {};
+    return dup.existing_players?.some((player: any) =>
+      !(csvData.player_code && csvData.player_code !== player.player_code) &&
+      !(csvData.email && csvData.email !== player.email) &&
+      !(csvData.date_of_birth && csvData.date_of_birth !== player.date_of_birth) &&
+      !(csvData.nationality && csvData.nationality !== player.nationality) &&
+      !(csvData.dupr_id && csvData.dupr_id !== player.dupr_id) &&
+      !(csvData.country && csvData.country !== player.country)
+    );
+  }, []);
+
   const applyUseExistingForAllExactMatches = useCallback(() => {
     const newResolutions = { ...resolutions } as Record<string, string>;
     duplicates.forEach((d: any) => {
@@ -676,44 +688,86 @@ Jane Smith,,AUS,female,womens_singles,800,2025-01-15,,,,
                     </div>
                   )}
 
-                  {duplicates.length > 0 && (
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <h3 className="font-semibold">Resolve Duplicate Players</h3>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            onClick={applyUseExistingForAllExactMatches}
-                          >
-                            Use existing for all exact matches
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setDuplicates([]);
-                              setResolutions({});
-                              setBulkImportFile(null);
-                            }}
-                          >
-                            Cancel
-                          </Button>
+                  {duplicates.length > 0 && (() => {
+                    const exactMatches = duplicates.filter(isExactMatch);
+                    const nonExactMatches = duplicates.filter((d: any) => !isExactMatch(d));
+                    const resolvedCount = Object.keys(resolutions).length;
+
+                    return (
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <h3 className="font-semibold">Resolve Duplicate Players</h3>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              onClick={applyUseExistingForAllExactMatches}
+                            >
+                              Use existing for all exact matches
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setDuplicates([]);
+                                setResolutions({});
+                                setBulkImportFile(null);
+                              }}
+                            >
+                              Cancel
+                            </Button>
+                          </div>
                         </div>
-                      </div>
 
-                      <div className="rounded-lg border bg-warning/10 p-4">
-                        <p className="text-sm text-muted-foreground">
-                          Found {duplicates.length} player(s) with matching names. For each duplicate:
-                        </p>
-                        <ul className="text-sm text-muted-foreground mt-2 ml-4 space-y-1">
-                          <li>• <strong>Use existing (no changes)</strong> - Keep the current player data unchanged</li>
-                          <li>• <strong>Update existing with new data</strong> - Merge CSV data into existing player (adds/updates fields like email, DOB, etc.)</li>
-                          <li>• <strong>Create new player</strong> - Add as a separate player with the same name</li>
-                        </ul>
-                      </div>
+                        <div className="rounded-lg border bg-warning/10 p-4">
+                          <p className="text-sm text-muted-foreground">
+                            Found {duplicates.length} player(s) with matching names. For each duplicate:
+                          </p>
+                          <ul className="text-sm text-muted-foreground mt-2 ml-4 space-y-1">
+                            <li>• <strong>Use existing (no changes)</strong> - Keep the current player data unchanged</li>
+                            <li>• <strong>Update existing with new data</strong> - Merge CSV data into existing player (adds/updates fields like email, DOB, etc.)</li>
+                            <li>• <strong>Create new player</strong> - Add as a separate player with the same name</li>
+                          </ul>
+                        </div>
 
-                      {duplicates.map((dup: any) => {
+                        {exactMatches.length > 0 && (
+                          <Card className="bg-green-50/50 dark:bg-green-950/20 border-green-200 dark:border-green-800">
+                            <CardHeader>
+                              <CardTitle className="text-base text-green-700 dark:text-green-300">
+                                ✓ Exact Matches ({exactMatches.length})
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                              <p className="text-sm text-muted-foreground mb-2">
+                                These players have exact matches in the database. They've been automatically set to "Use existing".
+                              </p>
+                              <div className="space-y-1 text-sm">
+                                {exactMatches.map((dup: any) => (
+                                  <div key={dup.csv_row} className="flex items-center gap-2">
+                                    <span className="text-muted-foreground">Row {dup.csv_row}:</span>
+                                    <span className="font-medium">{dup.csv_name}</span>
+                                    {resolutions[`row_${dup.csv_row - 2}`] && (
+                                      <span className="text-xs text-green-600 dark:text-green-400">✓ Resolved</span>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            </CardContent>
+                          </Card>
+                        )}
+
+                        {nonExactMatches.length > 0 && (
+                          <>
+                            <div className="rounded-lg border bg-amber-50/50 dark:bg-amber-950/20 border-amber-200 dark:border-amber-800 p-4">
+                              <h4 className="font-semibold text-amber-800 dark:text-amber-300 mb-2">
+                                ⚠ Needs Review ({nonExactMatches.length})
+                              </h4>
+                              <p className="text-sm text-muted-foreground">
+                                These players have different data in the CSV. Please review and choose an action for each.
+                              </p>
+                            </div>
+
+                            {nonExactMatches.map((dup: any) => {
                         const csvData = dup.csv_data || {};
                         const sameNameCount = duplicates.filter((d: any) => d.csv_name === dup.csv_name).length;
 
@@ -848,11 +902,14 @@ Jane Smith,,AUS,female,womens_singles,800,2025-01-15,,,,
                           </CardContent>
                         </Card>
                       );
-                      })}
-                      <Button
-                        className="w-full"
-                        disabled={Object.keys(resolutions).length !== duplicates.length || isImporting}
-                        onClick={async () => {
+                            })}
+                          </>
+                        )}
+
+                        <Button
+                          className="w-full"
+                          disabled={Object.keys(resolutions).length !== duplicates.length || isImporting}
+                          onClick={async () => {
                           if (!bulkImportFile) return;
 
                           setIsImporting(true);
@@ -918,9 +975,10 @@ Jane Smith,,AUS,female,womens_singles,800,2025-01-15,,,,
                           : Object.keys(resolutions).length !== duplicates.length 
                             ? `Select action for all ${duplicates.length} duplicate(s)` 
                             : 'Proceed with Import'}
-                      </Button>
-                    </div>
-                  )}
+                        </Button>
+                      </div>
+                    );
+                  })()}
 
                 </div>
               </CardContent>
