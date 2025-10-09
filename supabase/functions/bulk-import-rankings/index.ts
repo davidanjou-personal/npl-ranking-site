@@ -238,11 +238,15 @@ serve(async (req) => {
         if (!record.gender) {
           throw new Error(`Invalid gender for ${record.player_name}. Use "male" or "female".`);
         }
-        if (!record.category || !allowedCategories.has(record.category)) {
-          throw new Error(`Invalid or missing category for ${record.player_name}. Allowed: mens_singles, womens_singles, mens_doubles, womens_doubles, mixed_doubles.`);
-        }
-        if (!record.event_date) {
-          throw new Error(`Invalid or missing event_date for ${record.player_name}. Use YYYY-MM-DD.`);
+
+        const isPlayersOnly = (!record.category || record.category === '') && (!record.event_date || record.event_date === '');
+        if (!isPlayersOnly) {
+          if (!record.category || !allowedCategories.has(record.category)) {
+            throw new Error(`Invalid or missing category for ${record.player_name}. Allowed: mens_singles, womens_singles, mens_doubles, womens_doubles, mixed_doubles.`);
+          }
+          if (!record.event_date) {
+            throw new Error(`Invalid or missing event_date for ${record.player_name}. Use YYYY-MM-DD.`);
+          }
         }
         let playerId: string;
         const rowKey = `row_${i}`;
@@ -308,34 +312,36 @@ serve(async (req) => {
           }
         }
 
-        // Create a match entry for this import
-        const { data: match, error: matchError } = await supabaseClient
-          .from('matches')
-          .insert({
-            tournament_name: `Bulk Import - ${fileName}`,
-            match_date: record.event_date,
-            category: record.category,
-            tier: 'tier4', // Default tier for bulk imports
-          })
-          .select('id')
-          .single();
+        // Create match + result only when full match info is provided
+        if (record.category && record.event_date) {
+          const { data: match, error: matchError } = await supabaseClient
+            .from('matches')
+            .insert({
+              tournament_name: `Bulk Import - ${fileName}`,
+              match_date: record.event_date,
+              category: record.category,
+              tier: 'tier4', // Default tier for bulk imports
+            })
+            .select('id')
+            .single();
 
-        if (matchError || !match) {
-          throw matchError || new Error('Failed to create match');
-        }
+          if (matchError || !match) {
+            throw matchError || new Error('Failed to create match');
+          }
 
-        // Create match result with points
-        const { error: resultError } = await supabaseClient
-          .from('match_results')
-          .insert({
-            match_id: match.id,
-            player_id: playerId,
-            finishing_position: 'event_win',
-            points_awarded: record.points,
-          });
+          // Create match result with points
+          const { error: resultError } = await supabaseClient
+            .from('match_results')
+            .insert({
+              match_id: match.id,
+              player_id: playerId,
+              finishing_position: 'event_win',
+              points_awarded: record.points,
+            });
 
-        if (resultError) {
-          throw resultError;
+          if (resultError) {
+            throw resultError;
+          }
         }
 
         successful++;
