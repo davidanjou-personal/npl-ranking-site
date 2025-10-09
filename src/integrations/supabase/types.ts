@@ -318,6 +318,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      get_current_user_id: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
       get_player_ranking_summary: {
         Args: {
           p_category: Database["public"]["Enums"]["player_category"]
