@@ -630,7 +630,7 @@ Jane Smith,,AUS,female,womens_singles,800,2025-01-15,,,,
                             const header = lines[0];
                             const dataLines = lines.slice(1);
 
-                            const CHUNK_SIZE = 60;
+                            const CHUNK_SIZE = 40;
                             const totalParts = Math.ceil(dataLines.length / CHUNK_SIZE) || 1;
 
                             let totalSuccessful = 0;
@@ -644,14 +644,27 @@ Jane Smith,,AUS,female,womens_singles,800,2025-01-15,,,,
                               const chunkCsv = chunkLines.join('\n');
 
                               try {
-                                const { data, error } = await supabase.functions.invoke('bulk-import-rankings', {
-                                  body: {
-                                    csvText: chunkCsv,
-                                    fileName: `${bulkImportFile.name} (part ${part + 1}/${totalParts})`,
-                                  },
-                                });
+                                // Retry up to 3 times on transient errors
+                                let attempt = 0;
+                                let data: any = null;
+                                let lastError: any = null;
+                                while (attempt < 3 && !data) {
+                                  const res = await supabase.functions.invoke('bulk-import-rankings', {
+                                    body: {
+                                      csvText: chunkCsv,
+                                      fileName: `${bulkImportFile.name} (part ${part + 1}/${totalParts})`,
+                                    },
+                                  });
+                                  if (!res.error) {
+                                    data = res.data;
+                                    break;
+                                  }
+                                  lastError = res.error;
+                                  attempt++;
+                                  await new Promise(r => setTimeout(r, 500 * attempt));
+                                }
 
-                                if (error) throw error;
+                                if (!data) throw lastError;
 
                                 if (data.needs_resolution) {
                                   setDuplicates(data.duplicates);

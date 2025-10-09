@@ -533,11 +533,52 @@ serve(async (req) => {
         }
       }
 
-      // Batch insert new players
-      if (newPlayersToInsert.length > 0) {
+      // Batch update existing players FIRST to avoid later conflicts
+      for (const update of playersToUpdate) {
+        const { data: updated, error: updErr } = await supabaseClient
+          .from('players')
+          .update(update.data)
+          .eq('id', update.id)
+          .select('id, player_code, email, dupr_id')
+          .single();
+        if (!updErr && updated) {
+          if (updated.player_code) playersByCode.set(updated.player_code, updated);
+          if (updated.email) playersByEmail.set(updated.email, updated);
+          if (updated.dupr_id) playersByDuprId.set(updated.dupr_id, updated);
+        }
+      }
+
+      // Filter out any new players that now conflict by player_code after updates
+      const filteredNewPlayers = newPlayersToInsert.filter(p => {
+        return !(p.player_code && playersByCode.has(p.player_code));
+      });
+
+      // For filtered-out (now existing) players, map their IDs and queue matches
+      for (const p of newPlayersToInsert) {
+        if (p.player_code && playersByCode.has(p.player_code)) {
+          const existing = playersByCode.get(p.player_code);
+          const rowIndex = p._rowIndex;
+          playerIdMap.set(rowIndex, existing.id);
+          const record = batch[rowIndex % BATCH_SIZE];
+          if (record.category && record.event_date) {
+            matchesToInsert.push({
+              tournament_name: record.tournament_name || `Bulk Import - ${fileName}`,
+              match_date: record.event_date,
+              category: record.category,
+              tier: 'tier4',
+              _playerId: existing.id,
+              _points: record.points,
+              _rowIndex: rowIndex,
+            });
+          }
+        }
+      }
+
+      // Batch insert remaining new players
+      if (filteredNewPlayers.length > 0) {
         const { data: insertedPlayers, error: batchInsertError } = await supabaseClient
           .from('players')
-          .insert(newPlayersToInsert.map(p => {
+          .insert(filteredNewPlayers.map(p => {
             const { _rowIndex, ...playerData } = p;
             return playerData;
           }))
@@ -545,7 +586,7 @@ serve(async (req) => {
 
         if (batchInsertError || !insertedPlayers) {
           console.error('Batch player insert failed:', batchInsertError);
-          newPlayersToInsert.forEach(p => {
+          filteredNewPlayers.forEach(p => {
             const csvRowNumber = p._rowIndex + 2;
             errors.push({
               row: csvRowNumber,
@@ -556,7 +597,7 @@ serve(async (req) => {
           });
         } else {
           insertedPlayers.forEach((player, idx) => {
-            const originalRecord = newPlayersToInsert[idx];
+            const originalRecord = filteredNewPlayers[idx];
             const rowIndex = originalRecord._rowIndex;
             const record = batch[rowIndex % BATCH_SIZE];
             
@@ -581,14 +622,6 @@ serve(async (req) => {
             }
           });
         }
-      }
-
-      // Batch update existing players
-      for (const update of playersToUpdate) {
-        await supabaseClient
-          .from('players')
-          .update(update.data)
-          .eq('id', update.id);
       }
 
       // Batch insert matches
