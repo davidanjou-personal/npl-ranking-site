@@ -304,15 +304,17 @@ serve(async (req) => {
             // Update existing player if there's new data
             if (Object.keys(updateData).length > 0) {
               console.log('Merging into player', playerId, 'with', updateData);
-              const { error: updateError } = await supabaseClient
+              const { data: updated, error: updateError } = await supabaseClient
                 .from('players')
                 .update(updateData)
-                .eq('id', playerId);
+                .eq('id', playerId)
+                .select('id')
+                .single();
               
               if (updateError) {
                 throw updateError;
               }
-              updatedPlayers++;
+              if (updated?.id) updatedPlayers++;
             }
           } else {
             // Regular resolution: use existing player ID or 'new' for new player
