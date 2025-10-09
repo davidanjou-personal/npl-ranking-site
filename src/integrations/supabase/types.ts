@@ -309,6 +309,25 @@ export type Database = {
           },
         ]
       }
+      current_rankings: {
+        Row: {
+          category: Database["public"]["Enums"]["player_category"] | null
+          country: string | null
+          name: string | null
+          player_id: string | null
+          rank: number | null
+          total_points: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "match_results_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       create_audit_log: {
