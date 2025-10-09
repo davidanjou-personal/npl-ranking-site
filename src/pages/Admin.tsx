@@ -515,19 +515,43 @@ Jane Smith,,AUS,female,womens_singles,800,2025-01-15,,,,
                   </div>
 
                   {duplicates.length === 0 && (
-                    <div className="space-y-2">
-                      <Label htmlFor="bulk-file">Upload CSV File</Label>
-                      <Input 
-                        id="bulk-file" 
-                        type="file" 
-                        accept=".csv"
-                        onChange={async (e) => {
-                          const file = e.target.files?.[0];
-                          if (!file) return;
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="bulk-file">Upload CSV File</Label>
+                        <Input 
+                          id="bulk-file" 
+                          type="file" 
+                          accept=".csv"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              setBulkImportFile(file);
+                            }
+                          }}
+                        />
+                      </div>
+                      
+                      {bulkImportFile && (
+                        <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                          <span className="text-sm">{bulkImportFile.name}</span>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setBulkImportFile(null)}
+                          >
+                            Clear
+                          </Button>
+                        </div>
+                      )}
 
-                          setBulkImportFile(file);
+                      <Button
+                        className="w-full"
+                        disabled={!bulkImportFile}
+                        onClick={async () => {
+                          if (!bulkImportFile) return;
+
                           const formData = new FormData();
-                          formData.append('file', file);
+                          formData.append('file', bulkImportFile);
 
                           toast({
                             title: "Processing...",
@@ -559,17 +583,20 @@ Jane Smith,,AUS,female,womens_singles,800,2025-01-15,,,,
 
                             fetchPlayers();
                             fetchMatches();
-                            e.target.value = '';
+                            setBulkImportFile(null);
+                            const fileInput = document.getElementById('bulk-file') as HTMLInputElement;
+                            if (fileInput) fileInput.value = '';
                           } catch (error: any) {
                             toast({
                               variant: "destructive",
                               title: "Import Failed",
                               description: error.message || "Failed to import data",
                             });
-                            e.target.value = '';
                           }
                         }}
-                      />
+                      >
+                        Process Import
+                      </Button>
                     </div>
                   )}
 
