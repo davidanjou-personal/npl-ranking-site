@@ -25,7 +25,9 @@ export function useCurrentRankings() {
       if (error) throw error;
       return data as RankingData[];
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 0,
+    refetchOnWindowFocus: true,
+    refetchOnMount: 'always',
   });
 }
 
