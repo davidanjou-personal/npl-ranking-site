@@ -192,6 +192,7 @@ serve(async (req) => {
       const gender = normalizeGender(cols[3]);
       const category = normalizeCategory(cols[4]);
       const eventDate = normalizeDate(cols[6]);
+      const dob = normalizeDate(cols[8]);
 
       records.push({
         player_name: cols[0] || '',
@@ -202,7 +203,7 @@ serve(async (req) => {
         points: parseInt(cols[5]) || 0,
         event_date: eventDate ?? '',
         email: cols[7] || undefined,
-        date_of_birth: cols[8] || undefined,
+        date_of_birth: dob ?? undefined,
         nationality: cols[9] || undefined,
         dupr_id: cols[10] || undefined,
       });
@@ -262,25 +263,30 @@ serve(async (req) => {
     for (let i = 0; i < records.length; i++) {
       const record = records[i];
       try {
-        // Validate record
-        if (!record.player_name) {
-          throw new Error('Player name is required');
-        }
-        if (!record.gender) {
-          throw new Error(`Invalid gender for ${record.player_name}. Use "male" or "female".`);
-        }
+      // Validate record (allow relaxed rules for merges)
+      const rowKey = `row_${i}`;
+      const resolution = resolutionMap ? (resolutionMap[rowKey] as string | undefined) : undefined;
+      const isPlayersOnly = (!record.category || record.category === '') && (!record.event_date || record.event_date === '');
 
-        const isPlayersOnly = (!record.category || record.category === '') && (!record.event_date || record.event_date === '');
-        if (!isPlayersOnly) {
-          if (!record.category || !allowedCategories.has(record.category)) {
-            throw new Error(`Invalid or missing category for ${record.player_name}. Allowed: mens_singles, womens_singles, mens_doubles, womens_doubles, mixed_doubles.`);
-          }
-          if (!record.event_date) {
-            throw new Error(`Invalid or missing event_date for ${record.player_name}. Use YYYY-MM-DD.`);
-          }
+      if (!record.player_name) {
+        throw new Error('Player name is required');
+      }
+      // Require gender only when creating a new player or updating gender explicitly
+      const isMerge = typeof resolution === 'string' && resolution.startsWith('merge_');
+      if (!record.gender && !(isPlayersOnly && isMerge)) {
+        throw new Error(`Invalid gender for ${record.player_name}. Use "male" or "female".`);
+      }
+      if (!isPlayersOnly) {
+        if (!record.category || !allowedCategories.has(record.category)) {
+          throw new Error(`Invalid or missing category for ${record.player_name}. Allowed: mens_singles, womens_singles, mens_doubles, womens_doubles, mixed_doubles.`);
         }
-        let playerId: string;
-        const rowKey = `row_${i}`;
+        if (!record.event_date) {
+          throw new Error(`Invalid or missing event_date for ${record.player_name}. Use YYYY-MM-DD.`);
+        }
+      }
+
+      let playerId: string;
+        
         
         // Check if user provided resolution for this row
         if (resolutionMap && resolutionMap[rowKey]) {
