@@ -253,8 +253,11 @@ serve(async (req) => {
 
     let successful = 0;
     let failed = 0;
+    let updatedPlayers = 0;
     const errors: any[] = [];
 
+    console.log('Parsed records:', records.length);
+    console.log('Resolution keys:', resolutionMap ? Object.keys(resolutionMap) : []);
     // Process each record
     for (let i = 0; i < records.length; i++) {
       const record = records[i];
@@ -282,6 +285,7 @@ serve(async (req) => {
         // Check if user provided resolution for this row
         if (resolutionMap && resolutionMap[rowKey]) {
           const resolution = resolutionMap[rowKey];
+          console.log('Row', i, 'resolution:', resolution);
           
           // Check if this is a merge operation (format: "merge_PLAYER_ID")
           if (resolution.startsWith('merge_')) {
@@ -299,6 +303,7 @@ serve(async (req) => {
             
             // Update existing player if there's new data
             if (Object.keys(updateData).length > 0) {
+              console.log('Merging into player', playerId, 'with', updateData);
               const { error: updateError } = await supabaseClient
                 .from('players')
                 .update(updateData)
@@ -307,6 +312,7 @@ serve(async (req) => {
               if (updateError) {
                 throw updateError;
               }
+              updatedPlayers++;
             }
           } else {
             // Regular resolution: use existing player ID or 'new' for new player
@@ -428,6 +434,7 @@ serve(async (req) => {
         successful,
         failed,
         total: records.length,
+        updated_players: updatedPlayers,
         errors: errors.slice(0, 10), // Return first 10 errors
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

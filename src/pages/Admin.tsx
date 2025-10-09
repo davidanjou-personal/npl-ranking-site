@@ -780,7 +780,7 @@ Jane Smith,,AUS,female,womens_singles,800,2025-01-15,,,,
 
                             toast({
                               title: "Import Complete",
-                              description: `Successfully imported ${data.successful} records. ${data.failed} failed.`,
+                              description: `Imported ${data.successful} row(s), updated ${data.updated_players ?? 0} player(s), ${data.failed} failed.`,
                             });
 
                             setDuplicates([]);
