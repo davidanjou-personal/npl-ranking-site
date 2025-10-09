@@ -41,6 +41,8 @@ export default function Admin() {
   const [bulkImportFile, setBulkImportFile] = useState<File | null>(null);
   const [duplicates, setDuplicates] = useState<any[]>([]);
   const [resolutions, setResolutions] = useState<Record<string, string>>({});
+  const [isImporting, setIsImporting] = useState(false);
+
   // Bulk import helpers
   const applyToAllMatching = useCallback((playerId: string, resolution: string) => {
     const newResolutions = { ...resolutions } as Record<string, string>;
