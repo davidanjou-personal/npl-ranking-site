@@ -34,6 +34,66 @@ interface DuplicateMatch {
   }>;
 }
 
+// Normalization helpers
+const allowedCategories = new Set(['mens_singles','womens_singles','mens_doubles','womens_doubles','mixed_doubles']);
+
+function normalizeGender(value?: string): 'male' | 'female' | null {
+  if (!value) return null;
+  const v = value.trim().toLowerCase();
+  if (v.startsWith('m')) return 'male';
+  if (v.startsWith('f')) return 'female';
+  return null;
+}
+
+function normalizeCategory(value?: string): string {
+  if (!value) return '';
+  let v = value.trim().toLowerCase().replace(/[\s-]+/g, '_');
+  const map: Record<string, string> = {
+    'men': 'mens_singles',
+    'mens': 'mens_singles',
+    "men's": 'mens_singles',
+    'mens_singles': 'mens_singles',
+    "men's_singles": 'mens_singles',
+    'ms': 'mens_singles',
+    'women': 'womens_singles',
+    'womens': 'womens_singles',
+    "women's": 'womens_singles',
+    'womens_singles': 'womens_singles',
+    "women's_singles": 'womens_singles',
+    'ws': 'womens_singles',
+    'mens_doubles': 'mens_doubles',
+    'md': 'mens_doubles',
+    'womens_doubles': 'womens_doubles',
+    'wd': 'womens_doubles',
+    'mixed_doubles': 'mixed_doubles',
+    'mixed': 'mixed_doubles',
+    'xd': 'mixed_doubles',
+    'mx': 'mixed_doubles',
+  };
+  if (map[v]) v = map[v];
+  return allowedCategories.has(v) ? v : '';
+}
+
+function normalizeDate(value?: string): string | null {
+  if (!value) return null;
+  const s = value.trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  const m = s.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})$/);
+  if (m) {
+    let d = parseInt(m[1], 10);
+    let mo = parseInt(m[2], 10);
+    const y = parseInt(m[3], 10);
+    if (d <= 12 && mo > 12) {
+      const tmp = d; d = mo; mo = tmp;
+    }
+    const mm = String(mo).padStart(2, '0');
+    const dd = String(d).padStart(2, '0');
+    return `${y}-${mm}-${dd}`;
+  }
+  return null;
+}
+
+// Server
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -109,15 +169,18 @@ serve(async (req) => {
 
       const cols = line.split(',').map(col => col.trim());
       if (cols.length < 7) continue;
+      const gender = normalizeGender(cols[3]);
+      const category = normalizeCategory(cols[4]);
+      const eventDate = normalizeDate(cols[6]);
 
       records.push({
         player_name: cols[0] || '',
         player_code: cols[1] || undefined,
         country: cols[2] || '',
-        gender: cols[3] as 'male' | 'female',
-        category: cols[4] || '',
+        gender: (gender ?? undefined) as any,
+        category: category || '',
         points: parseInt(cols[5]) || 0,
-        event_date: cols[6] || '',
+        event_date: eventDate ?? '',
         email: cols[7] || undefined,
         date_of_birth: cols[8] || undefined,
         nationality: cols[9] || undefined,
@@ -172,8 +235,15 @@ serve(async (req) => {
         if (!record.player_name) {
           throw new Error('Player name is required');
         }
-
-        // Determine player ID
+        if (!record.gender) {
+          throw new Error(`Invalid gender for ${record.player_name}. Use "male" or "female".`);
+        }
+        if (!record.category || !allowedCategories.has(record.category)) {
+          throw new Error(`Invalid or missing category for ${record.player_name}. Allowed: mens_singles, womens_singles, mens_doubles, womens_doubles, mixed_doubles.`);
+        }
+        if (!record.event_date) {
+          throw new Error(`Invalid or missing event_date for ${record.player_name}. Use YYYY-MM-DD.`);
+        }
         let playerId: string;
         const rowKey = `row_${i}`;
         
