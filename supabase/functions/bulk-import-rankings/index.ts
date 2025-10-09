@@ -391,6 +391,36 @@ serve(async (req) => {
 
     console.log(`Built lookup maps: ${playersByCode.size} codes, ${playersByEmail.size} emails, ${playersByDuprId.size} DUPR IDs`);
 
+    // IDEMPOTENCY: Delete existing matches for the same tournament/date/category combinations
+    // This ensures re-imports replace data instead of duplicating it
+    const uniqueMatchKeys = new Set<string>();
+    for (const record of records) {
+      if (record.category && record.event_date && record.tournament_name) {
+        const key = `${record.tournament_name}|${record.event_date}|${record.category}`;
+        uniqueMatchKeys.add(key);
+      }
+    }
+
+    if (uniqueMatchKeys.size > 0) {
+      console.log(`Deleting existing matches for ${uniqueMatchKeys.size} tournament/date/category combinations to ensure idempotency`);
+      
+      for (const key of uniqueMatchKeys) {
+        const [tournament, date, category] = key.split('|');
+        
+        // Delete existing matches (CASCADE will handle match_results and rankings)
+        const { error: deleteError } = await supabaseClient
+          .from('matches')
+          .delete()
+          .eq('tournament_name', tournament)
+          .eq('match_date', date)
+          .eq('category', category);
+        
+        if (deleteError) {
+          console.error(`Failed to delete existing matches for ${key}:`, deleteError);
+        }
+      }
+    }
+
     let successful = 0;
     let failed = 0;
     let updatedPlayers = 0;
