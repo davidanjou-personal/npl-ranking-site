@@ -327,8 +327,13 @@ serve(async (req) => {
       
       for (let i = 0; i < records.length; i++) {
         const record = records[i];
-        const normalizedName = record.player_name.toLowerCase().trim();
         
+        // Skip duplicate check if no player_name (we'll match by code/id/email instead)
+        if (!record.player_name || record.player_name.trim() === '') {
+          continue;
+        }
+        
+        const normalizedName = record.player_name.toLowerCase().trim();
         const existingPlayers = playersByName.get(normalizedName);
 
         if (existingPlayers && existingPlayers.length > 0) {
@@ -369,6 +374,13 @@ serve(async (req) => {
 
     console.log('Parsed records:', records.length);
     console.log('Resolution keys:', resolutionMap ? Object.keys(resolutionMap) : []);
+    
+    // Log how many records have empty player_name for debugging
+    const emptyNameCount = records.filter(r => !r.player_name || r.player_name.trim() === '').length;
+    if (emptyNameCount > 0) {
+      console.log(`Note: ${emptyNameCount} records have empty player_name (will match by code/id/email)`);
+    }
+    
     // Process each record
     for (let i = 0; i < records.length; i++) {
       const record = records[i];
@@ -380,21 +392,15 @@ serve(async (req) => {
         const resolution = resolutionMap ? (resolutionMap[rowKey] as string | undefined) : undefined;
         const isPlayersOnly = (!record.category || record.category === '') && (!record.event_date || record.event_date === '');
 
-        if (!record.player_name) {
-          throw new Error(`Row ${csvRowNumber}: Player name is required`);
-        }
-
         // Determine if this is a merge/update operation
         const isMerge = typeof resolution === 'string' && resolution.startsWith('merge_');
         
-        // We'll check gender requirement later, after we know if we're creating a new player
-        
         if (!isPlayersOnly) {
           if (!record.category || !allowedCategories.has(record.category)) {
-            throw new Error(`Row ${csvRowNumber}: Invalid or missing category for ${record.player_name}. Allowed: mens_singles, womens_singles, mens_doubles, womens_doubles, mixed_doubles.`);
+            throw new Error(`Row ${csvRowNumber}: Invalid or missing category. Allowed: mens_singles, womens_singles, mens_doubles, womens_doubles, mixed_doubles.`);
           }
           if (!record.event_date) {
-            throw new Error(`Row ${csvRowNumber}: Invalid or missing event_date for ${record.player_name}. Use YYYY-MM-DD.`);
+            throw new Error(`Row ${csvRowNumber}: Invalid or missing event_date. Use YYYY-MM-DD.`);
           }
         }
 
@@ -470,11 +476,17 @@ serve(async (req) => {
           }
 
           if (existingPlayer) {
+            // Found existing player - we can proceed even without player_name
             playerId = existingPlayer.id;
           } else {
-            // Creating NEW player - gender is required
+            // Creating NEW player - both player_name and gender are REQUIRED
+            if (!record.player_name || record.player_name.trim() === '') {
+              const identifier = record.player_code || record.dupr_id || record.email || 'unknown';
+              throw new Error(`Row ${csvRowNumber}: Player not found with code/id "${identifier}". To create a new player, provide player_name and gender.`);
+            }
+            
             if (!record.gender) {
-              throw new Error(`Row ${csvRowNumber}: Gender is required for new player ${record.player_name}. Use "male" or "female".`);
+              throw new Error(`Row ${csvRowNumber}: Gender is required for new player "${record.player_name}". Use "male" or "female".`);
             }
             
             // Create new player
