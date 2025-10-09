@@ -11,10 +11,11 @@ interface PlayerRanking {
   category: string;
   total_points: number;
   rank: number;
-  players: {
-    name: string;
-    country: string;
+  players?: {
+    name?: string;
+    country?: string;
   };
+
 }
 
 const categoryLabels: Record<string, string> = {
@@ -105,8 +106,8 @@ export default function Rankings() {
       </div>
       
       <div className="flex-1">
-        <h3 className="text-lg font-bold text-foreground">{player.players.name}</h3>
-        <p className="text-sm text-muted-foreground">{player.players.country}</p>
+        <h3 className="text-lg font-bold text-foreground">{player.players?.name ?? 'Unknown Player'}</h3>
+        <p className="text-sm text-muted-foreground">{player.players?.country ?? 'Unknown'}</p>
       </div>
       
       <div className="text-right">
