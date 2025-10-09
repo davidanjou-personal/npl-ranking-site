@@ -174,40 +174,125 @@ serve(async (req) => {
       fileName = file.name || fileName;
     }
 
-    const lines = csvText.split('\n').filter(line => line.trim());
+    // Helper: Parse a CSV line respecting quotes
+    function parseCSVLine(line: string): string[] {
+      const result: string[] = [];
+      let current = '';
+      let inQuotes = false;
+      
+      for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        if (char === '"') {
+          inQuotes = !inQuotes;
+        } else if (char === ',' && !inQuotes) {
+          result.push(current.trim());
+          current = '';
+        } else {
+          current += char;
+        }
+      }
+      result.push(current.trim());
+      return result;
+    }
+
+    const lines = csvText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
     
     if (lines.length < 2) {
       throw new Error('File is empty or has no data rows');
     }
 
-    // Parse CSV (skip header)
-    // Expected format: player_name,player_code,country,gender,category,points,event_date,email,date_of_birth,nationality,dupr_id
-    const records: ImportRecord[] = [];
-    for (let i = 1; i < lines.length; i++) {
-      const line = lines[i].trim();
-      if (!line) continue;
+    // Parse header row and build column index map (case-insensitive, with aliases)
+    const headerCols = parseCSVLine(lines[0]).map(h => h.toLowerCase().trim());
+    
+    const columnAliases: Record<string, string[]> = {
+      'player_name': ['player_name', 'name'],
+      'player_code': ['player_code', 'code', 'id'],
+      'country': ['country', 'nationality'],
+      'gender': ['gender'],
+      'category': ['category'],
+      'points': ['points'],
+      'event_date': ['event_date', 'date', 'match_date'],
+      'email': ['email'],
+      'date_of_birth': ['date_of_birth', 'dob', 'birthdate'],
+      'nationality': ['nationality'],
+      'dupr_id': ['dupr_id'],
+    };
 
-      const cols = line.split(',').map(col => col.trim());
-      if (cols.length < 7) continue;
-      const gender = normalizeGender(cols[3]);
-      const category = normalizeCategory(cols[4]);
-      const eventDate = normalizeDate(cols[6]);
-      const dob = normalizeDate(cols[8]);
-
-      records.push({
-        player_name: cols[0] || '',
-        player_code: cols[1] || undefined,
-        country: cols[2] || '',
-        gender: (gender ?? undefined) as any,
-        category: category || '',
-        points: parseInt(cols[5]) || 0,
-        event_date: eventDate ?? '',
-        email: cols[7] || undefined,
-        date_of_birth: dob ?? undefined,
-        nationality: cols[9] || undefined,
-        dupr_id: cols[10] || undefined,
-      });
+    const colIndex: Record<string, number> = {};
+    for (const [key, aliases] of Object.entries(columnAliases)) {
+      for (const alias of aliases) {
+        const idx = headerCols.indexOf(alias);
+        if (idx !== -1) {
+          colIndex[key] = idx;
+          break;
+        }
+      }
     }
+
+    console.log('Detected column indices:', colIndex);
+
+    // Parse data rows
+    const records: ImportRecord[] = [];
+    const parseErrors: Array<{ row: number; error: string }> = [];
+
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i];
+      if (!line || line.trim().length === 0) continue;
+
+      try {
+        const cols = parseCSVLine(line);
+        
+        // Skip rows that are too short
+        if (cols.length < 3) {
+          parseErrors.push({ row: i + 1, error: 'Row has too few columns' });
+          continue;
+        }
+
+        const getCol = (key: string) => {
+          const idx = colIndex[key];
+          return idx !== undefined && idx < cols.length ? cols[idx] : undefined;
+        };
+
+        const playerName = getCol('player_name') || '';
+        const countryVal = getCol('country') || getCol('nationality') || '';
+        const genderVal = getCol('gender');
+        const categoryVal = getCol('category');
+        const pointsVal = getCol('points');
+        const eventDateVal = getCol('event_date');
+        const emailVal = getCol('email');
+        const dobVal = getCol('date_of_birth');
+        const nationalityVal = getCol('nationality');
+        const duprIdVal = getCol('dupr_id');
+        const playerCodeVal = getCol('player_code');
+
+        const gender = normalizeGender(genderVal);
+        const category = normalizeCategory(categoryVal);
+        const eventDate = normalizeDate(eventDateVal);
+        const dob = normalizeDate(dobVal);
+
+        records.push({
+          player_name: playerName,
+          player_code: playerCodeVal || undefined,
+          country: countryVal,
+          gender: (gender ?? undefined) as any,
+          category: category || '',
+          points: parseInt(pointsVal || '0') || 0,
+          event_date: eventDate ?? '',
+          email: emailVal || undefined,
+          date_of_birth: dob ?? undefined,
+          nationality: nationalityVal || undefined,
+          dupr_id: duprIdVal || undefined,
+        });
+      } catch (err: any) {
+        parseErrors.push({ row: i + 1, error: err.message });
+      }
+    }
+
+    if (parseErrors.length > 0) {
+      console.warn('Parse warnings:', parseErrors.slice(0, 5));
+    }
+
+    console.log(`Parsed ${records.length} records from ${lines.length - 1} data rows`);
 
     // If no resolutions provided, check for duplicates and return them
     if (!resolutionMap) {
@@ -290,28 +375,31 @@ serve(async (req) => {
     // Process each record
     for (let i = 0; i < records.length; i++) {
       const record = records[i];
+      const csvRowNumber = i + 2; // +1 for 0-index, +1 for header
+      
       try {
-      // Validate record (allow relaxed rules for merges)
-      const rowKey = `row_${i}`;
-      const resolution = resolutionMap ? (resolutionMap[rowKey] as string | undefined) : undefined;
-      const isPlayersOnly = (!record.category || record.category === '') && (!record.event_date || record.event_date === '');
+        // Validate record
+        const rowKey = `row_${i}`;
+        const resolution = resolutionMap ? (resolutionMap[rowKey] as string | undefined) : undefined;
+        const isPlayersOnly = (!record.category || record.category === '') && (!record.event_date || record.event_date === '');
 
-      if (!record.player_name) {
-        throw new Error('Player name is required');
-      }
-      // Require gender only when creating a new player or updating gender explicitly
-      const isMerge = typeof resolution === 'string' && resolution.startsWith('merge_');
-      if (!record.gender && !(isPlayersOnly && isMerge)) {
-        throw new Error(`Invalid gender for ${record.player_name}. Use "male" or "female".`);
-      }
-      if (!isPlayersOnly) {
-        if (!record.category || !allowedCategories.has(record.category)) {
-          throw new Error(`Invalid or missing category for ${record.player_name}. Allowed: mens_singles, womens_singles, mens_doubles, womens_doubles, mixed_doubles.`);
+        if (!record.player_name) {
+          throw new Error(`Row ${csvRowNumber}: Player name is required`);
         }
-        if (!record.event_date) {
-          throw new Error(`Invalid or missing event_date for ${record.player_name}. Use YYYY-MM-DD.`);
+
+        // Determine if this is a merge/update operation
+        const isMerge = typeof resolution === 'string' && resolution.startsWith('merge_');
+        
+        // We'll check gender requirement later, after we know if we're creating a new player
+        
+        if (!isPlayersOnly) {
+          if (!record.category || !allowedCategories.has(record.category)) {
+            throw new Error(`Row ${csvRowNumber}: Invalid or missing category for ${record.player_name}. Allowed: mens_singles, womens_singles, mens_doubles, womens_doubles, mixed_doubles.`);
+          }
+          if (!record.event_date) {
+            throw new Error(`Row ${csvRowNumber}: Invalid or missing event_date for ${record.player_name}. Use YYYY-MM-DD.`);
+          }
         }
-      }
 
       let playerId: string;
         
@@ -388,6 +476,11 @@ serve(async (req) => {
           if (existingPlayer) {
             playerId = existingPlayer.id;
           } else {
+            // Creating NEW player - gender is required
+            if (!record.gender) {
+              throw new Error(`Row ${csvRowNumber}: Gender is required for new player ${record.player_name}. Use "male" or "female".`);
+            }
+            
             // Create new player
             const { data: newPlayer, error: playerError } = await supabaseClient
               .from('players')
@@ -405,7 +498,7 @@ serve(async (req) => {
               .single();
 
             if (playerError || !newPlayer) {
-              throw playerError || new Error('Failed to create player');
+              throw playerError || new Error(`Row ${csvRowNumber}: Failed to create player`);
             }
 
             playerId = newPlayer.id;
@@ -446,10 +539,12 @@ serve(async (req) => {
 
         successful++;
       } catch (error: any) {
-        console.error('Error processing record:', record, error);
+        console.error(`Row ${csvRowNumber} error:`, record.player_name || 'unknown', error.message);
         failed++;
         errors.push({
-          record: record.player_code,
+          row: csvRowNumber,
+          player_name: record.player_name || 'unknown',
+          player_code: record.player_code,
           error: error.message,
         });
       }
@@ -471,7 +566,7 @@ serve(async (req) => {
         failed,
         total: records.length,
         updated_players: updatedPlayers,
-        errors: errors.slice(0, 10), // Return first 10 errors
+        errors: errors.slice(0, 20), // Return first 20 errors with row numbers
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
