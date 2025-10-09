@@ -16,6 +16,7 @@ interface ImportRecord {
   category: string;
   points: number;
   event_date: string;
+  tournament_name?: string;
   email?: string;
   date_of_birth?: string;
   dupr_id?: string;
@@ -209,6 +210,7 @@ serve(async (req) => {
       'category': ['category'],
       'points': ['points'],
       'event_date': ['event_date', 'date', 'match_date'],
+      'tournament_name': ['tournament_name', 'tournament', 'event_name', 'event'],
       'email': ['email'],
       'date_of_birth': ['date_of_birth', 'dob', 'birthdate'],
       'dupr_id': ['dupr_id'],
@@ -255,6 +257,7 @@ serve(async (req) => {
         const categoryVal = getCol('category');
         const pointsVal = getCol('points');
         const eventDateVal = getCol('event_date');
+        const tournamentNameVal = getCol('tournament_name');
         const emailVal = getCol('email');
         const dobVal = getCol('date_of_birth');
         const duprIdVal = getCol('dupr_id');
@@ -273,6 +276,7 @@ serve(async (req) => {
           category: category || '',
           points: parseInt(pointsVal || '0') || 0,
           event_date: eventDate ?? '',
+          tournament_name: tournamentNameVal || undefined,
           email: emailVal || undefined,
           date_of_birth: dob ?? undefined,
           dupr_id: duprIdVal || undefined,
@@ -498,10 +502,13 @@ serve(async (req) => {
 
         // Create match + result only when full match info is provided
         if (record.category && record.event_date) {
+          // Use custom tournament name if provided, otherwise default to filename
+          const tournamentName = record.tournament_name || `Bulk Import - ${fileName}`;
+          
           const { data: match, error: matchError } = await supabaseClient
             .from('matches')
             .insert({
-              tournament_name: `Bulk Import - ${fileName}`,
+              tournament_name: tournamentName,
               match_date: record.event_date,
               category: record.category,
               tier: 'tier4', // Default tier for bulk imports
