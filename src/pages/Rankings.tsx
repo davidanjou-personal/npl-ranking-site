@@ -69,9 +69,11 @@ export default function Rankings() {
             country
           )
         `)
-        .gte('matches.match_date', cutoffStr);
+        .gte('matches.match_date', cutoffStr)
+        .limit(10000);
 
       if (!error && data) {
+        console.log(`Fetched ${data.length} match results for current view`);
         type Row = {
           player_id: string;
           points_awarded: number;
@@ -96,6 +98,8 @@ export default function Rankings() {
             });
           }
         });
+
+        console.log(`Aggregated ${totals.size} unique player-category combinations`);
 
         const all: PlayerRanking[] = [];
         const byCategory: Record<string, typeof all> = {} as any;
@@ -126,9 +130,12 @@ export default function Rankings() {
             item.rank = currentRank;
             all.push(item);
           });
+          console.log(`${cat}: ${list.length} players`);
         });
 
         setPlayers(all);
+      } else if (error) {
+        console.error('Error fetching current rankings:', error);
       }
     } else {
       // Compute ALL-TIME directly from match_results to avoid any drift
@@ -142,9 +149,11 @@ export default function Rankings() {
             name,
             country
           )
-        `);
+        `)
+        .limit(10000);
 
       if (!error && data) {
+        console.log(`Fetched ${data.length} match results for all-time view`);
         // Aggregate total points per player per category
         type Row = {
           player_id: string;
@@ -170,6 +179,8 @@ export default function Rankings() {
             });
           }
         });
+
+        console.log(`Aggregated ${totals.size} unique player-category combinations for all-time`);
 
         // Build ranked list with tie handling
         const all: PlayerRanking[] = [];
@@ -201,9 +212,12 @@ export default function Rankings() {
             item.rank = currentRank;
             all.push(item);
           });
+          console.log(`${cat}: ${list.length} players`);
         });
 
         setPlayers(all);
+      } else if (error) {
+        console.error('Error fetching all-time rankings:', error);
       }
     }
     setLoading(false);
