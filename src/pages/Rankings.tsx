@@ -65,21 +65,79 @@ export default function Rankings() {
         setPlayers(data as any);
       }
     } else {
-      // Fetch from player_rankings table
+      // Compute ALL-TIME directly from match_results to avoid any drift
       const { data, error } = await supabase
-        .from('player_rankings')
+        .from('match_results')
         .select(`
-          *,
-          players (
+          player_id,
+          points_awarded,
+          matches!inner(category),
+          players:players!match_results_player_id_fkey (
             name,
             country
           )
-        `)
-        .order("category")
-        .order("rank");
+        `);
 
       if (!error && data) {
-        setPlayers(data as any);
+        // Aggregate total points per player per category
+        type Row = {
+          player_id: string;
+          points_awarded: number;
+          matches: { category: string } | null;
+          players: { name?: string; country?: string } | null;
+        };
+        const totals = new Map<string, { player_id: string; category: string; total_points: number; players?: { name?: string; country?: string } }>();
+        (data as Row[]).forEach((r) => {
+          const category = r.matches?.category;
+          if (!category) return;
+          const key = `${r.player_id}|${category}`;
+          const prev = totals.get(key);
+          const pts = Number(r.points_awarded) || 0;
+          if (prev) {
+            prev.total_points += pts;
+          } else {
+            totals.set(key, {
+              player_id: r.player_id,
+              category,
+              total_points: pts,
+              players: r.players || undefined,
+            });
+          }
+        });
+
+        // Build ranked list with tie handling
+        const all: PlayerRanking[] = [];
+        const byCategory: Record<string, typeof all> = {} as any;
+        totals.forEach((val) => {
+          const id = `${val.player_id}-${val.category}`;
+          const pr: PlayerRanking = {
+            id,
+            player_id: val.player_id,
+            category: val.category,
+            total_points: val.total_points,
+            rank: 0, // to be assigned
+            players: val.players,
+          };
+          if (!byCategory[val.category]) byCategory[val.category] = [] as any;
+          byCategory[val.category].push(pr);
+        });
+
+        Object.keys(byCategory).forEach((cat) => {
+          const list = byCategory[cat];
+          list.sort((a, b) => b.total_points - a.total_points);
+          let currentRank = 0;
+          let lastPoints = Infinity;
+          list.forEach((item, idx) => {
+            if (item.total_points !== lastPoints) {
+              currentRank = idx + 1;
+              lastPoints = item.total_points;
+            }
+            item.rank = currentRank;
+            all.push(item);
+          });
+        });
+
+        setPlayers(all);
       }
     }
     setLoading(false);
