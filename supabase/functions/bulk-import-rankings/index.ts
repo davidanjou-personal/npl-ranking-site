@@ -367,6 +367,30 @@ serve(async (req) => {
       }
     }
 
+    // Fetch ALL existing players for fast lookup during import
+    const { data: allPlayers, error: playersError } = await supabaseClient
+      .from('players')
+      .select('id, name, player_code, email, dupr_id');
+
+    if (playersError) {
+      throw new Error('Failed to fetch existing players: ' + playersError.message);
+    }
+
+    // Build lookup maps for fast player matching
+    const playersByCode = new Map<string, any>();
+    const playersByEmail = new Map<string, any>();
+    const playersByDuprId = new Map<string, any>();
+
+    if (allPlayers) {
+      for (const player of allPlayers) {
+        if (player.player_code) playersByCode.set(player.player_code, player);
+        if (player.email) playersByEmail.set(player.email, player);
+        if (player.dupr_id) playersByDuprId.set(player.dupr_id, player);
+      }
+    }
+
+    console.log(`Built lookup maps: ${playersByCode.size} codes, ${playersByEmail.size} emails, ${playersByDuprId.size} DUPR IDs`);
+
     let successful = 0;
     let failed = 0;
     let updatedPlayers = 0;
@@ -374,12 +398,6 @@ serve(async (req) => {
 
     console.log('Parsed records:', records.length);
     console.log('Resolution keys:', resolutionMap ? Object.keys(resolutionMap) : []);
-    
-    // Log how many records have empty player_name for debugging
-    const emptyNameCount = records.filter(r => !r.player_name || r.player_name.trim() === '').length;
-    if (emptyNameCount > 0) {
-      console.log(`Note: ${emptyNameCount} records have empty player_name (will match by code/id/email)`);
-    }
     
     // Process each record
     for (let i = 0; i < records.length; i++) {
@@ -445,34 +463,19 @@ serve(async (req) => {
             playerId = resolution;
           }
         } else {
-          // Try to find existing player by player_code, dupr_id, or email
+          // Use in-memory lookup maps instead of database queries (MUCH faster)
           let existingPlayer = null;
           
           if (record.player_code) {
-            const { data } = await supabaseClient
-              .from('players')
-              .select('id')
-              .eq('player_code', record.player_code)
-              .maybeSingle();
-            existingPlayer = data;
+            existingPlayer = playersByCode.get(record.player_code);
           }
           
           if (!existingPlayer && record.dupr_id) {
-            const { data } = await supabaseClient
-              .from('players')
-              .select('id')
-              .eq('dupr_id', record.dupr_id)
-              .maybeSingle();
-            existingPlayer = data;
+            existingPlayer = playersByDuprId.get(record.dupr_id);
           }
           
           if (!existingPlayer && record.email) {
-            const { data } = await supabaseClient
-              .from('players')
-              .select('id')
-              .eq('email', record.email)
-              .maybeSingle();
-            existingPlayer = data;
+            existingPlayer = playersByEmail.get(record.email);
           }
 
           if (existingPlayer) {
@@ -509,6 +512,18 @@ serve(async (req) => {
             }
 
             playerId = newPlayer.id;
+            
+            // Add new player to lookup maps for subsequent records
+            const newPlayerData = {
+              id: newPlayer.id,
+              name: record.player_name,
+              player_code: record.player_code || null,
+              email: record.email || null,
+              dupr_id: record.dupr_id || null,
+            };
+            if (record.player_code) playersByCode.set(record.player_code, newPlayerData);
+            if (record.email) playersByEmail.set(record.email, newPlayerData);
+            if (record.dupr_id) playersByDuprId.set(record.dupr_id, newPlayerData);
           }
         }
 
@@ -576,7 +591,7 @@ serve(async (req) => {
         failed,
         total: records.length,
         updated_players: updatedPlayers,
-        errors: errors.slice(0, 20), // Return first 20 errors with row numbers
+        errors: errors.slice(0, 20),
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
