@@ -92,7 +92,7 @@ export default function Admin() {
         *,
         match_results (
           *,
-          players (
+          players!match_results_player_id_fkey (
             name,
             country
           )
