@@ -105,6 +105,36 @@ export default function Admin() {
     });
     setResolutions(newResolutions);
   }, [duplicates, resolutions]);
+
+  const applyMergeForAllWithNewData = useCallback(() => {
+    const newResolutions = { ...resolutions } as Record<string, string>;
+    duplicates.forEach((d: any) => {
+      const csvData = d.csv_data || {};
+      // Find the first player that has new data to update
+      const playerWithNewData = d.existing_players?.find((player: any) =>
+        (csvData.player_code && csvData.player_code !== player.player_code) ||
+        (csvData.email && csvData.email !== player.email) ||
+        (csvData.date_of_birth && csvData.date_of_birth !== player.date_of_birth) ||
+        (csvData.nationality && csvData.nationality !== player.nationality) ||
+        (csvData.dupr_id && csvData.dupr_id !== player.dupr_id) ||
+        (csvData.country && csvData.country !== player.country)
+      );
+      if (playerWithNewData) {
+        newResolutions[`row_${d.csv_row - 2}`] = `merge_${playerWithNewData.id}`;
+      }
+    });
+    setResolutions(newResolutions);
+  }, [duplicates, resolutions]);
+
+  const applyToAllByNameMerge = useCallback((csvName: string, playerId: string) => {
+    const newResolutions = { ...resolutions } as Record<string, string>;
+    duplicates.forEach((d: any) => {
+      if (d.csv_name === csvName) {
+        newResolutions[`row_${d.csv_row - 2}`] = `merge_${playerId}`;
+      }
+    });
+    setResolutions(newResolutions);
+  }, [duplicates, resolutions]);
   useEffect(() => {
     checkAdminAccess();
     fetchPlayers();
@@ -752,6 +782,13 @@ Jane Smith,,AUS,female,womens_singles,800,2025-01-15,,,,
                               Use existing for all exact matches
                             </Button>
                             <Button
+                              variant="secondary"
+                              size="sm"
+                              onClick={applyMergeForAllWithNewData}
+                            >
+                              Update all with new data
+                            </Button>
+                            <Button
                               variant="outline"
                               size="sm"
                               onClick={() => {
@@ -914,6 +951,16 @@ Jane Smith,,AUS,female,womens_singles,800,2025-01-15,,,,
                                         )}
                                       </div>
                                     </Label>
+                                    {sameNameCount > 1 && (
+                                      <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => applyToAllByNameMerge(dup.csv_name, player.id)}
+                                      >
+                                        Apply to All {sameNameCount}
+                                      </Button>
+                                    )}
                                   </div>
                                 )}
                               </div>
