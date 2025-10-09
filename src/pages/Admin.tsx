@@ -626,7 +626,29 @@ Jane Smith,,AUS,female,womens_singles,800,2025-01-15,,,,
                     </div>
                   )}
 
-                   {duplicates.length > 0 && (
+                   {duplicates.length > 0 && (() => {
+                    // Helper function to apply resolution to all matching rows
+                    const applyToAllMatching = (playerId: string, resolution: string) => {
+                      const newResolutions = { ...resolutions };
+                      duplicates.forEach((d: any) => {
+                        if (d.existing_players.some((p: any) => p.id === playerId)) {
+                          newResolutions[`row_${d.csv_row - 2}`] = resolution;
+                        }
+                      });
+                      setResolutions(newResolutions);
+                    };
+
+                    const applyToAllByName = (csvName: string) => {
+                      const newResolutions = { ...resolutions };
+                      duplicates.forEach((d: any) => {
+                        if (d.csv_name === csvName) {
+                          newResolutions[`row_${d.csv_row - 2}`] = 'new';
+                        }
+                      });
+                      setResolutions(newResolutions);
+                    };
+
+                    return (
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
                         <h3 className="font-semibold">Resolve Duplicate Players</h3>
@@ -656,17 +678,6 @@ Jane Smith,,AUS,female,womens_singles,800,2025-01-15,,,,
 
                       {duplicates.map((dup: any) => {
                         const csvData = dup.csv_data || {};
-                        
-                        // Helper function to apply resolution to all matching rows
-                        const applyToAllMatching = (playerId: string, resolution: string) => {
-                          const newResolutions = { ...resolutions };
-                          duplicates.forEach((d: any) => {
-                            if (d.existing_players.some((p: any) => p.id === playerId)) {
-                              newResolutions[`row_${d.csv_row - 2}`] = resolution;
-                            }
-                          });
-                          setResolutions(newResolutions);
-                        };
                         
                         return (
                         <Card key={dup.csv_row}>
@@ -805,15 +816,7 @@ Jane Smith,,AUS,female,womens_singles,800,2025-01-15,,,,
                                   type="button"
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => {
-                                    const newResolutions = { ...resolutions };
-                                    duplicates.forEach((d: any) => {
-                                      if (d.csv_name === dup.csv_name) {
-                                        newResolutions[`row_${d.csv_row - 2}`] = 'new';
-                                      }
-                                    });
-                                    setResolutions(newResolutions);
-                                  }}
+                                  onClick={() => applyToAllByName(dup.csv_name)}
                                 >
                                   Apply to All {duplicates.filter((d: any) => d.csv_name === dup.csv_name).length}
                                 </Button>
@@ -894,7 +897,8 @@ Jane Smith,,AUS,female,womens_singles,800,2025-01-15,,,,
                             : 'Proceed with Import'}
                       </Button>
                     </div>
-                  )}
+                    );
+                  })()}
                 </div>
               </CardContent>
             </Card>
