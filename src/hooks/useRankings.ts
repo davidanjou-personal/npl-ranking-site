@@ -19,7 +19,8 @@ export function useCurrentRankings() {
         .from('current_rankings')
         .select('*')
         .order('category')
-        .order('rank');
+        .order('rank')
+        .range(0, 9999);
       
       if (error) throw error;
       return data as RankingData[];
@@ -46,7 +47,8 @@ export function useAllTimeRankings() {
           )
         `)
         .order('category')
-        .order('rank');
+        .order('rank')
+        .range(0, 9999);
       
       if (error) throw error;
       
