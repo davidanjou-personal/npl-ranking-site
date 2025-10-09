@@ -70,7 +70,7 @@ export default function Rankings() {
           )
         `)
         .gte('matches.match_date', cutoffStr)
-        .limit(10000);
+        .range(0, 9999);
 
       if (!error && data) {
         console.log(`Fetched ${data.length} match results for current view`);
@@ -150,7 +150,7 @@ export default function Rankings() {
             country
           )
         `)
-        .limit(10000);
+        .range(0, 9999);
 
       if (!error && data) {
         console.log(`Fetched ${data.length} match results for all-time view`);
