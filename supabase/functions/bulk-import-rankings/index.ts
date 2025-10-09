@@ -399,103 +399,99 @@ serve(async (req) => {
     console.log('Parsed records:', records.length);
     console.log('Resolution keys:', resolutionMap ? Object.keys(resolutionMap) : []);
     
-    // Process each record
-    for (let i = 0; i < records.length; i++) {
-      const record = records[i];
-      const csvRowNumber = i + 2; // +1 for 0-index, +1 for header
-      
-      try {
-        // Validate record
-        const rowKey = `row_${i}`;
-        const resolution = resolutionMap ? (resolutionMap[rowKey] as string | undefined) : undefined;
-        const isPlayersOnly = (!record.category || record.category === '') && (!record.event_date || record.event_date === '');
+    // Batch process records for much better performance
+    const BATCH_SIZE = 50; // Process in chunks
+    const batches = [];
+    for (let i = 0; i < records.length; i += BATCH_SIZE) {
+      batches.push(records.slice(i, i + BATCH_SIZE));
+    }
 
-        // Determine if this is a merge/update operation
-        const isMerge = typeof resolution === 'string' && resolution.startsWith('merge_');
-        
-        if (!isPlayersOnly) {
-          if (!record.category || !allowedCategories.has(record.category)) {
-            throw new Error(`Row ${csvRowNumber}: Invalid or missing category. Allowed: mens_singles, womens_singles, mens_doubles, womens_doubles, mixed_doubles.`);
-          }
-          if (!record.event_date) {
-            throw new Error(`Row ${csvRowNumber}: Invalid or missing event_date. Use YYYY-MM-DD.`);
-          }
-        }
+    console.log(`Processing ${records.length} records in ${batches.length} batches of ${BATCH_SIZE}`);
 
-      let playerId: string;
-        
-        
-        // Check if user provided resolution for this row
-        if (resolutionMap && resolutionMap[rowKey]) {
-          const resolution = resolutionMap[rowKey];
-          console.log('Row', i, 'resolution:', resolution);
+    for (let batchIdx = 0; batchIdx < batches.length; batchIdx++) {
+      const batch = batches[batchIdx];
+      console.log(`Processing batch ${batchIdx + 1}/${batches.length} (${batch.length} records)`);
+
+      // Prepare all inserts/updates for this batch
+      const newPlayersToInsert: any[] = [];
+      const playersToUpdate: { id: string; data: any }[] = [];
+      const matchesToInsert: any[] = [];
+      const playerIdMap: Map<number, string> = new Map(); // rowIndex -> playerId
+
+      for (let i = 0; i < batch.length; i++) {
+        const record = batch[i];
+        const rowIndex = batchIdx * BATCH_SIZE + i;
+        const csvRowNumber = rowIndex + 2;
+        const rowKey = `row_${rowIndex}`;
+
+        try {
+          // Validate
+          const resolution = resolutionMap ? (resolutionMap[rowKey] as string | undefined) : undefined;
+          const isPlayersOnly = (!record.category || record.category === '') && (!record.event_date || record.event_date === '');
           
-          // Check if this is a merge operation (format: "merge_PLAYER_ID")
-          if (resolution.startsWith('merge_')) {
-            playerId = resolution.replace('merge_', '');
+          if (!isPlayersOnly) {
+            if (!record.category || !allowedCategories.has(record.category)) {
+              throw new Error(`Invalid or missing category`);
+            }
+            if (!record.event_date) {
+              throw new Error(`Invalid or missing event_date`);
+            }
+          }
+
+          let playerId: string | null = null;
+
+          // Handle resolution
+          if (resolutionMap && resolutionMap[rowKey]) {
+            const resolution = resolutionMap[rowKey];
             
-            // Build update object with only non-empty new values
-            const updateData: any = {};
-            if (record.player_code) updateData.player_code = record.player_code;
-            if (record.email) updateData.email = record.email;
-            if (record.date_of_birth) updateData.date_of_birth = record.date_of_birth;
-            if (record.dupr_id) updateData.dupr_id = record.dupr_id;
-            if (record.country) updateData.country = record.country;
-            if (record.gender) updateData.gender = record.gender;
-            
-            // Update existing player if there's new data
-            if (Object.keys(updateData).length > 0) {
-              console.log('Merging into player', playerId, 'with', updateData);
-              const { data: updated, error: updateError } = await supabaseClient
-                .from('players')
-                .update(updateData)
-                .eq('id', playerId)
-                .select('id')
-                .single();
+            if (resolution.startsWith('merge_')) {
+              playerId = resolution.replace('merge_', '');
               
-              if (updateError) {
-                throw updateError;
+              const updateData: any = {};
+              if (record.player_code) updateData.player_code = record.player_code;
+              if (record.email) updateData.email = record.email;
+              if (record.date_of_birth) updateData.date_of_birth = record.date_of_birth;
+              if (record.dupr_id) updateData.dupr_id = record.dupr_id;
+              if (record.country) updateData.country = record.country;
+              if (record.gender) updateData.gender = record.gender;
+              
+              if (Object.keys(updateData).length > 0) {
+                playersToUpdate.push({ id: playerId, data: updateData });
+                updatedPlayers++;
               }
-              if (updated?.id) updatedPlayers++;
+            } else {
+              playerId = resolution;
             }
           } else {
-            // Regular resolution: use existing player ID or 'new' for new player
-            playerId = resolution;
-          }
-        } else {
-          // Use in-memory lookup maps instead of database queries (MUCH faster)
-          let existingPlayer = null;
-          
-          if (record.player_code) {
-            existingPlayer = playersByCode.get(record.player_code);
-          }
-          
-          if (!existingPlayer && record.dupr_id) {
-            existingPlayer = playersByDuprId.get(record.dupr_id);
-          }
-          
-          if (!existingPlayer && record.email) {
-            existingPlayer = playersByEmail.get(record.email);
-          }
+            // Lookup existing player
+            let existingPlayer = null;
+            
+            if (record.player_code) {
+              existingPlayer = playersByCode.get(record.player_code);
+            }
+            
+            if (!existingPlayer && record.dupr_id) {
+              existingPlayer = playersByDuprId.get(record.dupr_id);
+            }
+            
+            if (!existingPlayer && record.email) {
+              existingPlayer = playersByEmail.get(record.email);
+            }
 
-          if (existingPlayer) {
-            // Found existing player - we can proceed even without player_name
-            playerId = existingPlayer.id;
-          } else {
-            // Creating NEW player - both player_name and gender are REQUIRED
-            if (!record.player_name || record.player_name.trim() === '') {
-              const identifier = record.player_code || record.dupr_id || record.email || 'unknown';
-              throw new Error(`Row ${csvRowNumber}: Player not found with code/id "${identifier}". To create a new player, provide player_name and gender.`);
-            }
-            
-            if (!record.gender) {
-              throw new Error(`Row ${csvRowNumber}: Gender is required for new player "${record.player_name}". Use "male" or "female".`);
-            }
-            
-            // Create new player
-            const { data: newPlayer, error: playerError } = await supabaseClient
-              .from('players')
-              .insert({
+            if (existingPlayer) {
+              playerId = existingPlayer.id;
+            } else {
+              // Queue new player creation
+              if (!record.player_name || record.player_name.trim() === '') {
+                const identifier = record.player_code || record.dupr_id || record.email || 'unknown';
+                throw new Error(`Player not found with code/id "${identifier}". To create a new player, provide player_name and gender.`);
+              }
+              
+              if (!record.gender) {
+                throw new Error(`Gender is required for new player "${record.player_name}"`);
+              }
+              
+              newPlayersToInsert.push({
                 name: record.player_name,
                 country: record.country,
                 gender: record.gender,
@@ -503,76 +499,152 @@ serve(async (req) => {
                 email: record.email || null,
                 date_of_birth: record.date_of_birth || null,
                 dupr_id: record.dupr_id || null,
-              })
-              .select('id')
-              .single();
-
-            if (playerError || !newPlayer) {
-              throw playerError || new Error(`Row ${csvRowNumber}: Failed to create player`);
+                _rowIndex: rowIndex,
+              });
+              // playerId will be assigned after batch insert
             }
+          }
 
-            playerId = newPlayer.id;
+          if (playerId) {
+            playerIdMap.set(rowIndex, playerId);
             
-            // Add new player to lookup maps for subsequent records
-            const newPlayerData = {
-              id: newPlayer.id,
-              name: record.player_name,
-              player_code: record.player_code || null,
-              email: record.email || null,
-              dupr_id: record.dupr_id || null,
-            };
-            if (record.player_code) playersByCode.set(record.player_code, newPlayerData);
-            if (record.email) playersByEmail.set(record.email, newPlayerData);
-            if (record.dupr_id) playersByDuprId.set(record.dupr_id, newPlayerData);
+            // Queue match creation if needed
+            if (record.category && record.event_date) {
+              matchesToInsert.push({
+                tournament_name: record.tournament_name || `Bulk Import - ${fileName}`,
+                match_date: record.event_date,
+                category: record.category,
+                tier: 'tier4',
+                _playerId: playerId,
+                _points: record.points,
+                _rowIndex: rowIndex,
+              });
+            }
           }
+        } catch (error: any) {
+          console.error(`Row ${csvRowNumber} error:`, error.message);
+          failed++;
+          errors.push({
+            row: csvRowNumber,
+            player_name: record.player_name || 'unknown',
+            player_code: record.player_code,
+            error: error.message,
+          });
         }
-
-        // Create match + result only when full match info is provided
-        if (record.category && record.event_date) {
-          // Use custom tournament name if provided, otherwise default to filename
-          const tournamentName = record.tournament_name || `Bulk Import - ${fileName}`;
-          
-          const { data: match, error: matchError } = await supabaseClient
-            .from('matches')
-            .insert({
-              tournament_name: tournamentName,
-              match_date: record.event_date,
-              category: record.category,
-              tier: 'tier4', // Default tier for bulk imports
-            })
-            .select('id')
-            .single();
-
-          if (matchError || !match) {
-            throw matchError || new Error('Failed to create match');
-          }
-
-          // Create match result with points
-          const { error: resultError } = await supabaseClient
-            .from('match_results')
-            .insert({
-              match_id: match.id,
-              player_id: playerId,
-              finishing_position: 'event_win',
-              points_awarded: record.points,
-            });
-
-          if (resultError) {
-            throw resultError;
-          }
-        }
-
-        successful++;
-      } catch (error: any) {
-        console.error(`Row ${csvRowNumber} error:`, record.player_name || 'unknown', error.message);
-        failed++;
-        errors.push({
-          row: csvRowNumber,
-          player_name: record.player_name || 'unknown',
-          player_code: record.player_code,
-          error: error.message,
-        });
       }
+
+      // Batch insert new players
+      if (newPlayersToInsert.length > 0) {
+        const { data: insertedPlayers, error: batchInsertError } = await supabaseClient
+          .from('players')
+          .insert(newPlayersToInsert.map(p => {
+            const { _rowIndex, ...playerData } = p;
+            return playerData;
+          }))
+          .select('id, player_code, email, dupr_id');
+
+        if (batchInsertError || !insertedPlayers) {
+          console.error('Batch player insert failed:', batchInsertError);
+          newPlayersToInsert.forEach(p => {
+            const csvRowNumber = p._rowIndex + 2;
+            errors.push({
+              row: csvRowNumber,
+              player_name: p.name,
+              error: batchInsertError?.message || 'Failed to create player'
+            });
+            failed++;
+          });
+        } else {
+          insertedPlayers.forEach((player, idx) => {
+            const originalRecord = newPlayersToInsert[idx];
+            const rowIndex = originalRecord._rowIndex;
+            const record = batch[rowIndex % BATCH_SIZE];
+            
+            playerIdMap.set(rowIndex, player.id);
+            
+            // Add to lookup maps
+            if (player.player_code) playersByCode.set(player.player_code, player);
+            if (player.email) playersByEmail.set(player.email, player);
+            if (player.dupr_id) playersByDuprId.set(player.dupr_id, player);
+            
+            // Queue match if needed
+            if (record.category && record.event_date) {
+              matchesToInsert.push({
+                tournament_name: record.tournament_name || `Bulk Import - ${fileName}`,
+                match_date: record.event_date,
+                category: record.category,
+                tier: 'tier4',
+                _playerId: player.id,
+                _points: record.points,
+                _rowIndex: rowIndex,
+              });
+            }
+          });
+        }
+      }
+
+      // Batch update existing players
+      for (const update of playersToUpdate) {
+        await supabaseClient
+          .from('players')
+          .update(update.data)
+          .eq('id', update.id);
+      }
+
+      // Batch insert matches
+      if (matchesToInsert.length > 0) {
+        const { data: insertedMatches, error: matchInsertError } = await supabaseClient
+          .from('matches')
+          .insert(matchesToInsert.map(m => {
+            const { _playerId, _points, _rowIndex, ...matchData } = m;
+            return matchData;
+          }))
+          .select('id');
+
+        if (matchInsertError || !insertedMatches) {
+          console.error('Batch match insert failed:', matchInsertError);
+          matchesToInsert.forEach(m => {
+            errors.push({
+              row: m._rowIndex + 2,
+              error: matchInsertError?.message || 'Failed to create match'
+            });
+            failed++;
+          });
+        } else {
+          // Batch insert match results
+          const resultsToInsert = insertedMatches.map((match, idx) => {
+            const originalMatch = matchesToInsert[idx];
+            return {
+              match_id: match.id,
+              player_id: originalMatch._playerId,
+              finishing_position: 'event_win',
+              points_awarded: originalMatch._points,
+            };
+          });
+
+          const { error: resultsInsertError } = await supabaseClient
+            .from('match_results')
+            .insert(resultsToInsert);
+
+          if (resultsInsertError) {
+            console.error('Batch results insert failed:', resultsInsertError);
+            matchesToInsert.forEach(m => {
+              errors.push({
+                row: m._rowIndex + 2,
+                error: resultsInsertError.message
+              });
+              failed++;
+            });
+          } else {
+            successful += resultsToInsert.length;
+          }
+        }
+      } else {
+        // If no matches, count successful player creations/updates
+        successful += playerIdMap.size - matchesToInsert.length;
+      }
+
+      console.log(`Batch ${batchIdx + 1} complete. Success: ${successful}, Failed: ${failed}`);
     }
 
     // Log import history

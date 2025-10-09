@@ -643,33 +643,43 @@ Jane Smith,,AUS,female,womens_singles,800,2025-01-15,,,,
                               return;
                             }
 
-                            // Success - no duplicates
+                            // Success - show detailed summary
+                            const totalProcessed = data.successful + data.failed;
+                            const successRate = Math.round((data.successful / totalProcessed) * 100);
+                            
                             toast({
-                              title: "Import Complete",
-                              description: `Successfully imported ${data.successful} records. ${data.failed > 0 ? `${data.failed} failed.` : ''}`,
-                              variant: data.failed > 0 ? "default" : "default",
+                              title: data.failed === 0 ? "✓ Import Complete" : "⚠ Import Partially Complete",
+                              description: `Imported ${data.successful} of ${totalProcessed} records (${successRate}%). ${data.updated_players > 0 ? `Updated ${data.updated_players} existing players. ` : ''}${data.failed > 0 ? `${data.failed} records failed.` : ''}`,
+                              variant: data.failed > 0 ? "destructive" : "default",
+                              duration: 10000,
                             });
 
                             if (data.errors && data.errors.length > 0) {
                               console.log('Import errors:', data.errors);
-                              toast({
-                                variant: "destructive",
-                                title: "Some Records Failed",
-                                description: `${data.failed} records failed to import. Check console for details.`,
-                              });
+                              console.log(`Total records attempted: ${totalProcessed}, Successful: ${data.successful}, Failed: ${data.failed}`);
                             }
 
+                            // Always clear the file and refresh data
                             fetchPlayers();
                             fetchMatches();
                             setBulkImportFile(null);
                             const fileInput = document.getElementById('bulk-file') as HTMLInputElement;
                             if (fileInput) fileInput.value = '';
                           } catch (error: any) {
+                            console.error('Import error:', error);
                             toast({
                               variant: "destructive",
                               title: "Import Failed",
-                              description: error.message || "Failed to import data",
+                              description: error.message || "The import process encountered an error. Some records may have been imported. Please check the rankings page.",
+                              duration: 10000,
                             });
+                            
+                            // Clear file and refresh even on error - partial data may have been imported
+                            fetchPlayers();
+                            fetchMatches();
+                            setBulkImportFile(null);
+                            const fileInput = document.getElementById('bulk-file') as HTMLInputElement;
+                            if (fileInput) fileInput.value = '';
                           } finally {
                             setIsImporting(false);
                           }
