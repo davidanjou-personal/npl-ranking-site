@@ -33,6 +33,7 @@ const matchSchema = z.object({
 export default function Admin() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
   const [players, setPlayers] = useState<any[]>([]);
