@@ -41,6 +41,7 @@ export default function Admin() {
   const [bulkImportFile, setBulkImportFile] = useState<File | null>(null);
   const [duplicates, setDuplicates] = useState<any[]>([]);
   const [resolutions, setResolutions] = useState<Record<string, string>>({});
+  const [isImporting, setIsImporting] = useState(false);
 
   useEffect(() => {
     checkAdminAccess();
@@ -546,16 +547,17 @@ Jane Smith,,AUS,female,womens_singles,800,2025-01-15,,,,
 
                       <Button
                         className="w-full"
-                        disabled={!bulkImportFile}
+                        disabled={!bulkImportFile || isImporting}
                         onClick={async () => {
                           if (!bulkImportFile) return;
 
+                          setIsImporting(true);
                           const formData = new FormData();
                           formData.append('file', bulkImportFile);
 
                           toast({
                             title: "Processing...",
-                            description: "Checking for duplicates...",
+                            description: "Uploading and checking for duplicates. This may take a minute...",
                           });
 
                           try {
@@ -582,8 +584,18 @@ Jane Smith,,AUS,female,womens_singles,800,2025-01-15,,,,
                             // Success - no duplicates
                             toast({
                               title: "Import Complete",
-                              description: `Successfully imported ${data.successful} records. ${data.failed} failed.`,
+                              description: `Successfully imported ${data.successful} records. ${data.failed > 0 ? `${data.failed} failed.` : ''}`,
+                              variant: data.failed > 0 ? "default" : "default",
                             });
+
+                            if (data.errors && data.errors.length > 0) {
+                              console.log('Import errors:', data.errors);
+                              toast({
+                                variant: "destructive",
+                                title: "Some Records Failed",
+                                description: `${data.failed} records failed to import. Check console for details.`,
+                              });
+                            }
 
                             fetchPlayers();
                             fetchMatches();
@@ -596,11 +608,21 @@ Jane Smith,,AUS,female,womens_singles,800,2025-01-15,,,,
                               title: "Import Failed",
                               description: error.message || "Failed to import data",
                             });
+                          } finally {
+                            setIsImporting(false);
                           }
                         }}
                       >
-                        Process Import
+                        {isImporting ? "Processing..." : "Process Import"}
                       </Button>
+                      
+                      {isImporting && (
+                        <div className="rounded-lg border bg-muted/50 p-4 animate-pulse">
+                          <p className="text-sm text-center text-muted-foreground">
+                            Import in progress... This may take a minute for large files.
+                          </p>
+                        </div>
+                      )}
                     </div>
                   )}
 
@@ -748,9 +770,11 @@ Jane Smith,,AUS,female,womens_singles,800,2025-01-15,,,,
                       })}
                       <Button
                         className="w-full"
-                        disabled={Object.keys(resolutions).length !== duplicates.length}
+                        disabled={Object.keys(resolutions).length !== duplicates.length || isImporting}
                         onClick={async () => {
                           if (!bulkImportFile) return;
+
+                          setIsImporting(true);
 
                           // Filter out "new" entries (they'll be created automatically)
                           const finalResolutions: Record<string, string> = {};
@@ -764,7 +788,7 @@ Jane Smith,,AUS,female,womens_singles,800,2025-01-15,,,,
 
                           toast({
                             title: "Processing...",
-                            description: "Importing with resolved duplicates...",
+                            description: "Importing with resolved duplicates. This may take a minute...",
                           });
 
                           try {
@@ -780,8 +804,17 @@ Jane Smith,,AUS,female,womens_singles,800,2025-01-15,,,,
 
                             toast({
                               title: "Import Complete",
-                              description: `Imported ${data.successful} row(s), updated ${data.updated_players ?? 0} player(s), ${data.failed} failed.`,
+                              description: `Imported ${data.successful} row(s), updated ${data.updated_players ?? 0} player(s). ${data.failed > 0 ? `${data.failed} failed.` : ''}`,
                             });
+
+                            if (data.errors && data.errors.length > 0) {
+                              console.log('Import errors:', data.errors);
+                              toast({
+                                variant: "destructive",
+                                title: "Some Records Failed",
+                                description: `${data.failed} records failed to import. Check console for details.`,
+                              });
+                            }
 
                             setDuplicates([]);
                             setResolutions({});
@@ -794,12 +827,16 @@ Jane Smith,,AUS,female,womens_singles,800,2025-01-15,,,,
                               title: "Import Failed",
                               description: error.message || "Failed to import data",
                             });
+                          } finally {
+                            setIsImporting(false);
                           }
                         }}
                       >
-                        {Object.keys(resolutions).length !== duplicates.length 
-                          ? `Select action for all ${duplicates.length} duplicate(s)` 
-                          : 'Proceed with Import'}
+                        {isImporting 
+                          ? "Processing..." 
+                          : Object.keys(resolutions).length !== duplicates.length 
+                            ? `Select action for all ${duplicates.length} duplicate(s)` 
+                            : 'Proceed with Import'}
                       </Button>
                     </div>
                   )}
