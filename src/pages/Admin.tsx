@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Navigation } from "@/components/Navigation";
 import { supabase } from "@/integrations/supabase/client";
@@ -41,8 +41,55 @@ export default function Admin() {
   const [bulkImportFile, setBulkImportFile] = useState<File | null>(null);
   const [duplicates, setDuplicates] = useState<any[]>([]);
   const [resolutions, setResolutions] = useState<Record<string, string>>({});
-  const [isImporting, setIsImporting] = useState(false);
+  // Bulk import helpers
+  const applyToAllMatching = useCallback((playerId: string, resolution: string) => {
+    const newResolutions = { ...resolutions } as Record<string, string>;
+    duplicates.forEach((d: any) => {
+      if (d.existing_players?.some((p: any) => p.id === playerId)) {
+        newResolutions[`row_${d.csv_row - 2}`] = resolution;
+      }
+    });
+    setResolutions(newResolutions);
+  }, [duplicates, resolutions]);
 
+  const applyToAllByName = useCallback((csvName: string) => {
+    const newResolutions = { ...resolutions } as Record<string, string>;
+    duplicates.forEach((d: any) => {
+      if (d.csv_name === csvName) {
+        newResolutions[`row_${d.csv_row - 2}`] = 'new';
+      }
+    });
+    setResolutions(newResolutions);
+  }, [duplicates, resolutions]);
+
+  const applyToAllByNameUseExisting = useCallback((csvName: string, playerId: string) => {
+    const newResolutions = { ...resolutions } as Record<string, string>;
+    duplicates.forEach((d: any) => {
+      if (d.csv_name === csvName) {
+        newResolutions[`row_${d.csv_row - 2}`] = playerId;
+      }
+    });
+    setResolutions(newResolutions);
+  }, [duplicates, resolutions]);
+
+  const applyUseExistingForAllExactMatches = useCallback(() => {
+    const newResolutions = { ...resolutions } as Record<string, string>;
+    duplicates.forEach((d: any) => {
+      const csvData = d.csv_data || {};
+      const exact = d.existing_players?.find((player: any) =>
+        !(csvData.player_code && csvData.player_code !== player.player_code) &&
+        !(csvData.email && csvData.email !== player.email) &&
+        !(csvData.date_of_birth && csvData.date_of_birth !== player.date_of_birth) &&
+        !(csvData.nationality && csvData.nationality !== player.nationality) &&
+        !(csvData.dupr_id && csvData.dupr_id !== player.dupr_id) &&
+        !(csvData.country && csvData.country !== player.country)
+      );
+      if (exact) {
+        newResolutions[`row_${d.csv_row - 2}`] = exact.id;
+      }
+    });
+    setResolutions(newResolutions);
+  }, [duplicates, resolutions]);
   useEffect(() => {
     checkAdminAccess();
     fetchPlayers();
@@ -626,43 +673,30 @@ Jane Smith,,AUS,female,womens_singles,800,2025-01-15,,,,
                     </div>
                   )}
 
-                   {duplicates.length > 0 && (() => {
-                    // Helper function to apply resolution to all matching rows
-                    const applyToAllMatching = (playerId: string, resolution: string) => {
-                      const newResolutions = { ...resolutions };
-                      duplicates.forEach((d: any) => {
-                        if (d.existing_players.some((p: any) => p.id === playerId)) {
-                          newResolutions[`row_${d.csv_row - 2}`] = resolution;
-                        }
-                      });
-                      setResolutions(newResolutions);
-                    };
-
-                    const applyToAllByName = (csvName: string) => {
-                      const newResolutions = { ...resolutions };
-                      duplicates.forEach((d: any) => {
-                        if (d.csv_name === csvName) {
-                          newResolutions[`row_${d.csv_row - 2}`] = 'new';
-                        }
-                      });
-                      setResolutions(newResolutions);
-                    };
-
-                    return (
+                  {duplicates.length > 0 && (
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
                         <h3 className="font-semibold">Resolve Duplicate Players</h3>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            setDuplicates([]);
-                            setResolutions({});
-                            setBulkImportFile(null);
-                          }}
-                        >
-                          Cancel
-                        </Button>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={applyUseExistingForAllExactMatches}
+                          >
+                            Use existing for all exact matches
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setDuplicates([]);
+                              setResolutions({});
+                              setBulkImportFile(null);
+                            }}
+                          >
+                            Cancel
+                          </Button>
+                        </div>
                       </div>
 
                       <div className="rounded-lg border bg-warning/10 p-4">
@@ -678,7 +712,8 @@ Jane Smith,,AUS,female,womens_singles,800,2025-01-15,,,,
 
                       {duplicates.map((dup: any) => {
                         const csvData = dup.csv_data || {};
-                        
+                        const sameNameCount = duplicates.filter((d: any) => d.csv_name === dup.csv_name).length;
+
                         return (
                         <Card key={dup.csv_row}>
                           <CardHeader>
@@ -707,11 +742,7 @@ Jane Smith,,AUS,female,womens_singles,800,2025-01-15,,,,
                                 (csvData.nationality && csvData.nationality !== player.nationality) ||
                                 (csvData.dupr_id && csvData.dupr_id !== player.dupr_id) ||
                                 (csvData.country && csvData.country !== player.country);
-                              
-                              const matchingCount = duplicates.filter((d: any) => 
-                                d.existing_players.some((p: any) => p.id === player.id)
-                              ).length;
-                              
+
                               return (
                               <div key={player.id} className="space-y-2">
                                 <div className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-muted/50">
@@ -732,14 +763,14 @@ Jane Smith,,AUS,female,womens_singles,800,2025-01-15,,,,
                                       ({player.country}{player.player_code ? `, Code: ${player.player_code}` : ''}{player.email ? `, Email: ${player.email}` : ''})
                                     </span>
                                   </Label>
-                                  {matchingCount > 1 && (
+                                  {sameNameCount > 1 && (
                                     <Button
                                       type="button"
                                       variant="outline"
                                       size="sm"
-                                      onClick={() => applyToAllMatching(player.id, player.id)}
+                                      onClick={() => applyToAllByNameUseExisting(dup.csv_name, player.id)}
                                     >
-                                      Apply to All {matchingCount}
+                                      Apply to All {sameNameCount}
                                     </Button>
                                   )}
                                 </div>
@@ -780,17 +811,6 @@ Jane Smith,,AUS,female,womens_singles,800,2025-01-15,,,,
                                         )}
                                       </div>
                                     </Label>
-                                    {matchingCount > 1 && (
-                                      <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => applyToAllMatching(player.id, `merge_${player.id}`)}
-                                        className="mt-1"
-                                      >
-                                        Apply to All {matchingCount}
-                                      </Button>
-                                    )}
                                   </div>
                                 )}
                               </div>
@@ -811,14 +831,14 @@ Jane Smith,,AUS,female,womens_singles,800,2025-01-15,,,,
                               <Label className="cursor-pointer flex-1">
                                 Create new player (separate entry)
                               </Label>
-                              {duplicates.filter((d: any) => d.csv_name === dup.csv_name).length > 1 && (
+                              {sameNameCount > 1 && (
                                 <Button
                                   type="button"
                                   variant="outline"
                                   size="sm"
                                   onClick={() => applyToAllByName(dup.csv_name)}
                                 >
-                                  Apply to All {duplicates.filter((d: any) => d.csv_name === dup.csv_name).length}
+                                  Apply to All {sameNameCount}
                                 </Button>
                               )}
                             </div>
@@ -897,8 +917,8 @@ Jane Smith,,AUS,female,womens_singles,800,2025-01-15,,,,
                             : 'Proceed with Import'}
                       </Button>
                     </div>
-                    );
-                  })()}
+                  )}
+
                 </div>
               </CardContent>
             </Card>
