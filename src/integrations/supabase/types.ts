@@ -313,6 +313,7 @@ export type Database = {
         Row: {
           category: Database["public"]["Enums"]["player_category"] | null
           country: string | null
+          gender: string | null
           name: string | null
           player_id: string | null
           rank: number | null

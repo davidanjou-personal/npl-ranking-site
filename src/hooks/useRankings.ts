@@ -6,6 +6,7 @@ export interface RankingData {
   category: string;
   name: string;
   country: string | null;
+  gender: string | null;
   total_points: number;
   rank: number;
 }
@@ -40,7 +41,8 @@ export function useAllTimeRankings() {
           rank,
           players:players!player_rankings_player_id_fkey (
             name,
-            country
+            country,
+            gender
           )
         `)
         .order('category')
@@ -54,6 +56,7 @@ export function useAllTimeRankings() {
         category: item.category,
         name: item.players?.name || 'Unknown Player',
         country: item.players?.country || null,
+        gender: item.players?.gender || null,
         total_points: item.total_points,
         rank: item.rank || 999,
       })) as RankingData[];

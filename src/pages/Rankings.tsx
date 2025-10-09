@@ -18,6 +18,8 @@ const categoryLabels: Record<string, string> = {
 export default function Rankings() {
   const [viewMode, setViewMode] = useState<'current' | 'lifetime'>('current');
   const [selectedCountry, setSelectedCountry] = useState<string>("all");
+  const [selectedGender, setSelectedGender] = useState<string>("all");
+  const [currentCategory, setCurrentCategory] = useState<string>("mens_singles");
 
   const { data: currentData, isLoading: currentLoading } = useCurrentRankings();
   const { data: lifetimeData, isLoading: lifetimeLoading } = useAllTimeRankings();
@@ -42,6 +44,11 @@ export default function Rankings() {
     
     if (selectedCountry !== "all") {
       filtered = filtered.filter((p) => p.country === selectedCountry);
+    }
+    
+    // Apply gender filter only for mixed doubles
+    if (category === "mixed_doubles" && selectedGender !== "all") {
+      filtered = filtered.filter((p) => p.gender?.toLowerCase() === selectedGender.toLowerCase());
     }
     
     return filtered;
@@ -90,13 +97,13 @@ export default function Rankings() {
             </button>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <Filter className="h-4 w-4 text-muted-foreground" />
             <Select value={selectedCountry} onValueChange={setSelectedCountry}>
-              <SelectTrigger className="w-[200px]">
+              <SelectTrigger className="w-[200px] bg-background">
                 <SelectValue placeholder="Filter by country" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className="bg-popover z-50">
                 <SelectItem value="all">All Countries</SelectItem>
                 {countries.map((country) => (
                   <SelectItem key={country} value={country}>
@@ -105,6 +112,19 @@ export default function Rankings() {
                 ))}
               </SelectContent>
             </Select>
+
+            {currentCategory === "mixed_doubles" && (
+              <Select value={selectedGender} onValueChange={setSelectedGender}>
+                <SelectTrigger className="w-[180px] bg-background">
+                  <SelectValue placeholder="Filter by gender" />
+                </SelectTrigger>
+                <SelectContent className="bg-popover z-50">
+                  <SelectItem value="all">All Genders</SelectItem>
+                  <SelectItem value="male">Male</SelectItem>
+                  <SelectItem value="female">Female</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
           </div>
         </div>
 
@@ -113,7 +133,7 @@ export default function Rankings() {
             <p className="text-muted-foreground">Loading rankings...</p>
           </div>
         ) : (
-          <Tabs defaultValue="mens_singles" className="w-full">
+          <Tabs defaultValue="mens_singles" className="w-full" onValueChange={setCurrentCategory}>
             <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 mb-8 h-auto">
               {Object.entries(categoryLabels).map(([key, label]) => (
                 <TabsTrigger key={key} value={key} className="text-xs md:text-sm">
