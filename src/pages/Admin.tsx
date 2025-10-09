@@ -626,7 +626,7 @@ Jane Smith,,AUS,female,womens_singles,800,2025-01-15,,,,
                     </div>
                   )}
 
-                  {duplicates.length > 0 && (
+                   {duplicates.length > 0 && (
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
                         <h3 className="font-semibold">Resolve Duplicate Players</h3>
@@ -656,6 +656,18 @@ Jane Smith,,AUS,female,womens_singles,800,2025-01-15,,,,
 
                       {duplicates.map((dup: any) => {
                         const csvData = dup.csv_data || {};
+                        
+                        // Helper function to apply resolution to all matching rows
+                        const applyToAllMatching = (playerId: string, resolution: string) => {
+                          const newResolutions = { ...resolutions };
+                          duplicates.forEach((d: any) => {
+                            if (d.existing_players.some((p: any) => p.id === playerId)) {
+                              newResolutions[`row_${d.csv_row - 2}`] = resolution;
+                            }
+                          });
+                          setResolutions(newResolutions);
+                        };
+                        
                         return (
                         <Card key={dup.csv_row}>
                           <CardHeader>
@@ -685,6 +697,10 @@ Jane Smith,,AUS,female,womens_singles,800,2025-01-15,,,,
                                 (csvData.dupr_id && csvData.dupr_id !== player.dupr_id) ||
                                 (csvData.country && csvData.country !== player.country);
                               
+                              const matchingCount = duplicates.filter((d: any) => 
+                                d.existing_players.some((p: any) => p.id === player.id)
+                              ).length;
+                              
                               return (
                               <div key={player.id} className="space-y-2">
                                 <div className="flex items-center space-x-2 p-3 border rounded-lg hover:bg-muted/50">
@@ -705,6 +721,16 @@ Jane Smith,,AUS,female,womens_singles,800,2025-01-15,,,,
                                       ({player.country}{player.player_code ? `, Code: ${player.player_code}` : ''}{player.email ? `, Email: ${player.email}` : ''})
                                     </span>
                                   </Label>
+                                  {matchingCount > 1 && (
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => applyToAllMatching(player.id, player.id)}
+                                    >
+                                      Apply to All {matchingCount}
+                                    </Button>
+                                  )}
                                 </div>
                                 {hasNewData && (
                                   <div className="flex items-start space-x-2 p-3 border rounded-lg hover:bg-muted/50 bg-blue-50/50 dark:bg-blue-950/20">
@@ -743,6 +769,17 @@ Jane Smith,,AUS,female,womens_singles,800,2025-01-15,,,,
                                         )}
                                       </div>
                                     </Label>
+                                    {matchingCount > 1 && (
+                                      <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => applyToAllMatching(player.id, `merge_${player.id}`)}
+                                        className="mt-1"
+                                      >
+                                        Apply to All {matchingCount}
+                                      </Button>
+                                    )}
                                   </div>
                                 )}
                               </div>
@@ -760,9 +797,27 @@ Jane Smith,,AUS,female,womens_singles,800,2025-01-15,,,,
                                 })}
                                 className="w-4 h-4"
                               />
-                              <Label className="cursor-pointer">
+                              <Label className="cursor-pointer flex-1">
                                 Create new player (separate entry)
                               </Label>
+                              {duplicates.filter((d: any) => d.csv_name === dup.csv_name).length > 1 && (
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    const newResolutions = { ...resolutions };
+                                    duplicates.forEach((d: any) => {
+                                      if (d.csv_name === dup.csv_name) {
+                                        newResolutions[`row_${d.csv_row - 2}`] = 'new';
+                                      }
+                                    });
+                                    setResolutions(newResolutions);
+                                  }}
+                                >
+                                  Apply to All {duplicates.filter((d: any) => d.csv_name === dup.csv_name).length}
+                                </Button>
+                              )}
                             </div>
                           </CardContent>
                         </Card>
