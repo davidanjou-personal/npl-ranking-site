@@ -44,29 +44,21 @@ export default function Rankings() {
 
   const fetchPlayers = async () => {
     if (viewMode === 'current') {
-      // Fetch from active_player_rankings view
+      // Fetch from active_player_rankings view with joined player data
       const { data, error } = await supabase
         .from('active_player_rankings' as any)
-        .select('*')
+        .select(`
+          *,
+          players (
+            name,
+            country
+          )
+        `)
         .order("category")
         .order("rank");
 
       if (!error && data) {
-        // Fetch player details separately
-        const playerIds = [...new Set(data.map((d: any) => d.player_id))];
-        const { data: playersData } = await supabase
-          .from('players')
-          .select('id, name, country')
-          .in('id', playerIds);
-
-        const playersMap = new Map(playersData?.map(p => [p.id, p]) || []);
-        
-        const enrichedData = data.map((item: any) => ({
-          ...item,
-          players: playersMap.get(item.player_id),
-        }));
-        
-        setPlayers(enrichedData as PlayerRanking[]);
+        setPlayers(data as any);
       }
     } else {
       // Fetch from player_rankings table
