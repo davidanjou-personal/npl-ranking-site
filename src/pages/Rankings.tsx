@@ -1,10 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Navigation } from "@/components/Navigation";
 import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Trophy, Medal, Award } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Trophy, Medal, Award, Filter } from "lucide-react";
 
 interface PlayerRanking {
   id: string;
@@ -38,6 +40,7 @@ export default function Rankings() {
   const [players, setPlayers] = useState<PlayerRanking[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'current' | 'lifetime'>('current');
+  const [selectedCountry, setSelectedCountry] = useState<string>("all");
 
   useEffect(() => {
     fetchPlayers();
@@ -82,8 +85,24 @@ export default function Rankings() {
     setLoading(false);
   };
 
+  // Get unique countries for filter
+  const countries = useMemo(() => {
+    const uniqueCountries = new Set(
+      players
+        .map((p) => p.players?.country)
+        .filter((country): country is string => !!country)
+    );
+    return Array.from(uniqueCountries).sort();
+  }, [players]);
+
   const getPlayersByCategory = (category: string) => {
-    return players.filter((p) => p.category === category);
+    let filtered = players.filter((p) => p.category === category);
+    
+    if (selectedCountry !== "all") {
+      filtered = filtered.filter((p) => p.players?.country === selectedCountry);
+    }
+    
+    return filtered;
   };
 
   const PlayerRow = ({ player }: { player: PlayerRanking }) => (
@@ -100,10 +119,16 @@ export default function Rankings() {
         </div>
         
         <div className="flex-1">
-          <h3 className="text-lg font-bold text-foreground hover:text-primary transition-colors">
-            {player.players?.name ?? 'Unknown Player'}
-          </h3>
-          <p className="text-sm text-muted-foreground">{player.players?.country ?? 'Unknown'}</p>
+          <div className="flex items-center gap-2 mb-1">
+            <h3 className="text-lg font-bold text-foreground hover:text-primary transition-colors">
+              {player.players?.name ?? 'Unknown Player'}
+            </h3>
+            {player.players?.country && (
+              <Badge variant="outline" className="text-xs">
+                {player.players.country}
+              </Badge>
+            )}
+          </div>
         </div>
         
         <div className="text-right">
@@ -133,7 +158,7 @@ export default function Rankings() {
       </div>
 
       <div className="container mx-auto px-4 py-12">
-        <div className="flex justify-center mb-8">
+        <div className="flex flex-col md:flex-row justify-center items-center gap-4 mb-8">
           <div className="inline-flex rounded-lg border bg-muted p-1">
             <button
               onClick={() => setViewMode('current')}
@@ -155,6 +180,23 @@ export default function Rankings() {
             >
               All-Time
             </button>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4 text-muted-foreground" />
+            <Select value={selectedCountry} onValueChange={setSelectedCountry}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Filter by country" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Countries</SelectItem>
+                {countries.map((country) => (
+                  <SelectItem key={country} value={country}>
+                    {country}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
