@@ -328,6 +328,25 @@ export type Database = {
           },
         ]
       }
+      expiring_points: {
+        Row: {
+          category: Database["public"]["Enums"]["player_category"] | null
+          country: string | null
+          expiring_points: number | null
+          name: string | null
+          next_expiry_date: string | null
+          player_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "match_results_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       create_audit_log: {
@@ -364,6 +383,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      rebuild_player_rankings: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
       update_player_rankings: {
         Args: Record<PropertyKey, never>
