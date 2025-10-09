@@ -68,3 +68,59 @@ export function useAllTimeRankings() {
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 }
+
+export function useCurrentRankingsByCategory(category: string) {
+  return useQuery({
+    queryKey: ['rankings', 'current', category],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('current_rankings')
+        .select('*')
+        .eq('category', category as any)
+        .order('rank')
+        .range(0, 9999);
+      if (error) throw error;
+      return data as RankingData[];
+    },
+    staleTime: 0,
+    refetchOnWindowFocus: true,
+    refetchOnMount: 'always',
+  });
+}
+
+export function useAllTimeRankingsByCategory(category: string) {
+  return useQuery({
+    queryKey: ['rankings', 'lifetime', category],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('player_rankings')
+        .select(`
+          player_id,
+          category,
+          total_points,
+          rank,
+          players:players!player_rankings_player_id_fkey (
+            name,
+            country,
+            gender
+          )
+        `)
+        .eq('category', category as any)
+        .order('rank')
+        .range(0, 9999);
+      if (error) throw error;
+      return (data || []).map(item => ({
+        player_id: item.player_id,
+        category: item.category,
+        name: item.players?.name || 'Unknown Player',
+        country: item.players?.country || null,
+        gender: item.players?.gender || null,
+        total_points: item.total_points,
+        rank: item.rank || 999,
+      })) as RankingData[];
+    },
+    staleTime: 0,
+    refetchOnWindowFocus: true,
+    refetchOnMount: 'always',
+  });
+}

@@ -4,8 +4,8 @@ import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Filter } from "lucide-react";
-import { PlayerRankingCard } from "@/components/rankings/PlayerRankingCard";
-import { useCurrentRankings, useAllTimeRankings } from "@/hooks/useRankings";
+import { CategoryPanel } from "@/components/rankings/CategoryPanel";
+import { useAllTimeRankingsByCategory, useCurrentRankingsByCategory } from "@/hooks/useRankings";
 
 const categoryLabels: Record<string, string> = {
   mens_singles: "Men's Singles",
@@ -21,38 +21,21 @@ export default function Rankings() {
   const [selectedGender, setSelectedGender] = useState<string>("all");
   const [currentCategory, setCurrentCategory] = useState<string>("mens_singles");
 
-  const { data: currentData, isLoading: currentLoading } = useCurrentRankings();
-  const { data: lifetimeData, isLoading: lifetimeLoading } = useAllTimeRankings();
+  // Fetch only the active category to build the country list and avoid global 1000-row caps
+  const { data: currentCategoryData } = useCurrentRankingsByCategory(currentCategory);
+  const { data: lifetimeCategoryData } = useAllTimeRankingsByCategory(currentCategory);
+  const categoryDataset = viewMode === 'current' ? currentCategoryData : lifetimeCategoryData;
 
-  const players = viewMode === 'current' ? currentData : lifetimeData;
-  const loading = viewMode === 'current' ? currentLoading : lifetimeLoading;
-
-  // Get unique countries for filter
+  // Get unique countries based on the active category dataset
   const countries = useMemo(() => {
-    if (!players) return [];
+    const list = categoryDataset || [];
     const uniqueCountries = new Set(
-      players
+      list
         .map((p) => p.country)
         .filter((country): country is string => !!country)
     );
     return Array.from(uniqueCountries).sort();
-  }, [players]);
-
-  const getPlayersByCategory = (category: string) => {
-    if (!players) return [];
-    let filtered = players.filter((p) => p.category === category);
-    
-    if (selectedCountry !== "all") {
-      filtered = filtered.filter((p) => p.country === selectedCountry);
-    }
-    
-    // Apply gender filter only for mixed doubles
-    if (category === "mixed_doubles" && selectedGender !== "all") {
-      filtered = filtered.filter((p) => p.gender?.toLowerCase() === selectedGender.toLowerCase());
-    }
-    
-    return filtered;
-  };
+  }, [categoryDataset]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -128,44 +111,26 @@ export default function Rankings() {
           </div>
         </div>
 
-        {loading ? (
-          <div className="text-center py-12">
-            <p className="text-muted-foreground">Loading rankings...</p>
-          </div>
-        ) : (
-          <Tabs defaultValue="mens_singles" className="w-full" onValueChange={setCurrentCategory}>
-            <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 mb-8 h-auto">
-              {Object.entries(categoryLabels).map(([key, label]) => (
-                <TabsTrigger key={key} value={key} className="text-xs md:text-sm">
-                  {label}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-
-            {Object.entries(categoryLabels).map(([key]) => (
-              <TabsContent key={key} value={key}>
-                <div className="space-y-4">
-                  {getPlayersByCategory(key).length > 0 ? (
-                    getPlayersByCategory(key).map((player) => (
-                      <PlayerRankingCard
-                        key={`${player.player_id}-${player.category}`}
-                        playerId={player.player_id}
-                        rank={player.rank}
-                        name={player.name}
-                        country={player.country || undefined}
-                        totalPoints={player.total_points}
-                      />
-                    ))
-                  ) : (
-                    <Card className="p-8 text-center">
-                      <p className="text-muted-foreground">No players ranked in this category yet.</p>
-                    </Card>
-                  )}
-                </div>
-              </TabsContent>
+        <Tabs defaultValue="mens_singles" className="w-full" onValueChange={setCurrentCategory}>
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 mb-8 h-auto">
+            {Object.entries(categoryLabels).map(([key, label]) => (
+              <TabsTrigger key={key} value={key} className="text-xs md:text-sm">
+                {label}
+              </TabsTrigger>
             ))}
-          </Tabs>
-        )}
+          </TabsList>
+
+          {Object.entries(categoryLabels).map(([key]) => (
+            <TabsContent key={key} value={key}>
+              <CategoryPanel
+                category={key}
+                viewMode={viewMode}
+                selectedCountry={selectedCountry}
+                selectedGender={selectedGender}
+              />
+            </TabsContent>
+          ))}
+        </Tabs>
       </div>
     </div>
   );
