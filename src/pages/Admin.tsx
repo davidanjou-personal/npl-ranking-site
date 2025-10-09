@@ -624,40 +624,63 @@ Jane Smith,,AUS,female,womens_singles,800,2025-01-15,,,,
 
                           try {
                             const csvText = await bulkImportFile.text();
-                            const { data, error } = await supabase.functions.invoke('bulk-import-rankings', {
-                              body: {
-                                csvText,
-                                fileName: bulkImportFile.name,
-                              },
-                            });
 
-                            if (error) throw error;
+                            // Split into chunks to avoid edge function timeouts
+                            const lines = csvText.split(/\r?\n/).filter((l) => l.trim().length > 0);
+                            const header = lines[0];
+                            const dataLines = lines.slice(1);
 
-                            // Check if duplicates need resolution
-                            if (data.needs_resolution) {
-                              setDuplicates(data.duplicates);
-                              toast({
-                                title: "Duplicates Found",
-                                description: `Found ${data.duplicates.length} potential duplicate(s). Please review and confirm.`,
-                              });
-                              return;
+                            const CHUNK_SIZE = 60;
+                            const totalParts = Math.ceil(dataLines.length / CHUNK_SIZE) || 1;
+
+                            let totalSuccessful = 0;
+                            let totalFailed = 0;
+                            let totalUpdatedPlayers = 0;
+
+                            for (let part = 0; part < totalParts; part++) {
+                              const start = part * CHUNK_SIZE;
+                              const end = Math.min(start + CHUNK_SIZE, dataLines.length);
+                              const chunkLines = [header, ...dataLines.slice(start, end)];
+                              const chunkCsv = chunkLines.join('\n');
+
+                              try {
+                                const { data, error } = await supabase.functions.invoke('bulk-import-rankings', {
+                                  body: {
+                                    csvText: chunkCsv,
+                                    fileName: `${bulkImportFile.name} (part ${part + 1}/${totalParts})`,
+                                  },
+                                });
+
+                                if (error) throw error;
+
+                                if (data.needs_resolution) {
+                                  setDuplicates(data.duplicates);
+                                  toast({
+                                    title: 'Duplicates Found',
+                                    description: `Part ${part + 1}/${totalParts}: ${data.duplicates.length} duplicate(s). Please resolve to continue.`,
+                                  });
+                                  // Stop further processing until user resolves duplicates
+                                  return;
+                                }
+
+                                totalSuccessful += data.successful || 0;
+                                totalFailed += data.failed || 0;
+                                totalUpdatedPlayers += data.updated_players || 0;
+                              } catch (chunkErr: any) {
+                                console.error(`Chunk ${part + 1} failed:`, chunkErr);
+                                totalFailed += Math.min(CHUNK_SIZE, end - start);
+                              }
                             }
 
-                            // Success - show detailed summary
-                            const totalProcessed = data.successful + data.failed;
-                            const successRate = Math.round((data.successful / totalProcessed) * 100);
-                            
+                            const totalProcessed = totalSuccessful + totalFailed;
+                            const successRate = totalProcessed > 0 ? Math.round((totalSuccessful / totalProcessed) * 100) : 0;
+
                             toast({
-                              title: data.failed === 0 ? "✓ Import Complete" : "⚠ Import Partially Complete",
-                              description: `Imported ${data.successful} of ${totalProcessed} records (${successRate}%). ${data.updated_players > 0 ? `Updated ${data.updated_players} existing players. ` : ''}${data.failed > 0 ? `${data.failed} records failed.` : ''}`,
-                              variant: data.failed > 0 ? "destructive" : "default",
-                              duration: 10000,
+                              title: totalFailed === 0 ? '✓ Import Complete' : '⚠ Import Partially Complete',
+                              description: `Imported ${totalSuccessful} of ${totalProcessed} records (${successRate}%). ${totalUpdatedPlayers > 0 ? `Updated ${totalUpdatedPlayers} existing players. ` : ''}${totalFailed > 0 ? `${totalFailed} records failed.` : ''}`,
+                              variant: totalFailed > 0 ? 'destructive' : 'default',
+                              duration: 12000,
                             });
-
-                            if (data.errors && data.errors.length > 0) {
-                              console.log('Import errors:', data.errors);
-                              console.log(`Total records attempted: ${totalProcessed}, Successful: ${data.successful}, Failed: ${data.failed}`);
-                            }
 
                             // Always clear the file and refresh data
                             fetchPlayers();
@@ -668,12 +691,12 @@ Jane Smith,,AUS,female,womens_singles,800,2025-01-15,,,,
                           } catch (error: any) {
                             console.error('Import error:', error);
                             toast({
-                              variant: "destructive",
-                              title: "Import Failed",
-                              description: error.message || "The import process encountered an error. Some records may have been imported. Please check the rankings page.",
-                              duration: 10000,
+                              variant: 'destructive',
+                              title: 'Import Failed',
+                              description: error.message || 'The import process encountered an error. Some records may have been imported. Please check the rankings page.',
+                              duration: 12000,
                             });
-                            
+
                             // Clear file and refresh even on error - partial data may have been imported
                             fetchPlayers();
                             fetchMatches();
