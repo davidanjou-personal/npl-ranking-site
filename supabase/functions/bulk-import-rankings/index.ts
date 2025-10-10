@@ -422,6 +422,7 @@ serve(async (req) => {
           if (code && playersByCode.has(code)) {
             matchedPlayer = playersByCode.get(code);
             matchType = 'player_code';
+            console.log(`Row ${i + 2} (${record.player_name}): Matched by player_code "${code}" to existing player "${matchedPlayer.name}"`);
           }
         }
         
@@ -430,6 +431,7 @@ serve(async (req) => {
           if (playersByDuprId.has(record.dupr_id)) {
             matchedPlayer = playersByDuprId.get(record.dupr_id);
             matchType = 'dupr_id';
+            console.log(`Row ${i + 2} (${record.player_name}): Matched by dupr_id to existing player "${matchedPlayer.name}"`);
           }
         }
         
@@ -438,6 +440,7 @@ serve(async (req) => {
           if (playersByEmail.has(record.email)) {
             matchedPlayer = playersByEmail.get(record.email);
             matchType = 'email';
+            console.log(`Row ${i + 2} (${record.player_name}): Matched by email to existing player "${matchedPlayer.name}"`);
           }
         }
         
@@ -446,6 +449,7 @@ serve(async (req) => {
           const normalizedName = record.player_name.toLowerCase().trim();
           const existingPlayers = playersByName.get(normalizedName);
           if (existingPlayers && existingPlayers.length > 0) {
+            console.log(`Row ${i + 2} (${record.player_name}): Matched by name to ${existingPlayers.length} existing player(s)`);
             // For name matches, return all matching players (might be multiple)
             duplicates.push({
               csv_row: i + 2, // +2 because: +1 for 0-index, +1 for header row
@@ -555,7 +559,14 @@ serve(async (req) => {
     const errors: any[] = [];
 
     console.log('Parsed records:', records.length);
-    console.log('Resolution keys:', resolutionMap ? Object.keys(resolutionMap) : []);
+    if (resolutionMap) {
+      console.log('Resolution keys with player names:');
+      Object.keys(resolutionMap).forEach(key => {
+        const rowIndex = parseInt(key.replace('row_', ''));
+        const record = records[rowIndex];
+        console.log(`  ${key} -> ${record?.player_name || 'unknown'} (${record?.player_code || 'no code'})`);
+      });
+    }
     
     // Batch process records for much better performance
     const BATCH_SIZE = 50; // Process in chunks
@@ -762,21 +773,26 @@ serve(async (req) => {
 
         if (batchInsertError || !insertedPlayers) {
           console.error('Batch player insert failed:', batchInsertError);
+          console.log('Failed player codes:', dedupedNewPlayers.map(p => ({name: p.name, code: p.player_code})));
 
           // Refresh existing players for the candidate codes (handles case/whitespace mismatches)
           const codesToCheck = dedupedNewPlayers
             .map((p) => p.player_code)
             .filter((c): c is string => !!c);
           if (codesToCheck.length > 0) {
+            console.log(`Checking for existing players with codes: ${codesToCheck.join(', ')}`);
             const { data: existingForCodes } = await supabaseClient
               .from('players')
-              .select('id, player_code, email, dupr_id')
+              .select('id, name, player_code, email, dupr_id')
               .in('player_code', codesToCheck);
-            if (existingForCodes) {
+            if (existingForCodes && existingForCodes.length > 0) {
+              console.log(`Found ${existingForCodes.length} existing players:`, existingForCodes.map(p => ({name: p.name, code: p.player_code})));
               for (const pl of existingForCodes) {
                 const c = normalizeCode(pl.player_code);
                 if (c) playersByCode.set(c, pl);
               }
+            } else {
+              console.log('No existing players found with those codes');
             }
           }
 

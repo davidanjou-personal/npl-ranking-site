@@ -389,10 +389,6 @@ export type Database = {
         }
         Returns: boolean
       }
-      rebuild_player_rankings: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
       update_player_rankings: {
         Args: Record<PropertyKey, never>
         Returns: undefined
