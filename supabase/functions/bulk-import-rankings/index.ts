@@ -270,7 +270,7 @@ serve(async (req) => {
 
         records.push({
           player_name: playerName,
-          player_code: playerCodeVal || undefined,
+          player_code: playerCodeVal?.trim() ? playerCodeVal.trim() : undefined,
           country: countryVal,
           gender: (gender ?? undefined) as any,
           category: category || '',
@@ -383,7 +383,8 @@ serve(async (req) => {
 
     if (allPlayers) {
       for (const player of allPlayers) {
-        if (player.player_code) playersByCode.set(player.player_code, player);
+        const code = player.player_code?.trim();
+        if (code) playersByCode.set(code, player);
         if (player.email) playersByEmail.set(player.email, player);
         if (player.dupr_id) playersByDuprId.set(player.dupr_id, player);
       }
@@ -608,10 +609,13 @@ serve(async (req) => {
       if (filteredNewPlayers.length > 0) {
         const { data: insertedPlayers, error: batchInsertError } = await supabaseClient
           .from('players')
-          .insert(filteredNewPlayers.map(p => {
-            const { _rowIndex, ...playerData } = p;
-            return playerData;
-          }))
+          .upsert(
+            filteredNewPlayers.map(p => {
+              const { _rowIndex, ...playerData } = p;
+              return playerData;
+            }),
+            { onConflict: 'player_code' }
+          )
           .select('id, player_code, email, dupr_id');
 
         if (batchInsertError || !insertedPlayers) {
@@ -634,7 +638,7 @@ serve(async (req) => {
             playerIdMap.set(rowIndex, player.id);
             
             // Add to lookup maps
-            if (player.player_code) playersByCode.set(player.player_code, player);
+            { const code = player.player_code?.trim(); if (code) playersByCode.set(code, player); }
             if (player.email) playersByEmail.set(player.email, player);
             if (player.dupr_id) playersByDuprId.set(player.dupr_id, player);
             
