@@ -218,6 +218,7 @@ export default function Admin() {
       'gender',
       'category',
       'points',
+      'finishing_position',
       'event_date',
       'email',
       'date_of_birth',
@@ -226,8 +227,10 @@ export default function Admin() {
     ];
     
     const sampleRows = [
-      ['John Doe', 'NPL001', 'AUS', 'male', 'mens_singles', '1000', '2025-01-15', 'john@example.com', '1990-05-15', 'Australian', '12345'],
-      ['Jane Smith', '', 'AUS', 'female', 'womens_singles', '800', '2025-01-15', '', '', '', ''],
+      ['John Doe', 'NPL001', 'AUS', 'male', 'mens_singles', '1000', 'winner', '2025-01-15', 'john@example.com', '1990-05-15', 'Australian', '12345'],
+      ['Jane Smith', '', 'AUS', 'female', 'womens_singles', '800', 'second', '2025-01-15', '', '', '', ''],
+      ['Bob Wilson', 'NPL002', 'AUS', 'male', 'mens_doubles', '600', 'third', '2025-01-20', '', '', '', ''],
+      ['Alice Brown', '', 'AUS', 'female', 'mixed_doubles', '400', 'quarterfinalist', '2025-01-20', '', '', '', ''],
     ];
 
     const csvContent = [
@@ -606,15 +609,17 @@ export default function Admin() {
                   <div className="rounded-lg border bg-muted/30 p-4">
                     <h3 className="font-semibold mb-2">CSV Format Required:</h3>
                     <pre className="text-xs bg-background p-3 rounded overflow-x-auto">
-player_name,player_code,country,gender,category,points,event_date,email,date_of_birth,nationality,dupr_id
-John Doe,NPL001,AUS,male,mens_singles,1000,2025-01-15,john@example.com,1990-05-15,Australian,12345
-Jane Smith,,AUS,female,womens_singles,800,2025-01-15,,,,
+player_name,player_code,country,gender,category,points,finishing_position,event_date,email,date_of_birth,nationality,dupr_id
+John Doe,NPL001,AUS,male,mens_singles,1000,winner,2025-01-15,john@example.com,1990-05-15,Australian,12345
+Jane Smith,,AUS,female,womens_singles,800,second,2025-01-15,,,,
                     </pre>
                     <ul className="text-sm space-y-1 mt-3 text-muted-foreground">
                       <li>• <strong>player_name</strong>: (Required) Player's full name</li>
                       <li>• <strong>player_code</strong>: (Optional) Unique identifier for matching</li>
                       <li>• <strong>category</strong>: mens_singles, womens_singles, mens_doubles, womens_doubles, mixed_doubles</li>
                       <li>• <strong>gender</strong>: male or female</li>
+                      <li>• <strong>points</strong>: Direct point allocation for this result</li>
+                      <li>• <strong>finishing_position</strong>: winner, second, third, fourth, quarterfinalist, round_of_16, event_win</li>
                       <li>• <strong>event_date</strong>: YYYY-MM-DD format (for 12-month rolling points)</li>
                       <li>• <strong>email, date_of_birth, nationality, dupr_id</strong>: (Optional) Additional player information</li>
                       <li>• System will detect duplicate names and ask for confirmation</li>

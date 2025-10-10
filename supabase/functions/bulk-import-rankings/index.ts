@@ -15,6 +15,7 @@ interface ImportRecord {
   gender: 'male' | 'female';
   category: string;
   points: number;
+  finishing_position: string;
   event_date: string;
   tournament_name?: string;
   email?: string;
@@ -105,6 +106,50 @@ function normalizeDate(value?: string): string | null {
 function normalizeCode(value?: string): string {
   if (!value) return '';
   return value.replace(/\u200B/g, '').trim().toUpperCase();
+}
+
+function normalizeFinishingPosition(value?: string): string {
+  if (!value) return 'event_win'; // Default fallback
+  
+  const normalized = value.toLowerCase().trim().replace(/[^a-z0-9_]/g, '_');
+  
+  const validPositions = [
+    'winner', 'second', 'third', 'fourth', 
+    'quarterfinalist', 'round_of_16', 'event_win'
+  ];
+  
+  // Direct match
+  if (validPositions.includes(normalized)) {
+    return normalized;
+  }
+  
+  // Handle common variations
+  const positionMap: Record<string, string> = {
+    '1st': 'winner',
+    'first': 'winner',
+    '1st_place': 'winner',
+    'gold': 'winner',
+    'champion': 'winner',
+    '2nd': 'second',
+    '2nd_place': 'second',
+    'silver': 'second',
+    'runner_up': 'second',
+    '3rd': 'third',
+    '3rd_place': 'third',
+    'bronze': 'third',
+    '4th': 'fourth',
+    '4th_place': 'fourth',
+    'quarters': 'quarterfinalist',
+    'qf': 'quarterfinalist',
+    'quarter_final': 'quarterfinalist',
+    'r16': 'round_of_16',
+    'round16': 'round_of_16',
+    'last_16': 'round_of_16',
+    'participation': 'event_win',
+    'competed': 'event_win',
+  };
+  
+  return positionMap[normalized] || 'event_win';
 }
 
 // Server
@@ -214,6 +259,7 @@ serve(async (req) => {
       'gender': ['gender'],
       'category': ['category'],
       'points': ['points'],
+      'finishing_position': ['finishing_position', 'position', 'finish', 'place'],
       'event_date': ['event_date', 'date', 'match_date'],
       'tournament_name': ['tournament_name', 'tournament', 'event_name', 'event'],
       'email': ['email'],
@@ -261,6 +307,7 @@ serve(async (req) => {
         const genderVal = getCol('gender');
         const categoryVal = getCol('category');
         const pointsVal = getCol('points');
+        const finishingPositionVal = getCol('finishing_position');
         const eventDateVal = getCol('event_date');
         const tournamentNameVal = getCol('tournament_name');
         const emailVal = getCol('email');
@@ -272,6 +319,7 @@ serve(async (req) => {
         const category = normalizeCategory(categoryVal);
         const eventDate = normalizeDate(eventDateVal);
         const dob = normalizeDate(dobVal);
+        const finishingPosition = normalizeFinishingPosition(finishingPositionVal);
 
         records.push({
           player_name: playerName,
@@ -280,6 +328,7 @@ serve(async (req) => {
           gender: (gender ?? undefined) as any,
           category: category || '',
           points: parseInt(pointsVal || '0') || 0,
+          finishing_position: finishingPosition,
           event_date: eventDate ?? '',
           tournament_name: tournamentNameVal || undefined,
           email: emailVal || undefined,
@@ -841,10 +890,11 @@ serve(async (req) => {
           // Batch insert match results
           const resultsToInsert = insertedMatches.map((match, idx) => {
             const originalMatch = matchesToInsert[idx];
+            const originalRecord = records[originalMatch._rowIndex];
             return {
               match_id: match.id,
               player_id: originalMatch._playerId,
-              finishing_position: 'event_win',
+              finishing_position: originalRecord.finishing_position,
               points_awarded: originalMatch._points,
             };
           });
