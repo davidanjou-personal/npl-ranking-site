@@ -124,10 +124,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "match_results_opponent_id_fkey"
+            columns: ["opponent_id"]
+            isOneToOne: false
+            referencedRelation: "players_public"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "match_results_player_id_fkey"
             columns: ["player_id"]
             isOneToOne: false
             referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "match_results_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players_public"
             referencedColumns: ["id"]
           },
         ]
@@ -196,6 +210,13 @@ export type Database = {
             columns: ["player_id"]
             isOneToOne: false
             referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "player_rankings_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players_public"
             referencedColumns: ["id"]
           },
         ]
@@ -307,6 +328,13 @@ export type Database = {
             referencedRelation: "players"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "match_results_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       current_rankings: {
@@ -325,6 +353,13 @@ export type Database = {
             columns: ["player_id"]
             isOneToOne: false
             referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "match_results_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players_public"
             referencedColumns: ["id"]
           },
         ]
@@ -346,7 +381,50 @@ export type Database = {
             referencedRelation: "players"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "match_results_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players_public"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      players_public: {
+        Row: {
+          avatar_url: string | null
+          country: string | null
+          created_at: string | null
+          dupr_id: string | null
+          gender: string | null
+          id: string | null
+          name: string | null
+          player_code: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          country?: string | null
+          created_at?: string | null
+          dupr_id?: string | null
+          gender?: string | null
+          id?: string | null
+          name?: string | null
+          player_code?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          country?: string | null
+          created_at?: string | null
+          dupr_id?: string | null
+          gender?: string | null
+          id?: string | null
+          name?: string | null
+          player_code?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
       }
     }
     Functions: {

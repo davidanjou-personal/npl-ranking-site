@@ -73,9 +73,9 @@ export default function PlayerProfile() {
   const fetchPlayerData = async () => {
     setLoading(true);
 
-    // Fetch player basic info
+    // Fetch player basic info (using public view to protect PII)
     const { data: playerData, error: playerError } = await supabase
-      .from("players")
+      .from("players_public")
       .select("*")
       .eq("id", id)
       .single();
@@ -195,12 +195,6 @@ export default function PlayerProfile() {
                   <div className="flex items-center gap-2">
                     <User className="h-4 w-4" />
                     <span>Code: {player.player_code}</span>
-                  </div>
-                )}
-                {player.email && (
-                  <div className="flex items-center gap-2">
-                    <Mail className="h-4 w-4" />
-                    <span>{player.email}</span>
                   </div>
                 )}
               </div>

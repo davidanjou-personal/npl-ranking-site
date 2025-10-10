@@ -42,7 +42,7 @@ export function useAllTimeRankings() {
           category,
           total_points,
           rank,
-          players:players!player_rankings_player_id_fkey (
+          players:players_public!player_rankings_player_id_fkey (
             name,
             country,
             gender
@@ -99,7 +99,7 @@ export function useAllTimeRankingsByCategory(category: string) {
           category,
           total_points,
           rank,
-          players:players!player_rankings_player_id_fkey (
+          players:players_public!player_rankings_player_id_fkey (
             name,
             country,
             gender
