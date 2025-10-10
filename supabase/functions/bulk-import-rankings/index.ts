@@ -102,6 +102,11 @@ function normalizeDate(value?: string): string | null {
   return null;
 }
 
+function normalizeCode(value?: string): string {
+  if (!value) return '';
+  return value.replace(/\u200B/g, '').trim().toUpperCase();
+}
+
 // Server
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -270,7 +275,7 @@ serve(async (req) => {
 
         records.push({
           player_name: playerName,
-          player_code: playerCodeVal?.trim() ? playerCodeVal.trim() : undefined,
+          player_code: playerCodeVal ? normalizeCode(playerCodeVal) : undefined,
           country: countryVal,
           gender: (gender ?? undefined) as any,
           category: category || '',
@@ -383,7 +388,7 @@ serve(async (req) => {
 
     if (allPlayers) {
       for (const player of allPlayers) {
-        const code = player.player_code?.trim();
+        const code = normalizeCode(player.player_code);
         if (code) playersByCode.set(code, player);
         if (player.email) playersByEmail.set(player.email, player);
         if (player.dupr_id) playersByDuprId.set(player.dupr_id, player);
@@ -498,7 +503,7 @@ serve(async (req) => {
             let existingPlayer = null;
             
             if (record.player_code) {
-              existingPlayer = playersByCode.get(record.player_code);
+              existingPlayer = playersByCode.get(normalizeCode(record.player_code));
             }
             
             if (!existingPlayer && record.dupr_id) {
@@ -573,7 +578,7 @@ serve(async (req) => {
           .select('id, player_code, email, dupr_id')
           .single();
         if (!updErr && updated) {
-          if (updated.player_code) playersByCode.set(updated.player_code, updated);
+          if (updated.player_code) playersByCode.set(normalizeCode(updated.player_code), updated);
           if (updated.email) playersByEmail.set(updated.email, updated);
           if (updated.dupr_id) playersByDuprId.set(updated.dupr_id, updated);
         }
@@ -581,12 +586,13 @@ serve(async (req) => {
 
       // Filter out any new players that now conflict by player_code after updates
       const filteredNewPlayers = newPlayersToInsert.filter(p => {
-        return !(p.player_code && playersByCode.has(p.player_code.trim?.() || p.player_code));
+        const code = p.player_code ? normalizeCode(p.player_code) : '';
+        return !(code && playersByCode.has(code));
       });
 
       // For filtered-out (now existing) players, map their IDs and queue matches
       for (const p of newPlayersToInsert) {
-        const code = p.player_code?.trim();
+        const code = p.player_code ? normalizeCode(p.player_code) : '';
         if (code && playersByCode.has(code)) {
           const existing = playersByCode.get(code);
           const rowIndex = p._rowIndex;
@@ -611,7 +617,7 @@ serve(async (req) => {
       const dedupedNewPlayers: any[] = [];
       const duplicateRowsByCode = new Map<string, number[]>();
       for (const p of filteredNewPlayers) {
-        const code = p.player_code?.trim();
+        const code = p.player_code ? normalizeCode(p.player_code) : '';
         if (code && seenCodes.has(code)) {
           const arr = duplicateRowsByCode.get(code) ?? [];
           arr.push(p._rowIndex);
@@ -634,15 +640,117 @@ serve(async (req) => {
 
         if (batchInsertError || !insertedPlayers) {
           console.error('Batch player insert failed:', batchInsertError);
-          dedupedNewPlayers.forEach(p => {
-            const csvRowNumber = p._rowIndex + 2;
-            errors.push({
-              row: csvRowNumber,
-              player_name: p.name,
-              error: batchInsertError?.message || 'Failed to create player'
-            });
-            failed++;
-          });
+
+          // Refresh existing players for the candidate codes (handles case/whitespace mismatches)
+          const codesToCheck = dedupedNewPlayers
+            .map((p) => p.player_code)
+            .filter((c): c is string => !!c);
+          if (codesToCheck.length > 0) {
+            const { data: existingForCodes } = await supabaseClient
+              .from('players')
+              .select('id, player_code, email, dupr_id')
+              .in('player_code', codesToCheck);
+            if (existingForCodes) {
+              for (const pl of existingForCodes) {
+                const c = normalizeCode(pl.player_code);
+                if (c) playersByCode.set(c, pl);
+              }
+            }
+          }
+
+          // Map existing and collect retry list
+          const retryPlayers: any[] = [];
+          for (const p of dedupedNewPlayers) {
+            const code = p.player_code ? normalizeCode(p.player_code) : '';
+            if (code && playersByCode.has(code)) {
+              const existing = playersByCode.get(code);
+              const rowIndex = p._rowIndex;
+              playerIdMap.set(rowIndex, existing.id);
+              const record = batch[rowIndex % BATCH_SIZE];
+              if (record.category && record.event_date) {
+                matchesToInsert.push({
+                  tournament_name: record.tournament_name || `Bulk Import - ${fileName}`,
+                  match_date: record.event_date,
+                  category: record.category,
+                  tier: 'tier4',
+                  _playerId: existing.id,
+                  _points: record.points,
+                  _rowIndex: rowIndex,
+                });
+              }
+            } else {
+              retryPlayers.push(p);
+            }
+          }
+
+          // Retry only genuinely new players
+          if (retryPlayers.length > 0) {
+            const { data: reInserted, error: retryErr } = await supabaseClient
+              .from('players')
+              .insert(retryPlayers.map(p => {
+                const { _rowIndex, ...playerData } = p;
+                return playerData;
+              }))
+              .select('id, player_code, email, dupr_id');
+
+            if (retryErr || !reInserted) {
+              console.error('Retry player insert failed:', retryErr);
+              retryPlayers.forEach(p => {
+                const csvRowNumber = p._rowIndex + 2;
+                errors.push({
+                  row: csvRowNumber,
+                  player_name: p.name,
+                  error: retryErr?.message || 'Failed to create player'
+                });
+                failed++;
+              });
+            } else {
+              reInserted.forEach((player, idx) => {
+                const originalRecord = retryPlayers[idx];
+                const rowIndex = originalRecord._rowIndex;
+                const record = batch[rowIndex % BATCH_SIZE];
+                
+                playerIdMap.set(rowIndex, player.id);
+                { const codeN = normalizeCode(player.player_code); if (codeN) playersByCode.set(codeN, player); }
+                if (player.email) playersByEmail.set(player.email, player);
+                if (player.dupr_id) playersByDuprId.set(player.dupr_id, player);
+                
+                if (record.category && record.event_date) {
+                  matchesToInsert.push({
+                    tournament_name: record.tournament_name || `Bulk Import - ${fileName}`,
+                    match_date: record.event_date,
+                    category: record.category,
+                    tier: 'tier4',
+                    _playerId: player.id,
+                    _points: record.points,
+                    _rowIndex: rowIndex,
+                  });
+                }
+              });
+            }
+          }
+
+          // Map intra-batch duplicates to the inserted/existing player by normalized code
+          for (const [code, rows] of duplicateRowsByCode.entries()) {
+            const existing = code ? playersByCode.get(code) : null;
+            if (existing) {
+              for (const dupRowIndex of rows) {
+                playerIdMap.set(dupRowIndex, existing.id);
+                const record = batch[dupRowIndex % BATCH_SIZE];
+                if (record.category && record.event_date) {
+                  matchesToInsert.push({
+                    tournament_name: record.tournament_name || `Bulk Import - ${fileName}`,
+                    match_date: record.event_date,
+                    category: record.category,
+                    tier: 'tier4',
+                    _playerId: existing.id,
+                    _points: record.points,
+                    _rowIndex: dupRowIndex,
+                  });
+                }
+              }
+            }
+          }
         } else {
           insertedPlayers.forEach((player, idx) => {
             const originalRecord = dedupedNewPlayers[idx];
@@ -652,7 +760,7 @@ serve(async (req) => {
             playerIdMap.set(rowIndex, player.id);
             
             // Add to lookup maps
-            { const code = player.player_code?.trim(); if (code) playersByCode.set(code, player); }
+            { const code = normalizeCode(player.player_code); if (code) playersByCode.set(code, player); }
             if (player.email) playersByEmail.set(player.email, player);
             if (player.dupr_id) playersByDuprId.set(player.dupr_id, player);
             
