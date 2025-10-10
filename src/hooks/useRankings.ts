@@ -35,7 +35,6 @@ export function useAllTimeRankings() {
   return useQuery({
     queryKey: ['rankings', 'lifetime'],
     queryFn: async () => {
-      // First get all player rankings
       const { data: rankings, error: rankingsError } = await supabase
         .from('player_rankings')
         .select('player_id, category, total_points, rank')
@@ -46,21 +45,25 @@ export function useAllTimeRankings() {
       if (rankingsError) throw rankingsError;
       if (!rankings || rankings.length === 0) return [];
 
-      // Get all unique player IDs
       const playerIds = [...new Set(rankings.map(r => r.player_id))];
       
-      // Fetch player details from players_public
-      const { data: players, error: playersError } = await supabase
-        .from('players_public')
-        .select('id, name, country, gender')
-        .in('id', playerIds);
+      // Fetch player details in batches of 100 to avoid URL length limits
+      const BATCH_SIZE = 100;
+      const allPlayers: any[] = [];
       
-      if (playersError) throw playersError;
+      for (let i = 0; i < playerIds.length; i += BATCH_SIZE) {
+        const batch = playerIds.slice(i, i + BATCH_SIZE);
+        const { data: batchPlayers, error: playersError } = await supabase
+          .from('players_public')
+          .select('id, name, country, gender')
+          .in('id', batch);
+        
+        if (playersError) throw playersError;
+        if (batchPlayers) allPlayers.push(...batchPlayers);
+      }
       
-      // Create a map for quick lookup
-      const playerMap = new Map(players?.map(p => [p.id, p]) || []);
+      const playerMap = new Map(allPlayers.map(p => [p.id, p]));
       
-      // Transform to match RankingData interface
       return rankings.map(item => {
         const player = playerMap.get(item.player_id);
         return {
@@ -74,7 +77,7 @@ export function useAllTimeRankings() {
         };
       }) as RankingData[];
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
 }
 
@@ -101,7 +104,6 @@ export function useAllTimeRankingsByCategory(category: string) {
   return useQuery({
     queryKey: ['rankings', 'lifetime', category],
     queryFn: async () => {
-      // First get rankings for this category
       const { data: rankings, error: rankingsError } = await supabase
         .from('player_rankings')
         .select('player_id, category, total_points, rank')
@@ -112,19 +114,24 @@ export function useAllTimeRankingsByCategory(category: string) {
       if (rankingsError) throw rankingsError;
       if (!rankings || rankings.length === 0) return [];
 
-      // Get all unique player IDs
       const playerIds = [...new Set(rankings.map(r => r.player_id))];
       
-      // Fetch player details from players_public
-      const { data: players, error: playersError } = await supabase
-        .from('players_public')
-        .select('id, name, country, gender')
-        .in('id', playerIds);
+      // Fetch player details in batches of 100 to avoid URL length limits
+      const BATCH_SIZE = 100;
+      const allPlayers: any[] = [];
       
-      if (playersError) throw playersError;
+      for (let i = 0; i < playerIds.length; i += BATCH_SIZE) {
+        const batch = playerIds.slice(i, i + BATCH_SIZE);
+        const { data: batchPlayers, error: playersError } = await supabase
+          .from('players_public')
+          .select('id, name, country, gender')
+          .in('id', batch);
+        
+        if (playersError) throw playersError;
+        if (batchPlayers) allPlayers.push(...batchPlayers);
+      }
       
-      // Create a map for quick lookup
-      const playerMap = new Map(players?.map(p => [p.id, p]) || []);
+      const playerMap = new Map(allPlayers.map(p => [p.id, p]));
       
       return rankings.map(item => {
         const player = playerMap.get(item.player_id);

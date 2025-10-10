@@ -874,82 +874,18 @@ serve(async (req) => {
       console.log(`Batch ${batchIdx + 1} complete. Success: ${successful}, Failed: ${failed}`);
     }
 
-    // Rebuild player_rankings completely from match_results to ensure data integrity
-    console.log('Rebuilding player_rankings from match_results...');
-    
-    // Step 1: Calculate fresh totals from ALL match_results
-    const { data: results, error: resErr } = await supabaseClient
-      .from('match_results')
-      .select('player_id, points_awarded, matches!inner(category)');
-    
-    if (resErr) {
-      console.error('CRITICAL: Failed to load match_results for rebuild:', resErr);
-      throw new Error('Failed to rebuild player_rankings: ' + resErr.message);
-    }
+    // Rankings are now automatically computed via the player_rankings VIEW
+    // No manual rebuild needed - the VIEW always reflects current match_results data
+    console.log('Rankings automatically updated (computed from VIEW)');
 
-    const totalsMap = new Map<string, { player_id: string, category: string, total_points: number }>();
-    
-    for (const r of (results as any[]) || []) {
-      const category = (r as any).matches?.category;
-      if (!category) continue;
-      
-      const key = `${(r as any).player_id}|${category}`;
-      const pts = Number((r as any).points_awarded) || 0;
-      
-      const existing = totalsMap.get(key);
-      if (existing) {
-        existing.total_points += pts;
-      } else {
-        totalsMap.set(key, {
-          player_id: (r as any).player_id,
-          category: category,
-          total_points: pts
-        });
-      }
-    }
+    // Verify all players have codes
+    const { data: playersWithoutCodes } = await supabaseClient
+      .from('players')
+      .select('id, name')
+      .is('player_code', null);
 
-    console.log(`Calculated totals for ${totalsMap.size} player-category combinations`);
-
-    // Step 2: Delete ALL existing player_rankings (we'll recreate them)
-    const { error: deleteAllErr } = await supabaseClient
-      .from('player_rankings')
-      .delete()
-      .neq('id', '00000000-0000-0000-0000-000000000000'); // Delete all rows
-
-    if (deleteAllErr) {
-      console.error('CRITICAL: Failed to clear player_rankings:', deleteAllErr);
-      throw new Error('Failed to clear player_rankings: ' + deleteAllErr.message);
-    }
-
-    console.log('Cleared all existing player_rankings');
-
-    // Step 3: Insert fresh totals
-    if (totalsMap.size > 0) {
-      const upsertRows = Array.from(totalsMap.values());
-      
-      console.log(`Inserting ${upsertRows.length} fresh player_rankings rows`);
-      
-      const { error: insertErr } = await supabaseClient
-        .from('player_rankings')
-        .insert(upsertRows);
-
-      if (insertErr) {
-        console.error('CRITICAL: Failed to insert player_rankings:', insertErr);
-        throw new Error('Failed to insert player_rankings: ' + insertErr.message);
-      }
-
-      // Step 4: Update ranks using the database function
-      console.log('Updating ranks...');
-      const { error: rankErr } = await supabaseClient.rpc('update_player_rankings');
-      
-      if (rankErr) {
-        console.error('CRITICAL: Failed to update ranks:', rankErr);
-        throw new Error('Failed to update player ranks: ' + rankErr.message);
-      }
-
-      console.log('Successfully rebuilt player_rankings with proper ranks');
-    } else {
-      console.log('No match results found, player_rankings is empty');
+    if (playersWithoutCodes && playersWithoutCodes.length > 0) {
+      console.warn('Players without codes:', playersWithoutCodes);
     }
 
     // Log import history
@@ -968,6 +904,8 @@ serve(async (req) => {
         failed,
         total: records.length,
         updated_players: updatedPlayers,
+        rankings_auto_computed: true,
+        message: 'Import completed successfully. Rankings updated automatically.',
         errors: errors.slice(0, 20),
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

@@ -86,7 +86,6 @@ export type Database = {
           finishing_position: Database["public"]["Enums"]["finishing_position"]
           id: string
           match_id: string | null
-          opponent_id: string | null
           player_id: string | null
           points_awarded: number
         }
@@ -95,7 +94,6 @@ export type Database = {
           finishing_position: Database["public"]["Enums"]["finishing_position"]
           id?: string
           match_id?: string | null
-          opponent_id?: string | null
           player_id?: string | null
           points_awarded?: number
         }
@@ -104,7 +102,6 @@ export type Database = {
           finishing_position?: Database["public"]["Enums"]["finishing_position"]
           id?: string
           match_id?: string | null
-          opponent_id?: string | null
           player_id?: string | null
           points_awarded?: number
         }
@@ -114,13 +111,6 @@ export type Database = {
             columns: ["match_id"]
             isOneToOne: false
             referencedRelation: "matches"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "match_results_opponent_id_fkey"
-            columns: ["opponent_id"]
-            isOneToOne: false
-            referencedRelation: "players"
             referencedColumns: ["id"]
           },
           {
@@ -162,44 +152,6 @@ export type Database = {
         }
         Relationships: []
       }
-      player_rankings: {
-        Row: {
-          category: Database["public"]["Enums"]["player_category"]
-          created_at: string
-          id: string
-          player_id: string
-          rank: number | null
-          total_points: number
-          updated_at: string
-        }
-        Insert: {
-          category: Database["public"]["Enums"]["player_category"]
-          created_at?: string
-          id?: string
-          player_id: string
-          rank?: number | null
-          total_points?: number
-          updated_at?: string
-        }
-        Update: {
-          category?: Database["public"]["Enums"]["player_category"]
-          created_at?: string
-          id?: string
-          player_id?: string
-          rank?: number | null
-          total_points?: number
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "player_rankings_player_id_fkey"
-            columns: ["player_id"]
-            isOneToOne: false
-            referencedRelation: "players"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       players: {
         Row: {
           avatar_url: string | null
@@ -211,7 +163,7 @@ export type Database = {
           gender: string
           id: string
           name: string
-          player_code: string | null
+          player_code: string
           updated_at: string | null
         }
         Insert: {
@@ -224,7 +176,7 @@ export type Database = {
           gender: string
           id?: string
           name: string
-          player_code?: string | null
+          player_code: string
           updated_at?: string | null
         }
         Update: {
@@ -237,7 +189,7 @@ export type Database = {
           gender?: string
           id?: string
           name?: string
-          player_code?: string | null
+          player_code?: string
           updated_at?: string | null
         }
         Relationships: []
@@ -348,6 +300,26 @@ export type Database = {
           },
         ]
       }
+      player_rankings: {
+        Row: {
+          category: Database["public"]["Enums"]["player_category"] | null
+          created_at: string | null
+          id: string | null
+          player_id: string | null
+          rank: number | null
+          total_points: number | null
+          updated_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "match_results_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       players_public: {
         Row: {
           avatar_url: string | null
@@ -373,6 +345,10 @@ export type Database = {
           _table_name: string
         }
         Returns: undefined
+      }
+      generate_player_code: {
+        Args: Record<PropertyKey, never>
+        Returns: string
       }
       get_current_user_id: {
         Args: Record<PropertyKey, never>
