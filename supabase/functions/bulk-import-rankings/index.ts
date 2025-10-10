@@ -716,7 +716,8 @@ serve(async (req) => {
       .from('match_results')
       .select('player_id, points_awarded, matches!inner(category)');
     if (resErr) {
-      console.error('Failed to load match_results for rebuild:', resErr);
+      console.error('CRITICAL: Failed to load match_results for rebuild:', resErr);
+      throw new Error('Failed to rebuild player_rankings: ' + resErr.message);
     } else {
       const totalsMap = new Map<string, number>();
       for (const r of (results as any[]) || []) {
@@ -753,9 +754,14 @@ serve(async (req) => {
           .from('player_rankings')
           .upsert(upsertRows, { onConflict: 'player_id,category' });
         if (upErr) {
-          console.error('Failed to upsert player_rankings:', upErr);
+          console.error('CRITICAL: Failed to upsert player_rankings:', upErr);
+          throw new Error('Failed to rebuild player_rankings: ' + upErr.message);
         } else {
-          await supabaseClient.rpc('update_player_rankings');
+          const { error: rankErr } = await supabaseClient.rpc('update_player_rankings');
+          if (rankErr) {
+            console.error('CRITICAL: Failed to update ranks:', rankErr);
+            throw new Error('Failed to update player ranks: ' + rankErr.message);
+          }
         }
       }
     }
