@@ -351,16 +351,25 @@ serve(async (req) => {
       console.log('Starting duplicate check for', records.length, 'records');
       
       // OPTIMIZATION: Fetch ALL existing players in ONE query instead of checking each record
-    const { data: allPlayers, error: playersError } = await supabaseClient
-      .from('players')
-      .select('id, name, player_code, email, country, date_of_birth, dupr_id')
-      .limit(50000); // Fetch all players - increased from default 1000 limit
-
-      if (playersError) {
-        throw new Error('Failed to fetch existing players: ' + playersError.message);
+    // Fetch ALL existing players with pagination to bypass PostgREST 1000-row limit
+    const allPlayers: any[] = [];
+    let start = 0;
+    const pageSize = 1000;
+    while (true) {
+      const { data, error } = await supabaseClient
+        .from('players')
+        .select('id, name, player_code, email, country, date_of_birth, dupr_id')
+        .range(start, start + pageSize - 1);
+      if (error) {
+        throw new Error('Failed to fetch existing players: ' + error.message);
       }
+      if (!data || data.length === 0) break;
+      allPlayers.push(...data);
+      start += pageSize;
+      if (data.length < pageSize) break;
+    }
 
-      console.log('Fetched', allPlayers?.length || 0, 'existing players from database');
+    console.log('Fetched', allPlayers.length, 'existing players from database');
 
       // Build in-memory lookup maps for fast duplicate detection
       // Check by: player_code, dupr_id, email, and name (same priority as import)
