@@ -581,13 +581,14 @@ serve(async (req) => {
 
       // Filter out any new players that now conflict by player_code after updates
       const filteredNewPlayers = newPlayersToInsert.filter(p => {
-        return !(p.player_code && playersByCode.has(p.player_code));
+        return !(p.player_code && playersByCode.has(p.player_code.trim?.() || p.player_code));
       });
 
       // For filtered-out (now existing) players, map their IDs and queue matches
       for (const p of newPlayersToInsert) {
-        if (p.player_code && playersByCode.has(p.player_code)) {
-          const existing = playersByCode.get(p.player_code);
+        const code = p.player_code?.trim();
+        if (code && playersByCode.has(code)) {
+          const existing = playersByCode.get(code);
           const rowIndex = p._rowIndex;
           playerIdMap.set(rowIndex, existing.id);
           const record = batch[rowIndex % BATCH_SIZE];
@@ -605,22 +606,35 @@ serve(async (req) => {
         }
       }
 
-      // Batch insert remaining new players
-      if (filteredNewPlayers.length > 0) {
+      // Dedupe by player_code within this batch to avoid intra-batch unique conflicts
+      const seenCodes = new Set<string>();
+      const dedupedNewPlayers: any[] = [];
+      const duplicateRowsByCode = new Map<string, number[]>();
+      for (const p of filteredNewPlayers) {
+        const code = p.player_code?.trim();
+        if (code && seenCodes.has(code)) {
+          const arr = duplicateRowsByCode.get(code) ?? [];
+          arr.push(p._rowIndex);
+          duplicateRowsByCode.set(code, arr);
+        } else {
+          if (code) seenCodes.add(code);
+          dedupedNewPlayers.push(p);
+        }
+      }
+
+      // Batch insert remaining new players (deduped)
+      if (dedupedNewPlayers.length > 0) {
         const { data: insertedPlayers, error: batchInsertError } = await supabaseClient
           .from('players')
-          .upsert(
-            filteredNewPlayers.map(p => {
-              const { _rowIndex, ...playerData } = p;
-              return playerData;
-            }),
-            { onConflict: 'player_code' }
-          )
+          .insert(dedupedNewPlayers.map(p => {
+            const { _rowIndex, ...playerData } = p;
+            return playerData;
+          }))
           .select('id, player_code, email, dupr_id');
 
         if (batchInsertError || !insertedPlayers) {
           console.error('Batch player insert failed:', batchInsertError);
-          filteredNewPlayers.forEach(p => {
+          dedupedNewPlayers.forEach(p => {
             const csvRowNumber = p._rowIndex + 2;
             errors.push({
               row: csvRowNumber,
@@ -631,7 +645,7 @@ serve(async (req) => {
           });
         } else {
           insertedPlayers.forEach((player, idx) => {
-            const originalRecord = filteredNewPlayers[idx];
+            const originalRecord = dedupedNewPlayers[idx];
             const rowIndex = originalRecord._rowIndex;
             const record = batch[rowIndex % BATCH_SIZE];
             
@@ -655,6 +669,28 @@ serve(async (req) => {
               });
             }
           });
+
+          // Map intra-batch duplicates to the inserted player by code
+          for (const [code, rows] of duplicateRowsByCode.entries()) {
+            const existing = code ? playersByCode.get(code) : null;
+            if (existing) {
+              for (const dupRowIndex of rows) {
+                playerIdMap.set(dupRowIndex, existing.id);
+                const record = batch[dupRowIndex % BATCH_SIZE];
+                if (record.category && record.event_date) {
+                  matchesToInsert.push({
+                    tournament_name: record.tournament_name || `Bulk Import - ${fileName}`,
+                    match_date: record.event_date,
+                    category: record.category,
+                    tier: 'tier4',
+                    _playerId: existing.id,
+                    _points: record.points,
+                    _rowIndex: dupRowIndex,
+                  });
+                }
+              }
+            }
+          }
         }
       }
 
