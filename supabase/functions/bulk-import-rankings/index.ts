@@ -327,6 +327,23 @@ serve(async (req) => {
 
       console.log('Built lookup map with', playersByName.size, 'unique normalized names');
 
+      // PRE-FLIGHT VALIDATION: Check for duplicate player_codes within CSV itself
+      const intraCSVCodes = new Map<string, number[]>();
+      for (let i = 0; i < records.length; i++) {
+        const code = normalizeCode(records[i].player_code);
+        if (code) {
+          if (!intraCSVCodes.has(code)) intraCSVCodes.set(code, []);
+          intraCSVCodes.get(code)!.push(i);
+        }
+      }
+      const intraDuplicates = Array.from(intraCSVCodes.entries())
+        .filter(([_, rows]) => rows.length > 1)
+        .map(([code, rows]) => ({ code, row_indices: rows }));
+      
+      if (intraDuplicates.length > 0) {
+        console.log(`Found ${intraDuplicates.length} duplicate player_codes within CSV:`, intraDuplicates);
+      }
+
       // Check each record against the in-memory map (fast lookups)
       const duplicates: DuplicateMatch[] = [];
       
@@ -357,19 +374,18 @@ serve(async (req) => {
         }
       }
 
-      console.log('Found', duplicates.length, 'duplicate matches');
+      console.log('Found', duplicates.length, 'duplicate matches against existing players');
 
-      // If duplicates found, return them for user resolution
-      if (duplicates.length > 0) {
-        return new Response(
-          JSON.stringify({
-            needs_resolution: true,
-            duplicates,
-            total_records: records.length,
-          }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
+      // Return all duplicates without importing anything (including intra-CSV duplicates as warning)
+      return new Response(
+        JSON.stringify({
+          needs_resolution: duplicates.length > 0,
+          duplicates,
+          total_records: records.length,
+          intra_csv_duplicates: intraDuplicates.length > 0 ? intraDuplicates : undefined
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     // Fetch ALL existing players for fast lookup during import

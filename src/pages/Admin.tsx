@@ -67,13 +67,20 @@ export default function Admin() {
 
   const applyToAllByNameUseExisting = useCallback((csvName: string, playerId: string) => {
     const newResolutions = { ...resolutions } as Record<string, string>;
+    let count = 0;
     duplicates.forEach((d: any) => {
       if (d.csv_name === csvName) {
         newResolutions[`row_${d.csv_row - 2}`] = playerId;
+        count++;
       }
     });
     setResolutions(newResolutions);
-  }, [duplicates, resolutions]);
+    // Visual feedback
+    toast({
+      title: "Use Existing Applied",
+      description: `Set ${count} occurrences of "${csvName}" to use existing player data.`,
+    });
+  }, [duplicates, resolutions, toast]);
 
   const isExactMatch = useCallback((dup: any) => {
     const csvData = dup.csv_data || {};
@@ -128,13 +135,20 @@ export default function Admin() {
 
   const applyToAllByNameMerge = useCallback((csvName: string, playerId: string) => {
     const newResolutions = { ...resolutions } as Record<string, string>;
+    let count = 0;
     duplicates.forEach((d: any) => {
       if (d.csv_name === csvName) {
         newResolutions[`row_${d.csv_row - 2}`] = `merge_${playerId}`;
+        count++;
       }
     });
     setResolutions(newResolutions);
-  }, [duplicates, resolutions]);
+    // Visual feedback
+    toast({
+      title: "Merge Applied",
+      description: `Set ${count} occurrences of "${csvName}" to merge with existing data.`,
+    });
+  }, [duplicates, resolutions, toast]);
   useEffect(() => {
     checkAdminAccess();
     fetchPlayers();
@@ -644,77 +658,77 @@ Jane Smith,,AUS,female,womens_singles,800,2025-01-15,,,,
                           if (!bulkImportFile) return;
 
                           setIsImporting(true);
-                          const formData = new FormData();
-                          formData.append('file', bulkImportFile);
 
                           toast({
-                            title: "Processing...",
-                            description: "Uploading and checking for duplicates. This may take a minute...",
+                            title: "Checking File...",
+                            description: "Analyzing entire file for duplicates and validating data...",
                           });
 
                           try {
                             const csvText = await bulkImportFile.text();
 
-                            // Split into chunks to avoid edge function timeouts
-                            const lines = csvText.split(/\r?\n/).filter((l) => l.trim().length > 0);
-                            const header = lines[0];
-                            const dataLines = lines.slice(1);
+                            // STEP 1: Check entire file for duplicates (no chunking)
+                            const { data, error } = await supabase.functions.invoke('bulk-import-rankings', {
+                              body: {
+                                csvText: csvText,
+                                fileName: bulkImportFile.name,
+                              },
+                            });
 
-                            const CHUNK_SIZE = 40;
-                            const totalParts = Math.ceil(dataLines.length / CHUNK_SIZE) || 1;
-
-                            let totalSuccessful = 0;
-                            let totalFailed = 0;
-                            let totalUpdatedPlayers = 0;
-
-                            for (let part = 0; part < totalParts; part++) {
-                              const start = part * CHUNK_SIZE;
-                              const end = Math.min(start + CHUNK_SIZE, dataLines.length);
-                              const chunkLines = [header, ...dataLines.slice(start, end)];
-                              const chunkCsv = chunkLines.join('\n');
-
-                              try {
-                                // Retry up to 3 times on transient errors
-                                let attempt = 0;
-                                let data: any = null;
-                                let lastError: any = null;
-                                while (attempt < 3 && !data) {
-                                  const res = await supabase.functions.invoke('bulk-import-rankings', {
-                                    body: {
-                                      csvText: chunkCsv,
-                                      fileName: `${bulkImportFile.name} (part ${part + 1}/${totalParts})`,
-                                    },
-                                  });
-                                  if (!res.error) {
-                                    data = res.data;
-                                    break;
-                                  }
-                                  lastError = res.error;
-                                  attempt++;
-                                  await new Promise(r => setTimeout(r, 500 * attempt));
-                                }
-
-                                if (!data) throw lastError;
-
-                                if (data.needs_resolution) {
-                                  setDuplicates(data.duplicates);
-                                  toast({
-                                    title: 'Duplicates Found',
-                                    description: `Part ${part + 1}/${totalParts}: ${data.duplicates.length} duplicate(s). Please resolve to continue.`,
-                                  });
-                                  // Stop further processing until user resolves duplicates
-                                  return;
-                                }
-
-                                totalSuccessful += data.successful || 0;
-                                totalFailed += data.failed || 0;
-                                totalUpdatedPlayers += data.updated_players || 0;
-                              } catch (chunkErr: any) {
-                                console.error(`Chunk ${part + 1} failed:`, chunkErr);
-                                totalFailed += Math.min(CHUNK_SIZE, end - start);
-                              }
+                            if (error) {
+                              throw new Error(error.message);
                             }
 
+                            // Check for intra-CSV duplicates first
+                            if (data.intra_csv_duplicates && data.intra_csv_duplicates.length > 0) {
+                              const dupeDetails = data.intra_csv_duplicates
+                                .slice(0, 5)
+                                .map((d: any) => `${d.code} (rows: ${d.row_indices.join(', ')})`)
+                                .join('; ');
+                              const more = data.intra_csv_duplicates.length > 5 ? ` and ${data.intra_csv_duplicates.length - 5} more` : '';
+                              toast({
+                                title: "⚠️ Duplicate Player Codes in CSV",
+                                description: `Your CSV has ${data.intra_csv_duplicates.length} duplicate player_code(s): ${dupeDetails}${more}. Please fix these in your CSV before importing.`,
+                                variant: "destructive",
+                                duration: 15000,
+                              });
+                              setIsImporting(false);
+                              return;
+                            }
+
+                            // Check if duplicates need resolution
+                            if (data.needs_resolution && data.duplicates && data.duplicates.length > 0) {
+                              setDuplicates(data.duplicates);
+                              toast({
+                                title: "Duplicates Detected",
+                                description: `Found ${data.duplicates.length} potential duplicate players across all ${data.total_records} rows. Please resolve before importing.`,
+                                duration: 8000,
+                              });
+                              setIsImporting(false);
+                              return;
+                            }
+
+                            // STEP 2: No duplicates, proceed with import (with resolutions if provided)
+                            toast({
+                              title: "Importing Data...",
+                              description: `Processing ${data.total_records} records...`,
+                            });
+
+                            const { data: importData, error: importError } = await supabase.functions.invoke('bulk-import-rankings', {
+                              body: {
+                                csvText: csvText,
+                                fileName: bulkImportFile.name,
+                                duplicateResolutions: Object.keys(resolutions).length > 0 ? resolutions : {}
+                              },
+                            });
+
+                            if (importError) {
+                              throw new Error(importError.message);
+                            }
+
+                            const totalSuccessful = importData.successful || 0;
+                            const totalFailed = importData.failed || 0;
+                            const totalUpdatedPlayers = importData.updated_players || 0;
                             const totalProcessed = totalSuccessful + totalFailed;
                             const successRate = totalProcessed > 0 ? Math.round((totalSuccessful / totalProcessed) * 100) : 0;
 
@@ -725,10 +739,12 @@ Jane Smith,,AUS,female,womens_singles,800,2025-01-15,,,,
                               duration: 12000,
                             });
 
-                            // Always clear the file and refresh data
+                            // Clear and refresh
                             fetchPlayers();
                             fetchMatches();
                             setBulkImportFile(null);
+                            setDuplicates([]);
+                            setResolutions({});
                             const fileInput = document.getElementById('bulk-file') as HTMLInputElement;
                             if (fileInput) fileInput.value = '';
                           } catch (error: any) {
@@ -736,11 +752,11 @@ Jane Smith,,AUS,female,womens_singles,800,2025-01-15,,,,
                             toast({
                               variant: 'destructive',
                               title: 'Import Failed',
-                              description: error.message || 'The import process encountered an error. Some records may have been imported. Please check the rankings page.',
+                              description: error.message || 'The import process encountered an error.',
                               duration: 12000,
                             });
 
-                            // Clear file and refresh even on error - partial data may have been imported
+                            // Clear file and refresh
                             fetchPlayers();
                             fetchMatches();
                             setBulkImportFile(null);
@@ -769,38 +785,61 @@ Jane Smith,,AUS,female,womens_singles,800,2025-01-15,,,,
                     const nonExactMatches = duplicates.filter((d: any) => !isExactMatch(d));
                     const resolvedCount = Object.keys(resolutions).length;
 
-                    return (
-                      <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                          <h3 className="font-semibold">Resolve Duplicate Players</h3>
-                          <div className="flex items-center gap-2">
-                            <Button
-                              variant="secondary"
-                              size="sm"
-                              onClick={applyUseExistingForAllExactMatches}
-                            >
-                              Use existing for all exact matches
-                            </Button>
-                            <Button
-                              variant="secondary"
-                              size="sm"
-                              onClick={applyMergeForAllWithNewData}
-                            >
-                              Update all with new data
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                setDuplicates([]);
-                                setResolutions({});
-                                setBulkImportFile(null);
-                              }}
-                            >
-                              Cancel
-                            </Button>
-                          </div>
-                        </div>
+                     return (
+                       <div className="space-y-4">
+                         <div className="flex items-center justify-between">
+                           <h3 className="font-semibold">Resolve Duplicate Players</h3>
+                           <div className="flex items-center gap-2">
+                             <Button
+                               variant="secondary"
+                               size="sm"
+                               onClick={applyUseExistingForAllExactMatches}
+                             >
+                               Use existing for all exact matches
+                             </Button>
+                             <Button
+                               variant="secondary"
+                               size="sm"
+                               onClick={applyMergeForAllWithNewData}
+                             >
+                               Update all with new data
+                             </Button>
+                             <Button
+                               variant="outline"
+                               size="sm"
+                               onClick={() => {
+                                 setDuplicates([]);
+                                 setResolutions({});
+                                 setBulkImportFile(null);
+                               }}
+                             >
+                               Cancel
+                             </Button>
+                           </div>
+                         </div>
+
+                         {/* Resolution Progress Indicator */}
+                         <div className="rounded-lg border bg-muted p-4">
+                           <div className="flex items-center justify-between text-sm mb-2">
+                             <span className="font-medium">Resolution Progress:</span>
+                             <span className="text-muted-foreground">
+                               {resolvedCount} / {duplicates.length} resolved
+                             </span>
+                           </div>
+                           <div className="h-2 bg-background rounded-full overflow-hidden">
+                             <div 
+                               className="h-full bg-primary transition-all duration-300"
+                               style={{ 
+                                 width: `${(resolvedCount / duplicates.length) * 100}%` 
+                               }}
+                             />
+                           </div>
+                           {resolvedCount < duplicates.length && (
+                             <p className="text-sm text-destructive mt-2">
+                               ⚠️ {duplicates.length - resolvedCount} unresolved duplicate(s) remaining
+                             </p>
+                           )}
+                         </div>
 
                         <div className="rounded-lg border bg-warning/10 p-4">
                           <p className="text-sm text-muted-foreground">
@@ -1018,8 +1057,8 @@ Jane Smith,,AUS,female,womens_singles,800,2025-01-15,,,,
                           const csvText = await bulkImportFile.text();
 
                           toast({
-                            title: "Processing...",
-                            description: "Importing with resolved duplicates. This may take a minute...",
+                            title: "Importing...",
+                            description: "Processing your data with resolved duplicates...",
                           });
 
                           try {
@@ -1033,18 +1072,18 @@ Jane Smith,,AUS,female,womens_singles,800,2025-01-15,,,,
 
                             if (error) throw error;
 
+                            const totalProcessed = (data.successful || 0) + (data.failed || 0);
+                            const successRate = totalProcessed > 0 ? Math.round(((data.successful || 0) / totalProcessed) * 100) : 0;
+
                             toast({
-                              title: "Import Complete",
-                              description: `Imported ${data.successful} row(s), updated ${data.updated_players ?? 0} player(s). ${data.failed > 0 ? `${data.failed} failed.` : ''}`,
+                              title: data.failed === 0 ? "✓ Import Complete" : "⚠ Import Partially Complete",
+                              description: `Imported ${data.successful} of ${totalProcessed} records (${successRate}%). ${data.updated_players ? `Updated ${data.updated_players} player(s). ` : ''}${data.failed > 0 ? `${data.failed} failed.` : ''}`,
+                              variant: data.failed > 0 ? "destructive" : "default",
+                              duration: 12000,
                             });
 
                             if (data.errors && data.errors.length > 0) {
-                              console.log('Import errors:', data.errors);
-                              toast({
-                                variant: "destructive",
-                                title: "Some Records Failed",
-                                description: `${data.failed} records failed to import. Check console for details.`,
-                              });
+                              console.log('Import errors:', data.errors.slice(0, 10));
                             }
 
                             setDuplicates([]);
@@ -1052,11 +1091,14 @@ Jane Smith,,AUS,female,womens_singles,800,2025-01-15,,,,
                             setBulkImportFile(null);
                             fetchPlayers();
                             fetchMatches();
+                            const fileInput = document.getElementById('bulk-file') as HTMLInputElement;
+                            if (fileInput) fileInput.value = '';
                           } catch (error: any) {
                             toast({
                               variant: "destructive",
                               title: "Import Failed",
                               description: error.message || "Failed to import data",
+                              duration: 12000,
                             });
                           } finally {
                             setIsImporting(false);
@@ -1066,8 +1108,8 @@ Jane Smith,,AUS,female,womens_singles,800,2025-01-15,,,,
                         {isImporting 
                           ? "Processing..." 
                           : Object.keys(resolutions).length !== duplicates.length 
-                            ? `Select action for all ${duplicates.length} duplicate(s)` 
-                            : 'Proceed with Import'}
+                            ? `Resolve All (${Object.keys(resolutions).length}/${duplicates.length})` 
+                            : `Proceed with Import (${duplicates.length} resolved)`}
                         </Button>
                       </div>
                     );
