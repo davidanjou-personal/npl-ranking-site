@@ -351,9 +351,10 @@ serve(async (req) => {
       console.log('Starting duplicate check for', records.length, 'records');
       
       // OPTIMIZATION: Fetch ALL existing players in ONE query instead of checking each record
-      const { data: allPlayers, error: playersError } = await supabaseClient
-        .from('players')
-        .select('id, name, player_code, email, country, date_of_birth, dupr_id');
+    const { data: allPlayers, error: playersError } = await supabaseClient
+      .from('players')
+      .select('id, name, player_code, email, country, date_of_birth, dupr_id')
+      .limit(50000); // Fetch all players - increased from default 1000 limit
 
       if (playersError) {
         throw new Error('Failed to fetch existing players: ' + playersError.message);
