@@ -361,12 +361,26 @@ serve(async (req) => {
 
       console.log('Fetched', allPlayers?.length || 0, 'existing players from database');
 
-      // Build an in-memory lookup map for fast duplicate detection
-      // Key: normalized lowercase name -> Array of matching players
+      // Build in-memory lookup maps for fast duplicate detection
+      // Check by: player_code, dupr_id, email, and name (same priority as import)
+      const playersByCode = new Map<string, any>();
+      const playersByEmail = new Map<string, any>();
+      const playersByDuprId = new Map<string, any>();
       const playersByName = new Map<string, typeof allPlayers>();
       
       if (allPlayers) {
         for (const player of allPlayers) {
+          // Index by player_code
+          const code = normalizeCode(player.player_code);
+          if (code) playersByCode.set(code, player);
+          
+          // Index by email
+          if (player.email) playersByEmail.set(player.email, player);
+          
+          // Index by dupr_id
+          if (player.dupr_id) playersByDuprId.set(player.dupr_id, player);
+          
+          // Index by name (for fallback matching)
           const normalizedName = player.name.toLowerCase().trim();
           const existing = playersByName.get(normalizedName) || [];
           existing.push(player);
@@ -374,7 +388,7 @@ serve(async (req) => {
         }
       }
 
-      console.log('Built lookup map with', playersByName.size, 'unique normalized names');
+      console.log(`Built lookup maps: ${playersByCode.size} codes, ${playersByEmail.size} emails, ${playersByDuprId.size} DUPR IDs, ${playersByName.size} unique names`);
 
       // PRE-FLIGHT VALIDATION: Check for duplicate player_codes within CSV itself
       const intraCSVCodes = new Map<string, number[]>();
@@ -393,24 +407,67 @@ serve(async (req) => {
         console.log(`Found ${intraDuplicates.length} duplicate player_codes within CSV:`, intraDuplicates);
       }
 
-      // Check each record against the in-memory map (fast lookups)
+      // Check each record against the in-memory maps (fast lookups)
+      // Priority: player_code > dupr_id > email > player_name
       const duplicates: DuplicateMatch[] = [];
       
       for (let i = 0; i < records.length; i++) {
         const record = records[i];
+        let matchedPlayer: any = null;
+        let matchType = '';
         
-        // Skip duplicate check if no player_name (we'll match by code/id/email instead)
-        if (!record.player_name || record.player_name.trim() === '') {
-          continue;
+        // 1. Check by player_code (highest priority)
+        if (record.player_code) {
+          const code = normalizeCode(record.player_code);
+          if (code && playersByCode.has(code)) {
+            matchedPlayer = playersByCode.get(code);
+            matchType = 'player_code';
+          }
         }
         
-        const normalizedName = record.player_name.toLowerCase().trim();
-        const existingPlayers = playersByName.get(normalizedName);
-
-        if (existingPlayers && existingPlayers.length > 0) {
+        // 2. Check by dupr_id (second priority)
+        if (!matchedPlayer && record.dupr_id) {
+          if (playersByDuprId.has(record.dupr_id)) {
+            matchedPlayer = playersByDuprId.get(record.dupr_id);
+            matchType = 'dupr_id';
+          }
+        }
+        
+        // 3. Check by email (third priority)
+        if (!matchedPlayer && record.email) {
+          if (playersByEmail.has(record.email)) {
+            matchedPlayer = playersByEmail.get(record.email);
+            matchType = 'email';
+          }
+        }
+        
+        // 4. Check by player_name (fallback)
+        if (!matchedPlayer && record.player_name && record.player_name.trim() !== '') {
+          const normalizedName = record.player_name.toLowerCase().trim();
+          const existingPlayers = playersByName.get(normalizedName);
+          if (existingPlayers && existingPlayers.length > 0) {
+            // For name matches, return all matching players (might be multiple)
+            duplicates.push({
+              csv_row: i + 2, // +2 because: +1 for 0-index, +1 for header row
+              csv_name: record.player_name,
+              csv_data: {
+                player_code: record.player_code,
+                email: record.email,
+                country: record.country,
+                date_of_birth: record.date_of_birth,
+                dupr_id: record.dupr_id,
+              },
+              existing_players: existingPlayers,
+            });
+            continue; // Already added to duplicates
+          }
+        }
+        
+        // If matched by code/dupr/email, add to duplicates
+        if (matchedPlayer) {
           duplicates.push({
-            csv_row: i + 2, // +2 because: +1 for 0-index, +1 for header row
-            csv_name: record.player_name,
+            csv_row: i + 2,
+            csv_name: record.player_name || `[Match by ${matchType}]`,
             csv_data: {
               player_code: record.player_code,
               email: record.email,
@@ -418,7 +475,7 @@ serve(async (req) => {
               date_of_birth: record.date_of_birth,
               dupr_id: record.dupr_id,
             },
-            existing_players: existingPlayers,
+            existing_players: [matchedPlayer],
           });
         }
       }
