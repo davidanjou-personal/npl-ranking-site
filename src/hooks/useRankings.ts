@@ -35,35 +35,44 @@ export function useAllTimeRankings() {
   return useQuery({
     queryKey: ['rankings', 'lifetime'],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // First get all player rankings
+      const { data: rankings, error: rankingsError } = await supabase
         .from('player_rankings')
-        .select(`
-          player_id,
-          category,
-          total_points,
-          rank,
-          players:players_public!player_rankings_player_id_fkey (
-            name,
-            country,
-            gender
-          )
-        `)
+        .select('player_id, category, total_points, rank')
         .order('category')
         .order('rank')
         .range(0, 9999);
       
-      if (error) throw error;
+      if (rankingsError) throw rankingsError;
+      if (!rankings || rankings.length === 0) return [];
+
+      // Get all unique player IDs
+      const playerIds = [...new Set(rankings.map(r => r.player_id))];
+      
+      // Fetch player details from players_public
+      const { data: players, error: playersError } = await supabase
+        .from('players_public')
+        .select('id, name, country, gender')
+        .in('id', playerIds);
+      
+      if (playersError) throw playersError;
+      
+      // Create a map for quick lookup
+      const playerMap = new Map(players?.map(p => [p.id, p]) || []);
       
       // Transform to match RankingData interface
-      return (data || []).map(item => ({
-        player_id: item.player_id,
-        category: item.category,
-        name: item.players?.name || 'Unknown Player',
-        country: item.players?.country || null,
-        gender: item.players?.gender || null,
-        total_points: item.total_points,
-        rank: item.rank || 999,
-      })) as RankingData[];
+      return rankings.map(item => {
+        const player = playerMap.get(item.player_id);
+        return {
+          player_id: item.player_id,
+          category: item.category,
+          name: player?.name || 'Unknown Player',
+          country: player?.country || null,
+          gender: player?.gender || null,
+          total_points: item.total_points,
+          rank: item.rank || 999,
+        };
+      }) as RankingData[];
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
@@ -92,32 +101,43 @@ export function useAllTimeRankingsByCategory(category: string) {
   return useQuery({
     queryKey: ['rankings', 'lifetime', category],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // First get rankings for this category
+      const { data: rankings, error: rankingsError } = await supabase
         .from('player_rankings')
-        .select(`
-          player_id,
-          category,
-          total_points,
-          rank,
-          players:players_public!player_rankings_player_id_fkey (
-            name,
-            country,
-            gender
-          )
-        `)
+        .select('player_id, category, total_points, rank')
         .eq('category', category as any)
         .order('rank')
         .range(0, 9999);
-      if (error) throw error;
-      return (data || []).map(item => ({
-        player_id: item.player_id,
-        category: item.category,
-        name: item.players?.name || 'Unknown Player',
-        country: item.players?.country || null,
-        gender: item.players?.gender || null,
-        total_points: item.total_points,
-        rank: item.rank || 999,
-      })) as RankingData[];
+      
+      if (rankingsError) throw rankingsError;
+      if (!rankings || rankings.length === 0) return [];
+
+      // Get all unique player IDs
+      const playerIds = [...new Set(rankings.map(r => r.player_id))];
+      
+      // Fetch player details from players_public
+      const { data: players, error: playersError } = await supabase
+        .from('players_public')
+        .select('id, name, country, gender')
+        .in('id', playerIds);
+      
+      if (playersError) throw playersError;
+      
+      // Create a map for quick lookup
+      const playerMap = new Map(players?.map(p => [p.id, p]) || []);
+      
+      return rankings.map(item => {
+        const player = playerMap.get(item.player_id);
+        return {
+          player_id: item.player_id,
+          category: item.category,
+          name: player?.name || 'Unknown Player',
+          country: player?.country || null,
+          gender: player?.gender || null,
+          total_points: item.total_points,
+          rank: item.rank || 999,
+        };
+      }) as RankingData[];
     },
     staleTime: 0,
     refetchOnWindowFocus: true,
