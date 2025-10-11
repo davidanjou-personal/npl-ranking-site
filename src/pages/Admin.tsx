@@ -8,6 +8,7 @@ import { PlayersTable } from "@/components/admin/PlayersTable";
 import { AddPlayerForm } from "@/components/admin/AddPlayerForm";
 import { AddMatchResultForm } from "@/components/admin/AddMatchResultForm";
 import { BulkImportTab } from "@/components/admin/BulkImportTab";
+import { BulkImportMatchesTab } from "@/components/admin/BulkImportMatchesTab";
 import { MatchesList } from "@/components/admin/MatchesList";
 import type { Player, MatchWithResults } from "@/types/admin";
 
@@ -103,10 +104,11 @@ export default function Admin() {
         <h1 className="text-4xl font-bold mb-8 text-foreground">Admin Dashboard</h1>
 
         <Tabs defaultValue="add-player" className="w-full">
-          <TabsList className="grid w-full grid-cols-1 sm:grid-cols-5 mb-8">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 mb-8">
             <TabsTrigger value="add-player">Add Player</TabsTrigger>
-            <TabsTrigger value="add-result">Record Match Result</TabsTrigger>
-            <TabsTrigger value="bulk-import">Bulk Import</TabsTrigger>
+            <TabsTrigger value="add-result">Record Match</TabsTrigger>
+            <TabsTrigger value="bulk-import-players">Import Players</TabsTrigger>
+            <TabsTrigger value="bulk-import-matches">Import Matches</TabsTrigger>
             <TabsTrigger value="view-players">View Players</TabsTrigger>
             <TabsTrigger value="view-matches">View Matches</TabsTrigger>
           </TabsList>
@@ -125,8 +127,17 @@ export default function Admin() {
             />
           </TabsContent>
 
-          <TabsContent value="bulk-import">
+          <TabsContent value="bulk-import-players">
             <BulkImportTab onImportComplete={fetchPlayers} />
+          </TabsContent>
+
+          <TabsContent value="bulk-import-matches">
+            <BulkImportMatchesTab 
+              onImportComplete={() => {
+                fetchPlayers();
+                fetchMatches();
+              }} 
+            />
           </TabsContent>
 
           <TabsContent value="view-players">
