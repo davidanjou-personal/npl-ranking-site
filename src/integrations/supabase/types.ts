@@ -128,6 +128,7 @@ export type Database = {
           created_at: string | null
           created_by: string | null
           id: string
+          import_id: string | null
           match_date: string
           tier: Database["public"]["Enums"]["tournament_tier"]
           tournament_name: string
@@ -137,6 +138,7 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           id?: string
+          import_id?: string | null
           match_date: string
           tier?: Database["public"]["Enums"]["tournament_tier"]
           tournament_name: string
@@ -146,11 +148,20 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           id?: string
+          import_id?: string | null
           match_date?: string
           tier?: Database["public"]["Enums"]["tournament_tier"]
           tournament_name?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "matches_import_id_fkey"
+            columns: ["import_id"]
+            isOneToOne: false
+            referencedRelation: "import_history"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       players: {
         Row: {

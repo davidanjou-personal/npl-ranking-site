@@ -959,6 +959,22 @@ serve(async (req) => {
       console.log(`Batch ${batchIdx + 1} complete. Success: ${successful}, Failed: ${failed}`);
     }
 
+    // Log import history and get the ID BEFORE processing event keys
+    const { data: importHistory, error: historyError } = await supabaseClient
+      .from('import_history')
+      .insert({
+        imported_by: user.id,
+        file_name: fileName,
+        total_rows: records.length,
+        successful_rows: 0, // Will be updated at the end
+        failed_rows: 0,
+        error_log: errors.length > 0 ? errors : null,
+      })
+      .select('id')
+      .single();
+
+    const importId = importHistory?.id || null;
+
     // Process all event keys: find or create match, delete old results, insert new ones
     console.log(`Processing ${eventKeyToResults.size} unique event keys for match consolidation`);
     for (const [eventKey, results] of eventKeyToResults.entries()) {
@@ -1000,6 +1016,7 @@ serve(async (req) => {
             match_date: matchDate,
             category: category,
             tier: 'tier4',
+            import_id: importId,
           })
           .select('id')
           .single();
@@ -1062,15 +1079,17 @@ serve(async (req) => {
       console.warn('Players without codes:', playersWithoutCodes);
     }
 
-    // Log import history
-    await supabaseClient.from('import_history').insert({
-      imported_by: user.id,
-      file_name: fileName,
-      total_rows: records.length,
-      successful_rows: successful,
-      failed_rows: failed,
-      error_log: errors.length > 0 ? errors : null,
-    });
+    // Update import history with final counts
+    if (importId) {
+      await supabaseClient
+        .from('import_history')
+        .update({
+          successful_rows: successful,
+          failed_rows: failed,
+          error_log: errors.length > 0 ? errors : null,
+        })
+        .eq('id', importId);
+    }
 
     return new Response(
       JSON.stringify({

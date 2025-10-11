@@ -10,6 +10,7 @@ import { AddMatchResultForm } from "@/components/admin/AddMatchResultForm";
 import { BulkImportTab } from "@/components/admin/BulkImportTab";
 import { BulkImportMatchesTab } from "@/components/admin/BulkImportMatchesTab";
 import { MatchesList } from "@/components/admin/MatchesList";
+import { ImportHistoryList } from "@/components/admin/ImportHistoryList";
 import type { Player, MatchWithResults } from "@/types/admin";
 
 export default function Admin() {
@@ -20,11 +21,13 @@ export default function Admin() {
   const [loading, setLoading] = useState(true);
   const [players, setPlayers] = useState<Player[]>([]);
   const [matches, setMatches] = useState<MatchWithResults[]>([]);
+  const [imports, setImports] = useState<any[]>([]);
 
   useEffect(() => {
     checkAdminAccess();
     fetchPlayers();
     fetchMatches();
+    fetchImports();
   }, []);
 
   const checkAdminAccess = async () => {
@@ -83,6 +86,15 @@ export default function Admin() {
     if (data) setMatches(data as MatchWithResults[]);
   };
 
+  const fetchImports = async () => {
+    const { data } = await supabase
+      .from("import_history")
+      .select("*")
+      .order("created_at", { ascending: false });
+    
+    if (data) setImports(data);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
@@ -104,13 +116,14 @@ export default function Admin() {
         <h1 className="text-4xl font-bold mb-8 text-foreground">Admin Dashboard</h1>
 
         <Tabs defaultValue="add-player" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 mb-8">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 mb-8">
             <TabsTrigger value="add-player">Add Player</TabsTrigger>
             <TabsTrigger value="add-result">Record Match</TabsTrigger>
             <TabsTrigger value="bulk-import-players">Import Players</TabsTrigger>
             <TabsTrigger value="bulk-import-matches">Import Matches</TabsTrigger>
             <TabsTrigger value="view-players">View Players</TabsTrigger>
             <TabsTrigger value="view-matches">View Matches</TabsTrigger>
+            <TabsTrigger value="import-history">Import History</TabsTrigger>
           </TabsList>
 
           <TabsContent value="add-player">
@@ -145,7 +158,18 @@ export default function Admin() {
           </TabsContent>
 
           <TabsContent value="view-matches">
-            <MatchesList matches={matches} />
+            <MatchesList matches={matches} onRefresh={fetchMatches} />
+          </TabsContent>
+
+          <TabsContent value="import-history">
+            <ImportHistoryList 
+              imports={imports} 
+              onRefresh={() => {
+                fetchImports();
+                fetchMatches();
+                fetchPlayers();
+              }} 
+            />
           </TabsContent>
         </Tabs>
       </div>

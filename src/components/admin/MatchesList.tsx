@@ -1,9 +1,26 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Pencil, Trash2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { MatchEditor } from "./MatchEditor";
 import type { MatchWithResults } from "@/types/admin";
 
 interface MatchesListProps {
   matches: MatchWithResults[];
+  onRefresh?: () => void;
 }
 
 const categoryLabels: Record<string, string> = {
@@ -24,7 +41,42 @@ const positionLabels: Record<string, string> = {
   event_win: "Event Win",
 };
 
-export function MatchesList({ matches }: MatchesListProps) {
+export function MatchesList({ matches, onRefresh }: MatchesListProps) {
+  const { toast } = useToast();
+  const [editingMatch, setEditingMatch] = useState<MatchWithResults | null>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    if (!deleteId) return;
+
+    setDeleting(true);
+    try {
+      const { error } = await supabase
+        .from('matches')
+        .delete()
+        .eq('id', deleteId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Match deleted",
+        description: "The match and its results have been removed.",
+      });
+
+      onRefresh?.();
+      setDeleteId(null);
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Delete failed",
+        description: error.message,
+      });
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   if (matches.length === 0) {
     return (
       <Card>
@@ -36,14 +88,31 @@ export function MatchesList({ matches }: MatchesListProps) {
   }
 
   return (
-    <div className="space-y-4">
-      {matches.map((match) => (
-        <Card key={match.id}>
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center justify-between">
-              <span>{match.tournament_name}</span>
-              <Badge variant="outline">{categoryLabels[match.category]}</Badge>
-            </CardTitle>
+    <>
+      <div className="space-y-4">
+        {matches.map((match) => (
+          <Card key={match.id}>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center justify-between">
+                <span>{match.tournament_name}</span>
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline">{categoryLabels[match.category]}</Badge>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setEditingMatch(match)}
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setDeleteId(match.id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </CardTitle>
             <p className="text-sm text-muted-foreground">
               {new Date(match.match_date).toLocaleDateString()} • {match.tier.toUpperCase()}
             </p>
@@ -65,9 +134,44 @@ export function MatchesList({ matches }: MatchesListProps) {
                 ))}
               </ul>
             </div>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {editingMatch && (
+        <MatchEditor
+          match={editingMatch}
+          open={!!editingMatch}
+          onOpenChange={(open) => !open && setEditingMatch(null)}
+          onSaved={() => {
+            onRefresh?.();
+            setEditingMatch(null);
+          }}
+        />
+      )}
+
+      <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Match?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete this match and all its results.
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? "Deleting..." : "Delete Match"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
