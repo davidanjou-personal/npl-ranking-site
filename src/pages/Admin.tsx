@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { z } from "zod";
 import { Plus, Trash2, Download } from "lucide-react";
+import { PlayersTable } from "@/components/admin/PlayersTable";
 
 const playerSchema = z.object({
   name: z.string().min(1, "Name is required").max(100),
@@ -403,10 +404,11 @@ export default function Admin() {
         <h1 className="text-4xl font-bold mb-8 text-foreground">Admin Dashboard</h1>
 
         <Tabs defaultValue="add-player" className="w-full">
-          <TabsList className="grid w-full grid-cols-1 sm:grid-cols-4 mb-8">
+          <TabsList className="grid w-full grid-cols-1 sm:grid-cols-5 mb-8">
             <TabsTrigger value="add-player">Add Player</TabsTrigger>
             <TabsTrigger value="add-result">Record Match Result</TabsTrigger>
             <TabsTrigger value="bulk-import">Bulk Import</TabsTrigger>
+            <TabsTrigger value="view-players">View Players</TabsTrigger>
             <TabsTrigger value="view-matches">View Matches</TabsTrigger>
           </TabsList>
 
@@ -1121,6 +1123,17 @@ Jane Smith,,AUS,female,womens_singles,800,second,2025-01-15,,,,
                   })()}
 
                 </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="view-players">
+            <Card>
+              <CardHeader>
+                <CardTitle>Manage Players</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <PlayersTable players={players} onRefresh={fetchPlayers} />
               </CardContent>
             </Card>
           </TabsContent>
