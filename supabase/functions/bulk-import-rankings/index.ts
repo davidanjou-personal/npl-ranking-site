@@ -1092,7 +1092,7 @@ serve(async (req) => {
 
     // Update import history with final counts
     if (importId) {
-      await supabaseClient
+      const { error: updateError } = await supabaseClient
         .from('import_history')
         .update({
           successful_rows: successful,
@@ -1100,6 +1100,10 @@ serve(async (req) => {
           error_log: errors.length > 0 ? errors : null,
         })
         .eq('id', importId);
+      
+      if (updateError) {
+        console.error('Failed to update import history:', updateError);
+      }
     }
 
     return new Response(

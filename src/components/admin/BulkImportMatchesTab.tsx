@@ -58,7 +58,7 @@ Mike Johnson,NPL000000003,USA,male,mens_singles,third,2024-10-01,Spring Champion
       const text = await file.text();
       
       const { data, error } = await supabase.functions.invoke('bulk-import-rankings', {
-        body: { csvText: text, duplicateResolutions: null }
+        body: { csvText: text, fileName: file.name, duplicateResolutions: null }
       });
 
       if (error) throw error;
@@ -97,7 +97,7 @@ Mike Johnson,NPL000000003,USA,male,mens_singles,third,2024-10-01,Spring Champion
       const text = await file.text();
       
       const { data, error } = await supabase.functions.invoke('bulk-import-rankings', {
-        body: { csvText: text, duplicateResolutions: resolutions }
+        body: { csvText: text, fileName: file.name, duplicateResolutions: resolutions }
       });
 
       if (error) throw error;
