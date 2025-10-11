@@ -47,20 +47,13 @@ export function BulkImportTab({ onImportComplete }: BulkImportTabProps) {
 
     try {
       const text = await bulkImportFile.text();
-      const lines = text.trim().split("\n");
-      const headers = lines[0].split(",").map(h => h.trim());
-      
-      const players = lines.slice(1).map(line => {
-        const values = line.split(",").map(v => v.trim());
-        const player: any = {};
-        headers.forEach((header, index) => {
-          player[header] = values[index] || null;
-        });
-        return player;
-      });
 
       const { data, error } = await supabase.functions.invoke("bulk-import-rankings", {
-        body: { players },
+        body: { 
+          csvText: text, 
+          fileName: bulkImportFile.name,
+          duplicateResolutions: null 
+        },
       });
 
       if (error) throw error;
@@ -97,22 +90,12 @@ export function BulkImportTab({ onImportComplete }: BulkImportTabProps) {
 
     try {
       const text = await bulkImportFile.text();
-      const lines = text.trim().split("\n");
-      const headers = lines[0].split(",").map(h => h.trim());
-      
-      const players = lines.slice(1).map(line => {
-        const values = line.split(",").map(v => v.trim());
-        const player: any = {};
-        headers.forEach((header, index) => {
-          player[header] = values[index] || null;
-        });
-        return player;
-      });
 
       const { data, error } = await supabase.functions.invoke("bulk-import-rankings", {
         body: {
-          players,
-          resolutions,
+          csvText: text,
+          fileName: bulkImportFile.name,
+          duplicateResolutions: resolutions,
         },
       });
 
