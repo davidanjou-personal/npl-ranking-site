@@ -86,7 +86,7 @@ export default function PlayerProfile() {
 
     // Fetch current rankings (12-month)
     const { data: rankingsData, error: rankingsError } = await supabase
-      .from("active_player_rankings")
+      .from("current_rankings")
       .select("category, total_points, rank")
       .eq("player_id", id);
 

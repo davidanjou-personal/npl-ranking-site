@@ -241,26 +241,6 @@ export type Database = {
       }
     }
     Views: {
-      active_player_rankings: {
-        Row: {
-          category: Database["public"]["Enums"]["player_category"] | null
-          created_at: string | null
-          id: string | null
-          player_id: string | null
-          rank: number | null
-          total_points: number | null
-          updated_at: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "match_results_player_id_fkey"
-            columns: ["player_id"]
-            isOneToOne: false
-            referencedRelation: "players"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       current_rankings: {
         Row: {
           category: Database["public"]["Enums"]["player_category"] | null
