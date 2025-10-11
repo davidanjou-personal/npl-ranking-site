@@ -29,6 +29,7 @@ export function DuplicateResolutionList({
   const [exactMatchesOpen, setExactMatchesOpen] = useState(false);
   const [newDataOpen, setNewDataOpen] = useState(true);
   const [newPlayersOpen, setNewPlayersOpen] = useState(true);
+  const [defaultsApplied, setDefaultsApplied] = useState(false);
 
   const allResolved = duplicates.every((d) => resolutions[`row_${d.csv_row - 2}`]);
 
@@ -62,8 +63,10 @@ export function DuplicateResolutionList({
     return { exactMatches, newData, newPlayers };
   }, [duplicates]);
 
-  // Auto-apply smart defaults
+  // Auto-apply smart defaults only once on mount
   useEffect(() => {
+    if (defaultsApplied) return;
+    
     const autoResolutions = { ...resolutions };
     let hasChanges = false;
 
@@ -87,8 +90,9 @@ export function DuplicateResolutionList({
 
     if (hasChanges) {
       onResolutionChange(autoResolutions);
+      setDefaultsApplied(true);
     }
-  }, [categorizedDuplicates]);
+  }, [categorizedDuplicates, defaultsApplied, onResolutionChange, resolutions]);
 
   const applyToAllByName = (csvName: string) => {
     const newResolutions = { ...resolutions };
