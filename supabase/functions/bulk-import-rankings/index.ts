@@ -371,7 +371,7 @@ serve(async (req) => {
     const playersByCode = new Map<string, any>();
     const playersByEmail = new Map<string, any>();
     const playersByDuprId = new Map<string, any>();
-    const playersByName = new Map<string, typeof allPlayers>();
+    const playersByName = new Map<string, any[]>();
     
     if (allPlayers) {
       for (const player of allPlayers) {
