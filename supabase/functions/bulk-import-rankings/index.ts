@@ -533,35 +533,13 @@ serve(async (req) => {
 
     console.log(`Built lookup maps: ${playersByCode.size} codes, ${playersByEmail.size} emails, ${playersByDuprId.size} DUPR IDs`);
 
-    // IDEMPOTENCY: Delete existing matches for the same tournament/date/category combinations
-    // This ensures re-imports replace data instead of duplicating it
-    const uniqueMatchKeys = new Set<string>();
-    for (const record of records) {
-      if (record.category && record.event_date && record.tournament_name) {
-        const key = `${record.tournament_name}|${record.event_date}|${record.category}`;
-        uniqueMatchKeys.add(key);
-      }
-    }
-
-    if (uniqueMatchKeys.size > 0) {
-      console.log(`Deleting existing matches for ${uniqueMatchKeys.size} tournament/date/category combinations to ensure idempotency`);
-      
-      for (const key of uniqueMatchKeys) {
-        const [tournament, date, category] = key.split('|');
-        
-        // Delete existing matches (CASCADE will handle match_results and rankings)
-        const { error: deleteError } = await supabaseClient
-          .from('matches')
-          .delete()
-          .eq('tournament_name', tournament)
-          .eq('match_date', date)
-          .eq('category', category);
-        
-        if (deleteError) {
-          console.error(`Failed to delete existing matches for ${key}:`, deleteError);
-        }
-      }
-    }
+    // Build event key to results map for consolidated match handling
+    const eventKeyToResults = new Map<string, Array<{
+      rowIndex: number;
+      playerId: string;
+      finishingPosition: string;
+      points: number;
+    }>>();
 
     let successful = 0;
     let failed = 0;
@@ -623,7 +601,27 @@ serve(async (req) => {
           if (resolutionMap && resolutionMap[rowKey]) {
             const resolution = resolutionMap[rowKey];
             
-            if (resolution.startsWith('merge_')) {
+            if (resolution === 'new') {
+              // Create new player from CSV data
+              if (!record.player_name || record.player_name.trim() === '') {
+                throw new Error(`Player name is required to create a new player`);
+              }
+              if (!record.gender) {
+                throw new Error(`Gender is required for new player "${record.player_name}"`);
+              }
+              
+              newPlayersToInsert.push({
+                name: record.player_name,
+                country: record.country,
+                gender: record.gender,
+                player_code: record.player_code || null,
+                email: record.email || null,
+                date_of_birth: record.date_of_birth || null,
+                dupr_id: record.dupr_id || null,
+                _rowIndex: rowIndex,
+              });
+              // playerId will be assigned after batch insert
+            } else if (resolution.startsWith('merge_')) {
               playerId = resolution.replace('merge_', '');
               
               const updateData: any = {};
@@ -687,16 +685,17 @@ serve(async (req) => {
           if (playerId) {
             playerIdMap.set(rowIndex, playerId);
             
-            // Queue match creation if needed
+            // Add to event key map if this is a match result
             if (record.category && record.event_date) {
-              matchesToInsert.push({
-                tournament_name: record.tournament_name || `Bulk Import - ${fileName}`,
-                match_date: record.event_date,
-                category: record.category,
-                tier: 'tier4',
-                _playerId: playerId,
-                _points: record.points,
-                _rowIndex: rowIndex,
+              const eventKey = `${record.tournament_name || `Bulk Import - ${fileName}`}|${record.event_date}|${record.category}`;
+              if (!eventKeyToResults.has(eventKey)) {
+                eventKeyToResults.set(eventKey, []);
+              }
+              eventKeyToResults.get(eventKey)!.push({
+                rowIndex,
+                playerId,
+                finishingPosition: record.finishing_position,
+                points: record.points,
               });
             }
           }
@@ -738,20 +737,21 @@ serve(async (req) => {
         const code = p.player_code ? normalizeCode(p.player_code) : '';
         if (code && playersByCode.has(code)) {
           const existing = playersByCode.get(code);
-          const rowIndex = p._rowIndex;
-          playerIdMap.set(rowIndex, existing.id);
-          const record = batch[rowIndex % BATCH_SIZE];
-          if (record.category && record.event_date) {
-            matchesToInsert.push({
-              tournament_name: record.tournament_name || `Bulk Import - ${fileName}`,
-              match_date: record.event_date,
-              category: record.category,
-              tier: 'tier4',
-              _playerId: existing.id,
-              _points: record.points,
-              _rowIndex: rowIndex,
-            });
-          }
+              const rowIndex = p._rowIndex;
+              playerIdMap.set(rowIndex, existing.id);
+              const record = batch[rowIndex % BATCH_SIZE];
+              if (record.category && record.event_date) {
+                const eventKey = `${record.tournament_name || `Bulk Import - ${fileName}`}|${record.event_date}|${record.category}`;
+                if (!eventKeyToResults.has(eventKey)) {
+                  eventKeyToResults.set(eventKey, []);
+                }
+                eventKeyToResults.get(eventKey)!.push({
+                  rowIndex,
+                  playerId: existing.id,
+                  finishingPosition: record.finishing_position,
+                  points: record.points,
+                });
+              }
         }
       }
 
@@ -773,6 +773,7 @@ serve(async (req) => {
 
       // Batch insert remaining new players (deduped)
       if (dedupedNewPlayers.length > 0) {
+        console.log(`Inserting ${dedupedNewPlayers.length} new players in batch ${batchIdx + 1}`);
         const { data: insertedPlayers, error: batchInsertError } = await supabaseClient
           .from('players')
           .insert(dedupedNewPlayers.map(p => {
@@ -816,14 +817,15 @@ serve(async (req) => {
               playerIdMap.set(rowIndex, existing.id);
               const record = batch[rowIndex % BATCH_SIZE];
               if (record.category && record.event_date) {
-                matchesToInsert.push({
-                  tournament_name: record.tournament_name || `Bulk Import - ${fileName}`,
-                  match_date: record.event_date,
-                  category: record.category,
-                  tier: 'tier4',
-                  _playerId: existing.id,
-                  _points: record.points,
-                  _rowIndex: rowIndex,
+                const eventKey = `${record.tournament_name || `Bulk Import - ${fileName}`}|${record.event_date}|${record.category}`;
+                if (!eventKeyToResults.has(eventKey)) {
+                  eventKeyToResults.set(eventKey, []);
+                }
+                eventKeyToResults.get(eventKey)!.push({
+                  rowIndex,
+                  playerId: existing.id,
+                  finishingPosition: record.finishing_position,
+                  points: record.points,
                 });
               }
             } else {
@@ -864,14 +866,15 @@ serve(async (req) => {
                 if (player.dupr_id) playersByDuprId.set(player.dupr_id, player);
                 
                 if (record.category && record.event_date) {
-                  matchesToInsert.push({
-                    tournament_name: record.tournament_name || `Bulk Import - ${fileName}`,
-                    match_date: record.event_date,
-                    category: record.category,
-                    tier: 'tier4',
-                    _playerId: player.id,
-                    _points: record.points,
-                    _rowIndex: rowIndex,
+                  const eventKey = `${record.tournament_name || `Bulk Import - ${fileName}`}|${record.event_date}|${record.category}`;
+                  if (!eventKeyToResults.has(eventKey)) {
+                    eventKeyToResults.set(eventKey, []);
+                  }
+                  eventKeyToResults.get(eventKey)!.push({
+                    rowIndex,
+                    playerId: player.id,
+                    finishingPosition: record.finishing_position,
+                    points: record.points,
                   });
                 }
               });
@@ -886,14 +889,15 @@ serve(async (req) => {
                 playerIdMap.set(dupRowIndex, existing.id);
                 const record = batch[dupRowIndex % BATCH_SIZE];
                 if (record.category && record.event_date) {
-                  matchesToInsert.push({
-                    tournament_name: record.tournament_name || `Bulk Import - ${fileName}`,
-                    match_date: record.event_date,
-                    category: record.category,
-                    tier: 'tier4',
-                    _playerId: existing.id,
-                    _points: record.points,
-                    _rowIndex: dupRowIndex,
+                  const eventKey = `${record.tournament_name || `Bulk Import - ${fileName}`}|${record.event_date}|${record.category}`;
+                  if (!eventKeyToResults.has(eventKey)) {
+                    eventKeyToResults.set(eventKey, []);
+                  }
+                  eventKeyToResults.get(eventKey)!.push({
+                    rowIndex: dupRowIndex,
+                    playerId: existing.id,
+                    finishingPosition: record.finishing_position,
+                    points: record.points,
                   });
                 }
               }
@@ -912,16 +916,17 @@ serve(async (req) => {
             if (player.email) playersByEmail.set(player.email, player);
             if (player.dupr_id) playersByDuprId.set(player.dupr_id, player);
             
-            // Queue match if needed
+            // Add to event key map if this is a match result
             if (record.category && record.event_date) {
-              matchesToInsert.push({
-                tournament_name: record.tournament_name || `Bulk Import - ${fileName}`,
-                match_date: record.event_date,
-                category: record.category,
-                tier: 'tier4',
-                _playerId: player.id,
-                _points: record.points,
-                _rowIndex: rowIndex,
+              const eventKey = `${record.tournament_name || `Bulk Import - ${fileName}`}|${record.event_date}|${record.category}`;
+              if (!eventKeyToResults.has(eventKey)) {
+                eventKeyToResults.set(eventKey, []);
+              }
+              eventKeyToResults.get(eventKey)!.push({
+                rowIndex,
+                playerId: player.id,
+                finishingPosition: record.finishing_position,
+                points: record.points,
               });
             }
           });
@@ -934,14 +939,15 @@ serve(async (req) => {
                 playerIdMap.set(dupRowIndex, existing.id);
                 const record = batch[dupRowIndex % BATCH_SIZE];
                 if (record.category && record.event_date) {
-                  matchesToInsert.push({
-                    tournament_name: record.tournament_name || `Bulk Import - ${fileName}`,
-                    match_date: record.event_date,
-                    category: record.category,
-                    tier: 'tier4',
-                    _playerId: existing.id,
-                    _points: record.points,
-                    _rowIndex: dupRowIndex,
+                  const eventKey = `${record.tournament_name || `Bulk Import - ${fileName}`}|${record.event_date}|${record.category}`;
+                  if (!eventKeyToResults.has(eventKey)) {
+                    eventKeyToResults.set(eventKey, []);
+                  }
+                  eventKeyToResults.get(eventKey)!.push({
+                    rowIndex: dupRowIndex,
+                    playerId: existing.id,
+                    finishingPosition: record.finishing_position,
+                    points: record.points,
                   });
                 }
               }
@@ -950,62 +956,97 @@ serve(async (req) => {
         }
       }
 
-      // Batch insert matches
-      if (matchesToInsert.length > 0) {
-        const { data: insertedMatches, error: matchInsertError } = await supabaseClient
-          .from('matches')
-          .insert(matchesToInsert.map(m => {
-            const { _playerId, _points, _rowIndex, ...matchData } = m;
-            return matchData;
-          }))
-          .select('id');
+      console.log(`Batch ${batchIdx + 1} complete. Success: ${successful}, Failed: ${failed}`);
+    }
 
-        if (matchInsertError || !insertedMatches) {
-          console.error('Batch match insert failed:', matchInsertError);
-          matchesToInsert.forEach(m => {
+    // Process all event keys: find or create match, delete old results, insert new ones
+    console.log(`Processing ${eventKeyToResults.size} unique event keys for match consolidation`);
+    for (const [eventKey, results] of eventKeyToResults.entries()) {
+      const [tournamentName, matchDate, category] = eventKey.split('|');
+      
+      // Find or create match
+      const { data: existingMatches } = await supabaseClient
+        .from('matches')
+        .select('id')
+        .eq('tournament_name', tournamentName)
+        .eq('match_date', matchDate)
+        .eq('category', category)
+        .order('created_at', { ascending: false })
+        .limit(1);
+      
+      let matchId: string;
+      
+      if (existingMatches && existingMatches.length > 0) {
+        matchId = existingMatches[0].id;
+        console.log(`Using existing match ${matchId} for ${tournamentName}|${matchDate}|${category}`);
+        
+        // Delete old results for this match
+        const { error: deleteError } = await supabaseClient
+          .from('match_results')
+          .delete()
+          .eq('match_id', matchId);
+        
+        if (deleteError) {
+          console.error(`Failed to delete old results for match ${matchId}:`, deleteError);
+        } else {
+          console.log(`Deleted old results for match ${matchId}`);
+        }
+      } else {
+        // Create new match
+        const { data: newMatch, error: matchError } = await supabaseClient
+          .from('matches')
+          .insert({
+            tournament_name: tournamentName,
+            match_date: matchDate,
+            category: category,
+            tier: 'tier4',
+          })
+          .select('id')
+          .single();
+        
+        if (matchError || !newMatch) {
+          console.error(`Failed to create match for ${eventKey}:`, matchError);
+          results.forEach(r => {
             errors.push({
-              row: m._rowIndex + 2,
-              error: matchInsertError?.message || 'Failed to create match'
+              row: r.rowIndex + 2,
+              error: matchError?.message || 'Failed to create match'
             });
             failed++;
           });
-        } else {
-          // Batch insert match results
-          const resultsToInsert = insertedMatches.map((match, idx) => {
-            const originalMatch = matchesToInsert[idx];
-            const originalRecord = records[originalMatch._rowIndex];
-            return {
-              match_id: match.id,
-              player_id: originalMatch._playerId,
-              finishing_position: originalRecord.finishing_position,
-              points_awarded: originalMatch._points,
-            };
-          });
-
-          const { error: resultsInsertError } = await supabaseClient
-            .from('match_results')
-            .insert(resultsToInsert);
-
-          if (resultsInsertError) {
-            console.error('Batch results insert failed:', resultsInsertError);
-            matchesToInsert.forEach(m => {
-              errors.push({
-                row: m._rowIndex + 2,
-                error: resultsInsertError.message
-              });
-              failed++;
-            });
-          } else {
-            successful += resultsToInsert.length;
-          }
+          continue;
         }
-      } else {
-        // If no matches, count successful player creations/updates
-        successful += playerIdMap.size - matchesToInsert.length;
+        
+        matchId = newMatch.id;
+        console.log(`Created new match ${matchId} for ${tournamentName}|${matchDate}|${category}`);
       }
-
-      console.log(`Batch ${batchIdx + 1} complete. Success: ${successful}, Failed: ${failed}`);
+      
+      // Insert all results for this match
+      const resultsToInsert = results.map(r => ({
+        match_id: matchId,
+        player_id: r.playerId,
+        finishing_position: r.finishingPosition,
+        points_awarded: r.points,
+      }));
+      
+      const { error: resultsError } = await supabaseClient
+        .from('match_results')
+        .insert(resultsToInsert);
+      
+      if (resultsError) {
+        console.error(`Failed to insert results for match ${matchId}:`, resultsError);
+        results.forEach(r => {
+          errors.push({
+            row: r.rowIndex + 2,
+            error: resultsError.message
+          });
+          failed++;
+        });
+      } else {
+        successful += resultsToInsert.length;
+        console.log(`Inserted ${resultsToInsert.length} results for match ${matchId}`);
+      }
     }
+
 
     // Rankings are now automatically computed via the player_rankings VIEW
     // No manual rebuild needed - the VIEW always reflects current match_results data
