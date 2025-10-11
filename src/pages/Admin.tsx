@@ -22,6 +22,7 @@ export default function Admin() {
   const [players, setPlayers] = useState<Player[]>([]);
   const [matches, setMatches] = useState<MatchWithResults[]>([]);
   const [imports, setImports] = useState<any[]>([]);
+  const [isRunningCleanup, setIsRunningCleanup] = useState(false);
 
   useEffect(() => {
     checkAdminAccess();
@@ -95,6 +96,33 @@ export default function Admin() {
     if (data) setImports(data);
   };
 
+  const handleRunCleanup = async () => {
+    setIsRunningCleanup(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('bulk-import-rankings', {
+        body: { runCleanup: true }
+      });
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Cleanup Completed",
+        description: `Successfully linked ${data.updated_matches} matches to imports`,
+      });
+      await fetchImports();
+      await fetchMatches();
+    } catch (error) {
+      console.error('Cleanup error:', error);
+      toast({
+        variant: "destructive",
+        title: "Cleanup Failed",
+        description: "Failed to run cleanup. Please try again.",
+      });
+    } finally {
+      setIsRunningCleanup(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
@@ -162,6 +190,19 @@ export default function Admin() {
           </TabsContent>
 
           <TabsContent value="import-history">
+            <div className="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+              <p className="text-sm text-yellow-800 dark:text-yellow-200 mb-2">
+                <strong>One-time cleanup required:</strong> Link existing matches to their imports to enable deletion.
+              </p>
+              <button 
+                onClick={handleRunCleanup}
+                disabled={isRunningCleanup}
+                className="px-4 py-2 bg-background border border-input rounded-md text-sm font-medium hover:bg-accent hover:text-accent-foreground disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {isRunningCleanup ? 'Running Cleanup...' : 'Run Cleanup Now'}
+              </button>
+            </div>
+            
             <ImportHistoryList 
               imports={imports} 
               onRefresh={() => {

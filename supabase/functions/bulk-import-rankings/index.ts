@@ -202,6 +202,77 @@ serve(async (req) => {
 
     if (contentType.includes('application/json')) {
       const payload = await req.json();
+      
+      // ONE-TIME CLEANUP: Link orphaned matches to imports
+      if (payload.runCleanup === true) {
+        console.log('🧹 Starting one-time cleanup of orphaned matches...');
+        
+        const { data: orphanedMatches } = await supabaseClient
+          .from('matches')
+          .select('id, tournament_name, match_date, category, created_at')
+          .is('import_id', null);
+        
+        if (orphanedMatches && orphanedMatches.length > 0) {
+          console.log(`Found ${orphanedMatches.length} orphaned matches`);
+          
+          // Group by event key
+          const eventGroups = new Map<string, any[]>();
+          for (const match of orphanedMatches) {
+            const key = `${match.tournament_name}|${match.match_date}|${match.category}`;
+            if (!eventGroups.has(key)) eventGroups.set(key, []);
+            eventGroups.get(key)!.push(match);
+          }
+          
+          // For each group, find the most recent import and link it
+          let updated = 0;
+          for (const [eventKey, matches] of eventGroups.entries()) {
+            const oldestMatch = matches.sort((a, b) => 
+              new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+            )[0];
+            
+            // Find import_history record created around the same time (within 1 hour)
+            const { data: possibleImports } = await supabaseClient
+              .from('import_history')
+              .select('id')
+              .gte('created_at', new Date(oldestMatch.created_at).toISOString())
+              .lte('created_at', new Date(new Date(oldestMatch.created_at).getTime() + 3600000).toISOString())
+              .order('created_at', { ascending: false })
+              .limit(1);
+            
+            if (possibleImports && possibleImports.length > 0) {
+              const importId = possibleImports[0].id;
+              
+              // Update all matches in this group
+              for (const match of matches) {
+                await supabaseClient
+                  .from('matches')
+                  .update({ import_id: importId })
+                  .eq('id', match.id);
+                updated++;
+              }
+              
+              console.log(`Linked ${matches.length} matches for ${eventKey} to import ${importId}`);
+            }
+          }
+          
+          console.log(`✅ Cleanup complete: Updated ${updated} matches`);
+          return new Response(
+            JSON.stringify({ 
+              success: true, 
+              message: 'Cleanup completed', 
+              updated_matches: updated 
+            }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        } else {
+          console.log('No orphaned matches found');
+          return new Response(
+            JSON.stringify({ success: true, message: 'No cleanup needed' }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+      }
+      
       csvText = (payload.csvText ?? '').toString();
       fileName = (payload.fileName ?? fileName).toString();
       resolutionMap = payload.duplicateResolutions ?? null;
@@ -995,6 +1066,16 @@ serve(async (req) => {
       if (existingMatches && existingMatches.length > 0) {
         matchId = existingMatches[0].id;
         console.log(`Using existing match ${matchId} for ${tournamentName}|${matchDate}|${category}`);
+        
+        // Update import_id to current import
+        const { error: updateError } = await supabaseClient
+          .from('matches')
+          .update({ import_id: importId })
+          .eq('id', matchId);
+        
+        if (updateError) {
+          console.error(`Failed to update import_id for match ${matchId}:`, updateError);
+        }
         
         // Delete old results for this match
         const { error: deleteError } = await supabaseClient
