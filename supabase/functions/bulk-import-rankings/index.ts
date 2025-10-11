@@ -347,12 +347,7 @@ serve(async (req) => {
 
     console.log(`Parsed ${records.length} records from ${lines.length - 1} data rows`);
 
-    // If no resolutions provided, check for duplicates and return them
-    if (!resolutionMap) {
-      console.log('Starting duplicate check for', records.length, 'records');
-      
-      // OPTIMIZATION: Fetch ALL existing players in ONE query instead of checking each record
-    // Fetch ALL existing players with pagination to bypass PostgREST 1000-row limit
+    // ALWAYS fetch existing players for lookups (needed for both duplicate detection and resolution processing)
     const allPlayers: any[] = [];
     let start = 0;
     const pageSize = 1000;
@@ -372,35 +367,38 @@ serve(async (req) => {
 
     console.log('Fetched', allPlayers.length, 'existing players from database');
 
-      // Build in-memory lookup maps for fast duplicate detection
-      // Check by: player_code, dupr_id, email, and name (same priority as import)
-      const playersByCode = new Map<string, any>();
-      const playersByEmail = new Map<string, any>();
-      const playersByDuprId = new Map<string, any>();
-      const playersByName = new Map<string, typeof allPlayers>();
-      
-      if (allPlayers) {
-        for (const player of allPlayers) {
-          // Index by player_code
-          const code = normalizeCode(player.player_code);
-          if (code) playersByCode.set(code, player);
-          
-          // Index by email
-          if (player.email) playersByEmail.set(player.email, player);
-          
-          // Index by dupr_id
-          if (player.dupr_id) playersByDuprId.set(player.dupr_id, player);
-          
-          // Index by name (for fallback matching)
-          const normalizedName = player.name.toLowerCase().trim();
-          const existing = playersByName.get(normalizedName) || [];
-          existing.push(player);
-          playersByName.set(normalizedName, existing);
-        }
+    // Build in-memory lookup maps for fast lookups (needed for both duplicate detection and resolution processing)
+    const playersByCode = new Map<string, any>();
+    const playersByEmail = new Map<string, any>();
+    const playersByDuprId = new Map<string, any>();
+    const playersByName = new Map<string, typeof allPlayers>();
+    
+    if (allPlayers) {
+      for (const player of allPlayers) {
+        // Index by player_code
+        const code = normalizeCode(player.player_code);
+        if (code) playersByCode.set(code, player);
+        
+        // Index by email
+        if (player.email) playersByEmail.set(player.email, player);
+        
+        // Index by dupr_id
+        if (player.dupr_id) playersByDuprId.set(player.dupr_id, player);
+        
+        // Index by name (for fallback matching)
+        const normalizedName = player.name.toLowerCase().trim();
+        const existing = playersByName.get(normalizedName) || [];
+        existing.push(player);
+        playersByName.set(normalizedName, existing);
       }
+    }
 
-      console.log(`Built lookup maps: ${playersByCode.size} codes, ${playersByEmail.size} emails, ${playersByDuprId.size} DUPR IDs, ${playersByName.size} unique names`);
+    console.log(`Built lookup maps: ${playersByCode.size} codes, ${playersByEmail.size} emails, ${playersByDuprId.size} DUPR IDs, ${playersByName.size} unique names`);
 
+    // If no resolutions provided, check for duplicates and return them
+    if (!resolutionMap) {
+      console.log('Starting duplicate check for', records.length, 'records');
+      
       // PRE-FLIGHT VALIDATION: Check for duplicate player_codes within CSV itself
       const intraCSVCodes = new Map<string, number[]>();
       for (let i = 0; i < records.length; i++) {
@@ -509,28 +507,7 @@ serve(async (req) => {
       );
     }
 
-    // Fetch ALL existing players for fast lookup during import
-    const { data: allPlayers, error: playersError } = await supabaseClient
-      .from('players')
-      .select('id, name, player_code, email, dupr_id');
-
-    if (playersError) {
-      throw new Error('Failed to fetch existing players: ' + playersError.message);
-    }
-
-    // Build lookup maps for fast player matching
-    const playersByCode = new Map<string, any>();
-    const playersByEmail = new Map<string, any>();
-    const playersByDuprId = new Map<string, any>();
-
-    if (allPlayers) {
-      for (const player of allPlayers) {
-        const code = normalizeCode(player.player_code);
-        if (code) playersByCode.set(code, player);
-        if (player.email) playersByEmail.set(player.email, player);
-        if (player.dupr_id) playersByDuprId.set(player.dupr_id, player);
-      }
-    }
+    // Player lookup maps are now initialized earlier (before duplicate check) for use in both phases
 
     console.log(`Built lookup maps: ${playersByCode.size} codes, ${playersByEmail.size} emails, ${playersByDuprId.size} DUPR IDs`);
 
