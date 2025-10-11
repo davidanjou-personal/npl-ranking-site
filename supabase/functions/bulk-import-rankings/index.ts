@@ -110,7 +110,7 @@ function normalizeCode(value?: string): string {
 }
 
 function normalizeFinishingPosition(value?: string): string {
-  if (!value) return 'event_win'; // Default fallback
+  if (!value) return 'event_win'; // Default fallback (database value)
   
   const normalized = value.toLowerCase().trim().replace(/[^a-z0-9_]/g, '_');
   
@@ -124,8 +124,12 @@ function normalizeFinishingPosition(value?: string): string {
     return normalized;
   }
   
-  // Handle common variations
+  // Handle common variations and new nomenclature
   const positionMap: Record<string, string> = {
+    // New nomenclature support
+    'points_awarded': 'event_win',
+    'quarter_finalist': 'quarterfinalist',
+    // Existing mappings
     '1st': 'winner',
     'first': 'winner',
     '1st_place': 'winner',

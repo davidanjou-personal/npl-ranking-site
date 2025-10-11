@@ -36,9 +36,9 @@ const positionLabels: Record<string, string> = {
   second: "2nd Place",
   third: "3rd Place",
   fourth: "4th Place",
-  quarterfinalist: "Quarterfinalist",
+  quarterfinalist: "Quarter Finalist",
   round_of_16: "Round of 16",
-  event_win: "Event Win",
+  event_win: "Points Awarded",
 };
 
 export function MatchesList({ matches, onRefresh }: MatchesListProps) {

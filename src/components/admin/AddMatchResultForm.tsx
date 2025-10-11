@@ -243,9 +243,9 @@ export function AddMatchResultForm({ players, onMatchAdded }: AddMatchResultForm
                       <SelectItem value="second">2nd Place</SelectItem>
                       <SelectItem value="third">3rd Place</SelectItem>
                       <SelectItem value="fourth">4th Place</SelectItem>
-                      <SelectItem value="quarterfinalist">Quarterfinalist</SelectItem>
+                      <SelectItem value="quarterfinalist">Quarter Finalist</SelectItem>
                       <SelectItem value="round_of_16">Round of 16</SelectItem>
-                      <SelectItem value="event_win">Event Win</SelectItem>
+                      <SelectItem value="event_win">Points Awarded</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

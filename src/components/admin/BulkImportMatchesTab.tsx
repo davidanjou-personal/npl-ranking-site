@@ -143,7 +143,7 @@ Mike Johnson,NPL000000003,USA,male,mens_singles,third,2024-10-01,Spring Champion
             <br />
             Categories: mens_singles, womens_singles, mens_doubles, womens_doubles, mixed_doubles
             <br />
-            Positions: winner, second, third, fourth, quarterfinalist, round_of_16, event_win
+            Positions: winner, second, third, fourth, quarter_finalist, round_of_16, points_awarded
             <br />
             Tiers: tier1, tier2, tier3, tier4, historic (for imported results with no tier)
           </AlertDescription>

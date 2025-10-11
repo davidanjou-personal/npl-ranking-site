@@ -48,9 +48,9 @@ const positionOptions = [
   { value: "second", label: "2nd Place" },
   { value: "third", label: "3rd Place" },
   { value: "fourth", label: "4th Place" },
-  { value: "quarterfinalist", label: "Quarterfinalist" },
+  { value: "quarterfinalist", label: "Quarter Finalist" },
   { value: "round_of_16", label: "Round of 16" },
-  { value: "event_win", label: "Event Win" },
+  { value: "event_win", label: "Points Awarded" },
 ];
 
 export function MatchEditor({ match, open, onOpenChange, onSaved }: MatchEditorProps) {
