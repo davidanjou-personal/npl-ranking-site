@@ -8,6 +8,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Trophy, Calendar, Award, ArrowLeft, Mail, Globe, User } from "lucide-react";
+import { ExpiringPointsWarning } from "@/components/player/ExpiringPointsWarning";
+import { RankingChangeIndicator } from "@/components/player/RankingChangeIndicator";
+import { useLatestRankingChange } from "@/hooks/useRankingHistory";
 
 interface PlayerData {
   id: string;
@@ -204,6 +207,13 @@ export default function PlayerProfile() {
       </div>
 
       <div className="container mx-auto px-4 py-12">
+        {/* Point Expiry Warning */}
+        {id && (
+          <div className="mb-8">
+            <ExpiringPointsWarning playerId={id} />
+          </div>
+        )}
+
         {/* Current Rankings Section */}
         <div className="mb-12">
           <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center gap-2">
@@ -213,26 +223,44 @@ export default function PlayerProfile() {
 
           {rankings.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {rankings.map((ranking) => (
-                <Card
-                  key={ranking.category}
-                  className="p-6"
-                  style={{
-                    background: "var(--gradient-card)",
-                    boxShadow: "var(--shadow-card)",
-                  }}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="font-semibold text-foreground">
-                      {categoryLabels[ranking.category]}
-                    </h3>
-                    <Badge variant="secondary">Rank #{ranking.rank}</Badge>
-                  </div>
-                  <p className="text-3xl font-bold text-secondary">
-                    {ranking.total_points} pts
-                  </p>
-                </Card>
-              ))}
+              {rankings.map((ranking) => {
+                const RankingCard = () => {
+                  const { data: latestChange } = useLatestRankingChange(id!, ranking.category);
+                  
+                  return (
+                    <Card
+                      key={ranking.category}
+                      className="p-6"
+                      style={{
+                        background: "var(--gradient-card)",
+                        boxShadow: "var(--shadow-card)",
+                      }}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="font-semibold text-foreground">
+                          {categoryLabels[ranking.category]}
+                        </h3>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="secondary">Rank #{ranking.rank}</Badge>
+                          {latestChange && (
+                            <RankingChangeIndicator
+                              oldRank={latestChange.old_rank}
+                              newRank={latestChange.new_rank}
+                              oldPoints={latestChange.old_points}
+                              newPoints={latestChange.new_points}
+                            />
+                          )}
+                        </div>
+                      </div>
+                      <p className="text-3xl font-bold text-secondary">
+                        {ranking.total_points} pts
+                      </p>
+                    </Card>
+                  );
+                };
+                
+                return <RankingCard key={ranking.category} />;
+              })}
             </div>
           ) : (
             <Card className="p-8 text-center">
