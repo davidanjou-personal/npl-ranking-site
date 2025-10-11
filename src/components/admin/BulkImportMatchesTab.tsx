@@ -24,7 +24,7 @@ export function BulkImportMatchesTab({ onImportComplete }: BulkImportMatchesTabP
     const template = `player_name,player_code,country,gender,category,finishing_position,event_date,tournament_name,tier
 John Doe,NPL000000001,USA,male,mens_singles,winner,2024-10-01,Spring Championship,tier2
 Jane Smith,NPL000000002,Canada,female,womens_singles,second,2024-10-01,Spring Championship,tier2
-Mike Johnson,NPL000000003,USA,male,mens_singles,third,2024-10-01,Spring Championship,tier2`;
+Mike Johnson,NPL000000003,USA,male,mens_singles,third,2024-10-01,Spring Championship,historic`;
     
     const blob = new Blob([template], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
@@ -145,7 +145,7 @@ Mike Johnson,NPL000000003,USA,male,mens_singles,third,2024-10-01,Spring Champion
             <br />
             Positions: winner, second, third, fourth, quarterfinalist, round_of_16, event_win
             <br />
-            Tiers: tier1, tier2, tier3, tier4
+            Tiers: tier1, tier2, tier3, tier4, historic (for imported results with no tier)
           </AlertDescription>
         </Alert>
 

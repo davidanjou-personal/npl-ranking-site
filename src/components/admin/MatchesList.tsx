@@ -114,7 +114,8 @@ export function MatchesList({ matches, onRefresh }: MatchesListProps) {
                 </div>
               </CardTitle>
             <p className="text-sm text-muted-foreground">
-              {new Date(match.match_date).toLocaleDateString()} • {match.tier.toUpperCase()}
+              {new Date(match.match_date).toLocaleDateString()}
+              {match.tier !== 'historic' && ` • ${match.tier.toUpperCase()}`}
             </p>
           </CardHeader>
           <CardContent>

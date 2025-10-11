@@ -13,7 +13,7 @@ import type { Player, MatchFormData } from "@/types/admin";
 const matchSchema = z.object({
   tournament_name: z.string().min(1, "Tournament name is required").max(200),
   match_date: z.string().min(1, "Date is required"),
-  tier: z.enum(["tier1", "tier2", "tier3", "tier4"]),
+  tier: z.enum(["tier1", "tier2", "tier3", "tier4", "historic"]),
   category: z.enum(["mens_singles", "womens_singles", "mens_doubles", "womens_doubles", "mixed_doubles"]),
   results: z.array(z.object({
     player_id: z.string().uuid(),
@@ -166,6 +166,7 @@ export function AddMatchResultForm({ players, onMatchAdded }: AddMatchResultForm
                   <SelectItem value="tier2">Tier 2 (500 pts)</SelectItem>
                   <SelectItem value="tier3">Tier 3 (250 pts)</SelectItem>
                   <SelectItem value="tier4">Tier 4 (100 pts)</SelectItem>
+                  <SelectItem value="historic">Historic/Imported (no tier display)</SelectItem>
                 </SelectContent>
               </Select>
             </div>

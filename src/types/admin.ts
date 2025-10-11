@@ -18,7 +18,7 @@ export interface Match {
   id: string;
   tournament_name: string;
   match_date: string;
-  tier: "tier1" | "tier2" | "tier3" | "tier4";
+  tier: "tier1" | "tier2" | "tier3" | "tier4" | "historic";
   category: "mens_singles" | "womens_singles" | "mens_doubles" | "womens_doubles" | "mixed_doubles";
   created_at?: string;
   created_by?: string;
@@ -61,7 +61,7 @@ export interface PlayerFormData {
 export interface MatchFormData {
   tournament_name: string;
   match_date: string;
-  tier: "tier1" | "tier2" | "tier3" | "tier4";
+  tier: "tier1" | "tier2" | "tier3" | "tier4" | "historic";
   category: "mens_singles" | "womens_singles" | "mens_doubles" | "womens_doubles" | "mixed_doubles";
   results: Array<{
     player_id: string;

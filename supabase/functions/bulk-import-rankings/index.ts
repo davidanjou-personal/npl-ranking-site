@@ -18,6 +18,7 @@ interface ImportRecord {
   finishing_position: string;
   event_date: string;
   tournament_name?: string;
+  tier?: string;
   email?: string;
   date_of_birth?: string;
   dupr_id?: string;
@@ -152,6 +153,13 @@ function normalizeFinishingPosition(value?: string): string {
   return positionMap[normalized] || 'event_win';
 }
 
+function normalizeTier(value?: string): string {
+  if (!value) return 'historic'; // Default to historic for old imports
+  const normalized = value.toLowerCase().trim();
+  const validTiers = ['tier1', 'tier2', 'tier3', 'tier4', 'historic'];
+  return validTiers.includes(normalized) ? normalized : 'historic';
+}
+
 // Server
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -263,6 +271,7 @@ serve(async (req) => {
       'finishing_position': ['finishing_position', 'position', 'finish', 'place'],
       'event_date': ['event_date', 'date', 'match_date'],
       'tournament_name': ['tournament_name', 'tournament', 'event_name', 'event'],
+      'tier': ['tier'],
       'email': ['email'],
       'date_of_birth': ['date_of_birth', 'dob', 'birthdate'],
       'dupr_id': ['dupr_id'],
@@ -311,6 +320,7 @@ serve(async (req) => {
         const finishingPositionVal = getCol('finishing_position');
         const eventDateVal = getCol('event_date');
         const tournamentNameVal = getCol('tournament_name');
+        const tierVal = getCol('tier');
         const emailVal = getCol('email');
         const dobVal = getCol('date_of_birth');
         const duprIdVal = getCol('dupr_id');
@@ -321,6 +331,7 @@ serve(async (req) => {
         const eventDate = normalizeDate(eventDateVal);
         const dob = normalizeDate(dobVal);
         const finishingPosition = normalizeFinishingPosition(finishingPositionVal);
+        const tier = normalizeTier(tierVal);
 
         records.push({
           player_name: playerName,
@@ -332,6 +343,7 @@ serve(async (req) => {
           finishing_position: finishingPosition,
           event_date: eventDate ?? '',
           tournament_name: tournamentNameVal || undefined,
+          tier: tier,
           email: emailVal || undefined,
           date_of_birth: dob ?? undefined,
           dupr_id: duprIdVal || undefined,
@@ -517,6 +529,7 @@ serve(async (req) => {
       playerId: string;
       finishingPosition: string;
       points: number;
+      tier: string;
     }>>();
 
     let successful = 0;
@@ -674,6 +687,7 @@ serve(async (req) => {
                 playerId,
                 finishingPosition: record.finishing_position,
                 points: record.points,
+                tier: record.tier || 'historic',
               });
             }
           }
@@ -728,6 +742,7 @@ serve(async (req) => {
                   playerId: existing.id,
                   finishingPosition: record.finishing_position,
                   points: record.points,
+                  tier: record.tier || 'historic',
                 });
               }
         }
@@ -804,6 +819,7 @@ serve(async (req) => {
                   playerId: existing.id,
                   finishingPosition: record.finishing_position,
                   points: record.points,
+                  tier: record.tier || 'historic',
                 });
               }
             } else {
@@ -853,6 +869,7 @@ serve(async (req) => {
                     playerId: player.id,
                     finishingPosition: record.finishing_position,
                     points: record.points,
+                    tier: record.tier || 'historic',
                   });
                 }
               });
@@ -876,6 +893,7 @@ serve(async (req) => {
                     playerId: existing.id,
                     finishingPosition: record.finishing_position,
                     points: record.points,
+                    tier: record.tier || 'historic',
                   });
                 }
               }
@@ -905,6 +923,7 @@ serve(async (req) => {
                 playerId: player.id,
                 finishingPosition: record.finishing_position,
                 points: record.points,
+                tier: record.tier || 'historic',
               });
             }
           });
@@ -926,6 +945,7 @@ serve(async (req) => {
                     playerId: existing.id,
                     finishingPosition: record.finishing_position,
                     points: record.points,
+                    tier: record.tier || 'historic',
                   });
                 }
               }
@@ -957,6 +977,7 @@ serve(async (req) => {
     console.log(`Processing ${eventKeyToResults.size} unique event keys for match consolidation`);
     for (const [eventKey, results] of eventKeyToResults.entries()) {
       const [tournamentName, matchDate, category] = eventKey.split('|');
+      const matchTier = results[0]?.tier || 'historic'; // Use tier from first result
       
       // Find or create match
       const { data: existingMatches } = await supabaseClient
@@ -1003,7 +1024,7 @@ serve(async (req) => {
             tournament_name: tournamentName,
             match_date: matchDate,
             category: category,
-            tier: 'tier4',
+            tier: matchTier,
             import_id: importId,
           })
           .select('id')

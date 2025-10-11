@@ -40,6 +40,7 @@ const tierOptions = [
   { value: "tier2", label: "Tier 2" },
   { value: "tier3", label: "Tier 3" },
   { value: "tier4", label: "Tier 4" },
+  { value: "historic", label: "Historic/Imported" },
 ];
 
 const positionOptions = [
