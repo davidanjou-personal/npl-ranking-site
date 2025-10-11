@@ -6,7 +6,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { DuplicateResolutionList } from "./DuplicateResolutionList";
-import type { DuplicatePlayer, BulkImportResolutions } from "@/types/admin";
+import { IncompletePlayersForm } from "./IncompletePlayersForm";
+import type { DuplicatePlayer, BulkImportResolutions, IncompletePlayer, NewPlayerCompletions } from "@/types/admin";
 
 interface BulkImportMatchesTabProps {
   onImportComplete: () => void;
@@ -18,6 +19,8 @@ export function BulkImportMatchesTab({ onImportComplete }: BulkImportMatchesTabP
   const [importing, setImporting] = useState(false);
   const [duplicates, setDuplicates] = useState<DuplicatePlayer[]>([]);
   const [resolutions, setResolutions] = useState<BulkImportResolutions>({});
+  const [incompletePlayers, setIncompletePlayers] = useState<IncompletePlayer[]>([]);
+  const [completions, setCompletions] = useState<NewPlayerCompletions>({});
   const [resolving, setResolving] = useState(false);
 
   const downloadTemplate = () => {
@@ -40,6 +43,8 @@ Mike Johnson,NPL000000003,USA,male,mens_singles,third,2024-10-01,Spring Champion
       setFile(e.target.files[0]);
       setDuplicates([]);
       setResolutions({});
+      setIncompletePlayers([]);
+      setCompletions({});
     }
   };
 
@@ -58,16 +63,30 @@ Mike Johnson,NPL000000003,USA,male,mens_singles,third,2024-10-01,Spring Champion
       const text = await file.text();
       
       const { data, error } = await supabase.functions.invoke('bulk-import-rankings', {
-        body: { csvText: text, fileName: file.name, duplicateResolutions: null }
+        body: { csvText: text, fileName: file.name, duplicateResolutions: null, newPlayerCompletions: null }
       });
 
       if (error) throw error;
 
-      if (data.duplicates && data.duplicates.length > 0) {
+      const hasDuplicates = data.duplicates && data.duplicates.length > 0;
+      const hasIncomplete = data.incomplete_new_players && data.incomplete_new_players.length > 0;
+
+      if (hasDuplicates) {
         setDuplicates(data.duplicates);
+      }
+      
+      if (hasIncomplete) {
+        setIncompletePlayers(data.incomplete_new_players);
+      }
+
+      if (hasDuplicates || hasIncomplete) {
+        const messages = [];
+        if (hasDuplicates) messages.push(`${data.duplicates.length} potential duplicates`);
+        if (hasIncomplete) messages.push(`${data.incomplete_new_players.length} incomplete new players`);
+        
         toast({
-          title: "Duplicates Detected",
-          description: `Found ${data.duplicates.length} potential duplicate players. Please resolve them to continue.`,
+          title: "Action Required",
+          description: `Found ${messages.join(' and ')}. Please resolve them to continue.`,
         });
       } else {
         toast({
@@ -97,7 +116,12 @@ Mike Johnson,NPL000000003,USA,male,mens_singles,third,2024-10-01,Spring Champion
       const text = await file.text();
       
       const { data, error } = await supabase.functions.invoke('bulk-import-rankings', {
-        body: { csvText: text, fileName: file.name, duplicateResolutions: resolutions }
+        body: { 
+          csvText: text, 
+          fileName: file.name, 
+          duplicateResolutions: resolutions,
+          newPlayerCompletions: completions
+        }
       });
 
       if (error) throw error;
@@ -113,6 +137,8 @@ Mike Johnson,NPL000000003,USA,male,mens_singles,third,2024-10-01,Spring Champion
 
       setDuplicates([]);
       setResolutions({});
+      setIncompletePlayers([]);
+      setCompletions({});
       setFile(null);
       onImportComplete();
     } catch (error: any) {
@@ -155,7 +181,7 @@ Mike Johnson,NPL000000003,USA,male,mens_singles,third,2024-10-01,Spring Champion
           </Button>
         </div>
 
-        {duplicates.length === 0 ? (
+        {duplicates.length === 0 && incompletePlayers.length === 0 ? (
           <div className="space-y-4">
             <Input
               type="file"
@@ -172,13 +198,25 @@ Mike Johnson,NPL000000003,USA,male,mens_singles,third,2024-10-01,Spring Champion
             </Button>
           </div>
         ) : (
-          <DuplicateResolutionList
-            duplicates={duplicates}
-            resolutions={resolutions}
-            onResolutionChange={setResolutions}
-            onResolve={handleResolve}
-            isResolving={resolving}
-          />
+          <div className="space-y-6">
+            {duplicates.length > 0 && (
+              <DuplicateResolutionList
+                duplicates={duplicates}
+                resolutions={resolutions}
+                onResolutionChange={setResolutions}
+                onResolve={handleResolve}
+                isResolving={resolving}
+              />
+            )}
+
+            {incompletePlayers.length > 0 && (
+              <IncompletePlayersForm
+                incompletePlayers={incompletePlayers}
+                completions={completions}
+                onCompletionsChange={setCompletions}
+              />
+            )}
+          </div>
         )}
       </CardContent>
     </Card>

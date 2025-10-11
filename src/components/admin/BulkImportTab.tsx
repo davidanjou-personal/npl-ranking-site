@@ -7,7 +7,8 @@ import { Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { DuplicateResolutionList } from "./DuplicateResolutionList";
-import type { DuplicatePlayer, BulkImportResolutions } from "@/types/admin";
+import { IncompletePlayersForm } from "./IncompletePlayersForm";
+import type { DuplicatePlayer, BulkImportResolutions, IncompletePlayer, NewPlayerCompletions } from "@/types/admin";
 
 interface BulkImportTabProps {
   onImportComplete: () => void;
@@ -18,6 +19,8 @@ export function BulkImportTab({ onImportComplete }: BulkImportTabProps) {
   const [bulkImportFile, setBulkImportFile] = useState<File | null>(null);
   const [duplicates, setDuplicates] = useState<DuplicatePlayer[]>([]);
   const [resolutions, setResolutions] = useState<BulkImportResolutions>({});
+  const [incompletePlayers, setIncompletePlayers] = useState<IncompletePlayer[]>([]);
+  const [completions, setCompletions] = useState<NewPlayerCompletions>({});
   const [isImporting, setIsImporting] = useState(false);
 
   const downloadCSVTemplate = () => {
@@ -52,17 +55,32 @@ export function BulkImportTab({ onImportComplete }: BulkImportTabProps) {
         body: { 
           csvText: text, 
           fileName: bulkImportFile.name,
-          duplicateResolutions: null 
+          duplicateResolutions: null,
+          newPlayerCompletions: null
         },
       });
 
       if (error) throw error;
 
-      if (data.duplicates && data.duplicates.length > 0) {
+      const hasDuplicates = data.duplicates && data.duplicates.length > 0;
+      const hasIncomplete = data.incomplete_new_players && data.incomplete_new_players.length > 0;
+
+      if (hasDuplicates) {
         setDuplicates(data.duplicates);
+      }
+      
+      if (hasIncomplete) {
+        setIncompletePlayers(data.incomplete_new_players);
+      }
+
+      if (hasDuplicates || hasIncomplete) {
+        const messages = [];
+        if (hasDuplicates) messages.push(`${data.duplicates.length} potential duplicates`);
+        if (hasIncomplete) messages.push(`${data.incomplete_new_players.length} incomplete new players`);
+        
         toast({
-          title: "Duplicates Found",
-          description: `Found ${data.duplicates.length} potential duplicates. Please resolve them below.`,
+          title: "Action Required",
+          description: `Found ${messages.join(' and ')}. Please resolve them below.`,
         });
       } else {
         toast({
@@ -96,6 +114,7 @@ export function BulkImportTab({ onImportComplete }: BulkImportTabProps) {
           csvText: text,
           fileName: bulkImportFile.name,
           duplicateResolutions: resolutions,
+          newPlayerCompletions: completions,
         },
       });
 
@@ -109,6 +128,8 @@ export function BulkImportTab({ onImportComplete }: BulkImportTabProps) {
       setBulkImportFile(null);
       setDuplicates([]);
       setResolutions({});
+      setIncompletePlayers([]);
+      setCompletions({});
       onImportComplete();
     } catch (error: any) {
       toast({
@@ -158,6 +179,14 @@ export function BulkImportTab({ onImportComplete }: BulkImportTabProps) {
           onResolutionChange={setResolutions}
           onResolve={handleResolveDuplicates}
           isResolving={isImporting}
+        />
+      )}
+
+      {incompletePlayers.length > 0 && (
+        <IncompletePlayersForm
+          incompletePlayers={incompletePlayers}
+          completions={completions}
+          onCompletionsChange={setCompletions}
         />
       )}
     </div>

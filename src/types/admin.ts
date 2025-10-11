@@ -68,3 +68,29 @@ export interface MatchFormData {
     finishing_position: "winner" | "second" | "third" | "fourth" | "quarterfinalist" | "round_of_16" | "event_win";
   }>;
 }
+
+export interface IncompletePlayer {
+  csv_row: number;
+  player_name: string;
+  existing_data: {
+    player_code?: string;
+    email?: string;
+    country?: string;
+    gender?: 'male' | 'female';
+    date_of_birth?: string;
+    dupr_id?: string;
+  };
+  missing_fields: string[];
+}
+
+export interface NewPlayerCompletions {
+  [key: string]: {
+    player_name?: string;
+    country?: string;
+    gender?: 'male' | 'female';
+    player_code?: string;
+    email?: string;
+    date_of_birth?: string;
+    dupr_id?: string;
+  };
+}

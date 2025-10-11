@@ -211,6 +211,7 @@ serve(async (req) => {
     let csvText = '';
     let fileName = 'upload.csv';
     let resolutionMap: Record<string, string> | null = null;
+    let newPlayerCompletions: Record<string, any> | null = null;
 
     if (contentType.includes('application/json')) {
       const payload = await req.json();
@@ -218,6 +219,7 @@ serve(async (req) => {
       csvText = (payload.csvText ?? '').toString();
       fileName = (payload.fileName ?? fileName).toString();
       resolutionMap = payload.duplicateResolutions ?? null;
+      newPlayerCompletions = payload.newPlayerCompletions ?? null;
       if (!csvText) {
         throw new Error('No CSV content provided');
       }
@@ -226,7 +228,9 @@ serve(async (req) => {
       const formData = await req.formData();
       const file = formData.get('file') as File | null;
       const duplicateResolutions = formData.get('duplicateResolutions');
+      const playerCompletions = formData.get('newPlayerCompletions');
       resolutionMap = duplicateResolutions ? JSON.parse(duplicateResolutions as string) : null;
+      newPlayerCompletions = playerCompletions ? JSON.parse(playerCompletions as string) : null;
 
       if (!file) {
         throw new Error('No file provided');
@@ -511,11 +515,62 @@ serve(async (req) => {
 
       console.log('Found', duplicates.length, 'duplicate matches against existing players');
 
-      // Return all duplicates without importing anything (including intra-CSV duplicates as warning)
+      // NEW VALIDATION: Detect incomplete new players
+      const incompleteNewPlayers: Array<{
+        csv_row: number;
+        player_name: string;
+        existing_data: any;
+        missing_fields: string[];
+      }> = [];
+
+      for (let i = 0; i < records.length; i++) {
+        const record = records[i];
+        
+        // Skip if this is a duplicate (will be resolved by user)
+        if (duplicates.some(d => d.csv_row === i + 2)) continue;
+        
+        // Check if player exists by any identifier
+        const code = normalizeCode(record.player_code);
+        const existsByCode = code && playersByCode.has(code);
+        const existsByEmail = record.email && playersByEmail.has(record.email);
+        const existsByDupr = record.dupr_id && playersByDuprId.has(record.dupr_id);
+        
+        // If player doesn't exist, this is a NEW player
+        if (!existsByCode && !existsByEmail && !existsByDupr) {
+          const missingFields: string[] = [];
+          
+          // Check required fields
+          if (!record.gender) missingFields.push('gender');
+          if (!record.country || record.country.trim() === '') missingFields.push('country');
+          if (!record.player_name || record.player_name.trim() === '') missingFields.push('player_name');
+          
+          // If any required fields are missing, add to incomplete list
+          if (missingFields.length > 0) {
+            incompleteNewPlayers.push({
+              csv_row: i + 2,
+              player_name: record.player_name || '[No Name]',
+              existing_data: {
+                player_code: record.player_code,
+                email: record.email,
+                country: record.country,
+                gender: record.gender,
+                date_of_birth: record.date_of_birth,
+                dupr_id: record.dupr_id,
+              },
+              missing_fields: missingFields,
+            });
+          }
+        }
+      }
+
+      console.log('Found', incompleteNewPlayers.length, 'incomplete new players');
+
+      // Return duplicates AND incomplete new players
       return new Response(
         JSON.stringify({
-          needs_resolution: duplicates.length > 0,
+          needs_resolution: duplicates.length > 0 || incompleteNewPlayers.length > 0,
           duplicates,
+          incomplete_new_players: incompleteNewPlayers,
           total_records: records.length,
           intra_csv_duplicates: intraDuplicates.length > 0 ? intraDuplicates : undefined
         }),
@@ -597,22 +652,36 @@ serve(async (req) => {
             const resolution = resolutionMap[rowKey];
             
             if (resolution === 'new') {
-              // Create new player from CSV data
-              if (!record.player_name || record.player_name.trim() === '') {
+              // Create new player from CSV data + completions
+              const completionKey = `row_${rowIndex}`;
+              const completedData = newPlayerCompletions?.[completionKey] || {};
+              
+              // Merge CSV data with completions (completions take priority)
+              const finalPlayerData = {
+                player_name: completedData.player_name || record.player_name,
+                country: completedData.country || record.country,
+                gender: completedData.gender || record.gender,
+                player_code: completedData.player_code || record.player_code || null,
+                email: completedData.email || record.email || null,
+                date_of_birth: completedData.date_of_birth || record.date_of_birth || null,
+                dupr_id: completedData.dupr_id || record.dupr_id || null,
+              };
+              
+              if (!finalPlayerData.player_name || finalPlayerData.player_name.trim() === '') {
                 throw new Error(`Player name is required to create a new player`);
               }
-              if (!record.gender) {
-                throw new Error(`Gender is required for new player "${record.player_name}"`);
+              if (!finalPlayerData.gender) {
+                throw new Error(`Gender is required for new player "${finalPlayerData.player_name}"`);
               }
               
               newPlayersToInsert.push({
-                name: record.player_name,
-                country: record.country,
-                gender: record.gender,
-                player_code: record.player_code || null,
-                email: record.email || null,
-                date_of_birth: record.date_of_birth || null,
-                dupr_id: record.dupr_id || null,
+                name: finalPlayerData.player_name,
+                country: finalPlayerData.country,
+                gender: finalPlayerData.gender,
+                player_code: finalPlayerData.player_code,
+                email: finalPlayerData.email,
+                date_of_birth: finalPlayerData.date_of_birth,
+                dupr_id: finalPlayerData.dupr_id,
                 _rowIndex: rowIndex,
               });
               // playerId will be assigned after batch insert
@@ -653,24 +722,38 @@ serve(async (req) => {
             if (existingPlayer) {
               playerId = existingPlayer.id;
             } else {
-              // Queue new player creation
-              if (!record.player_name || record.player_name.trim() === '') {
+              // Queue new player creation with completions
+              const completionKey = `row_${rowIndex}`;
+              const completedData = newPlayerCompletions?.[completionKey] || {};
+              
+              // Merge CSV data with completions
+              const finalPlayerData = {
+                player_name: completedData.player_name || record.player_name,
+                country: completedData.country || record.country,
+                gender: completedData.gender || record.gender,
+                player_code: completedData.player_code || record.player_code || null,
+                email: completedData.email || record.email || null,
+                date_of_birth: completedData.date_of_birth || record.date_of_birth || null,
+                dupr_id: completedData.dupr_id || record.dupr_id || null,
+              };
+              
+              if (!finalPlayerData.player_name || finalPlayerData.player_name.trim() === '') {
                 const identifier = record.player_code || record.dupr_id || record.email || 'unknown';
                 throw new Error(`Player not found with code/id "${identifier}". To create a new player, provide player_name and gender.`);
               }
               
-              if (!record.gender) {
-                throw new Error(`Gender is required for new player "${record.player_name}"`);
+              if (!finalPlayerData.gender) {
+                throw new Error(`Gender is required for new player "${finalPlayerData.player_name}"`);
               }
               
               newPlayersToInsert.push({
-                name: record.player_name,
-                country: record.country,
-                gender: record.gender,
-                player_code: record.player_code || null,
-                email: record.email || null,
-                date_of_birth: record.date_of_birth || null,
-                dupr_id: record.dupr_id || null,
+                name: finalPlayerData.player_name,
+                country: finalPlayerData.country,
+                gender: finalPlayerData.gender,
+                player_code: finalPlayerData.player_code,
+                email: finalPlayerData.email,
+                date_of_birth: finalPlayerData.date_of_birth,
+                dupr_id: finalPlayerData.dupr_id,
                 _rowIndex: rowIndex,
               });
               // playerId will be assigned after batch insert
