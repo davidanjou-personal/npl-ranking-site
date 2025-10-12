@@ -16,11 +16,15 @@ export const PlayerStats = ({
 }: PlayerStatsProps) => {
   const getFinishLabel = (finish: string) => {
     const labels: Record<string, string> = {
+      event_win: "1st Place",
+      winner: "1st Place",
       first: "1st Place",
       second: "2nd Place",
       third: "3rd Place",
+      fourth: "4th Place",
       semifinalist: "Semi-Finalist",
       quarterfinalist: "Quarter-Finalist",
+      round_of_16: "Round of 16",
     };
     return labels[finish] || finish;
   };
