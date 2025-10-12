@@ -847,19 +847,39 @@ serve(async (req) => {
         }
       }
 
-      // Dedupe by player_code within this batch to avoid intra-batch unique conflicts
+      // Dedupe by player_code AND by name+gender+country within this batch to avoid intra-batch unique conflicts
       const seenCodes = new Set<string>();
+      const seenNameKeys = new Set<string>();
       const dedupedNewPlayers: any[] = [];
       const duplicateRowsByCode = new Map<string, number[]>();
+      const duplicateRowsByName = new Map<string, number[]>();
+      
       for (const p of filteredNewPlayers) {
         const code = p.player_code ? normalizeCode(p.player_code) : '';
-        if (code && seenCodes.has(code)) {
-          const arr = duplicateRowsByCode.get(code) ?? [];
-          arr.push(p._rowIndex);
-          duplicateRowsByCode.set(code, arr);
+        
+        // If has code, dedupe by code
+        if (code) {
+          if (seenCodes.has(code)) {
+            const arr = duplicateRowsByCode.get(code) ?? [];
+            arr.push(p._rowIndex);
+            duplicateRowsByCode.set(code, arr);
+            continue;
+          } else {
+            seenCodes.add(code);
+            dedupedNewPlayers.push(p);
+          }
         } else {
-          if (code) seenCodes.add(code);
-          dedupedNewPlayers.push(p);
+          // No code - dedupe by name+gender+country
+          const nameKey = `${p.name.toLowerCase().trim()}|${p.gender || ''}|${p.country || ''}`;
+          if (seenNameKeys.has(nameKey)) {
+            const arr = duplicateRowsByName.get(nameKey) ?? [];
+            arr.push(p._rowIndex);
+            duplicateRowsByName.set(nameKey, arr);
+            continue;
+          } else {
+            seenNameKeys.add(nameKey);
+            dedupedNewPlayers.push(p);
+          }
         }
       }
 
@@ -1005,6 +1025,37 @@ serve(async (req) => {
               }
             }
           }
+
+          // Map intra-batch duplicates by name to the inserted player
+          for (const [nameKey, rows] of duplicateRowsByName.entries()) {
+            // Find the player we just inserted for this nameKey
+            const [name, gender, country] = nameKey.split('|');
+            const normalizedName = name.toLowerCase().trim();
+            const matchingPlayers = playersByName.get(normalizedName) || [];
+            const existing = matchingPlayers.find(p => 
+              p.gender === gender && p.country === country
+            );
+            
+            if (existing) {
+              for (const dupRowIndex of rows) {
+                playerIdMap.set(dupRowIndex, existing.id);
+                const record = batch[dupRowIndex % BATCH_SIZE];
+                if (record.category && record.event_date) {
+                  const eventKey = `${record.tournament_name || `Bulk Import - ${fileName}`}|${record.event_date}|${record.category}`;
+                  if (!eventKeyToResults.has(eventKey)) {
+                    eventKeyToResults.set(eventKey, []);
+                  }
+                  eventKeyToResults.get(eventKey)!.push({
+                    rowIndex: dupRowIndex,
+                    playerId: existing.id,
+                    finishingPosition: record.finishing_position,
+                    points: record.points,
+                    tier: record.tier || 'historic',
+                  });
+                }
+              }
+            }
+          }
         } else {
           insertedPlayers.forEach((player, idx) => {
             const originalRecord = dedupedNewPlayers[idx];
@@ -1044,6 +1095,37 @@ serve(async (req) => {
           // Map intra-batch duplicates to the inserted player by code
           for (const [code, rows] of duplicateRowsByCode.entries()) {
             const existing = code ? playersByCode.get(code) : null;
+            if (existing) {
+              for (const dupRowIndex of rows) {
+                playerIdMap.set(dupRowIndex, existing.id);
+                const record = batch[dupRowIndex % BATCH_SIZE];
+                if (record.category && record.event_date) {
+                  const eventKey = `${record.tournament_name || `Bulk Import - ${fileName}`}|${record.event_date}|${record.category}`;
+                  if (!eventKeyToResults.has(eventKey)) {
+                    eventKeyToResults.set(eventKey, []);
+                  }
+                  eventKeyToResults.get(eventKey)!.push({
+                    rowIndex: dupRowIndex,
+                    playerId: existing.id,
+                    finishingPosition: record.finishing_position,
+                    points: record.points,
+                    tier: record.tier || 'historic',
+                  });
+                }
+              }
+            }
+          }
+
+          // Map intra-batch duplicates by name to the inserted player
+          for (const [nameKey, rows] of duplicateRowsByName.entries()) {
+            // Find the player we just inserted for this nameKey
+            const [name, gender, country] = nameKey.split('|');
+            const normalizedName = name.toLowerCase().trim();
+            const matchingPlayers = playersByName.get(normalizedName) || [];
+            const existing = matchingPlayers.find(p => 
+              p.gender === gender && p.country === country
+            );
+            
             if (existing) {
               for (const dupRowIndex of rows) {
                 playerIdMap.set(dupRowIndex, existing.id);

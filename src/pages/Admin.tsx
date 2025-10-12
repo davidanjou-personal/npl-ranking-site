@@ -22,6 +22,9 @@ export default function Admin() {
   const [players, setPlayers] = useState<Player[]>([]);
   const [matches, setMatches] = useState<MatchWithResults[]>([]);
   const [imports, setImports] = useState<any[]>([]);
+  const [page, setPage] = useState(0);
+  const [totalCount, setTotalCount] = useState<number | null>(null);
+  const [loadingPage, setLoadingPage] = useState(false);
   
 
   useEffect(() => {
@@ -59,14 +62,33 @@ export default function Admin() {
     setLoading(false);
   };
 
-  const fetchPlayers = async () => {
-    const { data } = await supabase
+  const PAGE_SIZE = 1000;
+
+  const fetchPlayersPage = async (pageNum: number) => {
+    setLoadingPage(true);
+    const { data, count } = await supabase
       .from("players")
-      .select("*")
+      .select("*", { count: "exact" })
       .order("name")
-      .limit(5000);
+      .range(pageNum * PAGE_SIZE, (pageNum + 1) * PAGE_SIZE - 1);
     
-    if (data) setPlayers(data as Player[]);
+    if (data) {
+      if (pageNum === 0) {
+        setPlayers(data as Player[]);
+      } else {
+        setPlayers(prev => [...prev, ...data as Player[]]);
+      }
+      setTotalCount(count);
+    }
+    setLoadingPage(false);
+  };
+
+  const fetchPlayers = () => fetchPlayersPage(0);
+
+  const loadMorePlayers = () => {
+    const nextPage = page + 1;
+    setPage(nextPage);
+    fetchPlayersPage(nextPage);
   };
 
   const fetchMatches = async () => {
@@ -158,6 +180,20 @@ export default function Admin() {
 
           <TabsContent value="view-players">
             <PlayersTable players={players} onRefresh={fetchPlayers} />
+            <div className="mt-4 flex items-center justify-between border-t pt-4">
+              <p className="text-sm text-muted-foreground">
+                Loaded {players.length} of {totalCount ?? "..."} players
+              </p>
+              {totalCount && players.length < totalCount && (
+                <button
+                  onClick={loadMorePlayers}
+                  disabled={loadingPage}
+                  className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50"
+                >
+                  {loadingPage ? "Loading..." : "Load More"}
+                </button>
+              )}
+            </div>
           </TabsContent>
 
           <TabsContent value="view-matches">
