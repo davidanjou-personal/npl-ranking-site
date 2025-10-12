@@ -47,6 +47,33 @@ export type Database = {
         }
         Relationships: []
       }
+      email_preferences: {
+        Row: {
+          account_notifications: boolean
+          consent_date: string | null
+          id: string
+          marketing_emails: boolean
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          account_notifications?: boolean
+          consent_date?: string | null
+          id?: string
+          marketing_emails?: boolean
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          account_notifications?: boolean
+          consent_date?: string | null
+          id?: string
+          marketing_emails?: boolean
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       event_results: {
         Row: {
           created_at: string | null
@@ -169,6 +196,129 @@ export type Database = {
           total_rows?: number
         }
         Relationships: []
+      }
+      player_accounts: {
+        Row: {
+          created_at: string | null
+          id: string
+          player_id: string
+          user_id: string
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          player_id: string
+          user_id: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          player_id?: string
+          user_id?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "player_accounts_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: true
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      player_claims: {
+        Row: {
+          claim_message: string | null
+          created_at: string | null
+          id: string
+          player_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          claim_message?: string | null
+          created_at?: string | null
+          id?: string
+          player_id: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          claim_message?: string | null
+          created_at?: string | null
+          id?: string
+          player_id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "player_claims_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      player_profile_updates: {
+        Row: {
+          created_at: string | null
+          field_name: string
+          id: string
+          new_value: string
+          old_value: string
+          player_account_id: string
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string | null
+          field_name: string
+          id?: string
+          new_value: string
+          old_value: string
+          player_account_id: string
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string | null
+          field_name?: string
+          id?: string
+          new_value?: string
+          old_value?: string
+          player_account_id?: string
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "player_profile_updates_player_account_id_fkey"
+            columns: ["player_account_id"]
+            isOneToOne: false
+            referencedRelation: "player_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       players: {
         Row: {
