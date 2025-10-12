@@ -14,23 +14,23 @@ export default function HowItWorks() {
       
       {/* Hero Section */}
       <div 
-        className="py-16 px-4"
+        className="py-12 sm:py-16 px-4"
         style={{ background: "var(--gradient-hero)" }}
       >
         <div className="container mx-auto text-center">
-          <Trophy className="h-16 w-16 text-primary-foreground mx-auto mb-4" />
-          <h1 className="text-5xl font-bold text-primary-foreground mb-4">
+          <Trophy className="h-12 w-12 sm:h-16 sm:w-16 text-primary-foreground mx-auto mb-3 sm:mb-4" />
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-primary-foreground mb-3 sm:mb-4 px-2">
             How Rankings Work
           </h1>
-          <p className="text-xl text-primary-foreground/90 max-w-2xl mx-auto">
+          <p className="text-base sm:text-lg md:text-xl text-primary-foreground/90 max-w-2xl mx-auto px-2">
             Understanding the National Pickleball League ranking system
           </p>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-12 max-w-5xl">
+      <div className="container mx-auto px-4 py-8 sm:py-12 max-w-5xl">
         {/* Overview */}
-        <section className="mb-12">
+        <section className="mb-8 sm:mb-12">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -53,9 +53,9 @@ export default function HowItWorks() {
         </section>
 
         {/* Points Calculation */}
-        <section className="mb-12">
-          <h2 className="text-3xl font-bold text-foreground mb-6 flex items-center gap-2">
-            <TrendingUp className="h-7 w-7 text-primary" />
+        <section className="mb-8 sm:mb-12">
+          <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-4 sm:mb-6 flex items-center gap-2">
+            <TrendingUp className="h-6 w-6 sm:h-7 sm:w-7 text-primary" />
             Points Calculation
           </h2>
 
@@ -190,9 +190,9 @@ export default function HowItWorks() {
         </section>
 
         {/* Rolling 12-Month Window */}
-        <section className="mb-12">
-          <h2 className="text-3xl font-bold text-foreground mb-6 flex items-center gap-2">
-            <Calendar className="h-7 w-7 text-primary" />
+        <section className="mb-8 sm:mb-12">
+          <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-4 sm:mb-6 flex items-center gap-2">
+            <Calendar className="h-6 w-6 sm:h-7 sm:w-7 text-primary" />
             Rolling 12-Month Window
           </h2>
 
@@ -229,10 +229,10 @@ export default function HowItWorks() {
         </section>
 
         {/* Categories */}
-        <section className="mb-12">
-          <h2 className="text-3xl font-bold text-foreground mb-6">Competition Categories</h2>
+        <section className="mb-8 sm:mb-12">
+          <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-4 sm:mb-6">Competition Categories</h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             {[
               { name: "Men's Singles", desc: "Individual male players compete one-on-one" },
               { name: "Women's Singles", desc: "Individual female players compete one-on-one" },
@@ -256,8 +256,8 @@ export default function HowItWorks() {
         </section>
 
         {/* FAQs */}
-        <section className="mb-12">
-          <h2 className="text-3xl font-bold text-foreground mb-6">Frequently Asked Questions</h2>
+        <section className="mb-8 sm:mb-12">
+          <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-4 sm:mb-6">Frequently Asked Questions</h2>
 
           <Accordion type="single" collapsible className="w-full">
             <AccordionItem value="item-1">

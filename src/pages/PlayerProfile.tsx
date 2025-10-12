@@ -163,41 +163,41 @@ export default function PlayerProfile() {
       <Navigation />
 
       <div
-        className="py-12 px-4"
+        className="py-8 sm:py-12 px-4"
         style={{ background: "var(--gradient-hero)" }}
       >
         <div className="container mx-auto">
           <Link
             to="/rankings"
-            className="inline-flex items-center gap-2 text-primary-foreground/90 hover:text-primary-foreground mb-6 transition-colors"
+            className="inline-flex items-center gap-2 text-primary-foreground/90 hover:text-primary-foreground mb-4 sm:mb-6 transition-colors text-sm"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to Rankings
           </Link>
 
-          <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
-            <Avatar className="h-32 w-32 border-4 border-primary-foreground/20">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start md:items-center gap-4 sm:gap-6">
+            <Avatar className="h-24 w-24 sm:h-32 sm:w-32 border-4 border-primary-foreground/20 flex-shrink-0">
               <AvatarImage
                 src={player.avatar_url || undefined}
                 alt={player.name}
               />
-              <AvatarFallback className="text-3xl bg-primary text-primary-foreground">
+              <AvatarFallback className="text-2xl sm:text-3xl bg-primary text-primary-foreground">
                 {getInitials(player.name)}
               </AvatarFallback>
             </Avatar>
 
-            <div className="flex-1">
-              <h1 className="text-4xl font-bold text-primary-foreground mb-2">
+            <div className="flex-1 text-center sm:text-left">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-primary-foreground mb-2">
                 {player.name}
               </h1>
-              <div className="flex flex-wrap gap-3 text-primary-foreground/90">
+              <div className="flex flex-wrap justify-center sm:justify-start gap-2 sm:gap-3 text-sm sm:text-base text-primary-foreground/90">
                 <div className="flex items-center gap-2">
-                  <Globe className="h-4 w-4" />
+                  <Globe className="h-3 w-3 sm:h-4 sm:w-4" />
                   <span>{player.country}</span>
                 </div>
                 {player.player_code && (
                   <div className="flex items-center gap-2">
-                    <User className="h-4 w-4" />
+                    <User className="h-3 w-3 sm:h-4 sm:w-4" />
                     <span>Code: {player.player_code}</span>
                   </div>
                 )}
@@ -207,22 +207,22 @@ export default function PlayerProfile() {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-12">
+      <div className="container mx-auto px-4 py-8 sm:py-12">
         {/* Point Expiry Warning */}
         {id && (
-          <div className="mb-8">
+          <div className="mb-6 sm:mb-8">
             <ExpiringPointsWarning playerId={id} />
           </div>
         )}
 
         {/* Current Rankings Section */}
-        <div className="mb-12">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
-              <Trophy className="h-6 w-6 text-primary" />
+        <div className="mb-8 sm:mb-12">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 gap-2">
+            <h2 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2">
+              <Trophy className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
               Current Rankings (12-month)
             </h2>
-            <Link to="/how-it-works" className="text-sm text-muted-foreground hover:text-foreground underline transition-colors">
+            <Link to="/how-it-works" className="text-xs sm:text-sm text-muted-foreground hover:text-foreground underline transition-colors">
               How do rankings work?
             </Link>
           </div>
@@ -296,8 +296,8 @@ export default function PlayerProfile() {
 
         {/* Event Results Section */}
         <div>
-          <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center gap-2">
-            <Award className="h-6 w-6 text-primary" />
+          <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-4 sm:mb-6 flex items-center gap-2">
+            <Award className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
             Event History
           </h2>
 

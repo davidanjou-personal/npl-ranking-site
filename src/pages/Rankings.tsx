@@ -43,34 +43,34 @@ export default function Rankings() {
       <Navigation />
       
       <div 
-        className="py-16 px-4"
+        className="py-12 sm:py-16 px-4"
         style={{ background: "var(--gradient-hero)" }}
       >
         <div className="container mx-auto text-center">
-          <h1 className="text-5xl font-bold text-primary-foreground mb-4">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-primary-foreground mb-3 sm:mb-4 px-2">
             {selectedCountry === 'all' 
               ? 'NPL Global Rankings' 
               : `${selectedCountry} National Rankings`}
           </h1>
-          <p className="text-xl text-primary-foreground/90">
+          <p className="text-base sm:text-lg md:text-xl text-primary-foreground/90 px-2">
             {selectedCountry === 'all'
               ? 'Official National Pickleball League Player Rankings'
               : `Rankings for ${selectedCountry} players in the NPL`}
           </p>
-          <Link to="/how-it-works" className="inline-block mt-4">
-            <p className="text-sm text-primary-foreground/80 hover:text-primary-foreground underline transition-colors">
+          <Link to="/how-it-works" className="inline-block mt-3 sm:mt-4">
+            <p className="text-xs sm:text-sm text-primary-foreground/80 hover:text-primary-foreground underline transition-colors">
               How do rankings work?
             </p>
           </Link>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-12">
-        <div className="flex flex-col md:flex-row justify-center items-center gap-4 mb-8">
-          <div className="inline-flex rounded-lg border bg-muted p-1">
+      <div className="container mx-auto px-4 py-8 sm:py-12">
+        <div className="flex flex-col sm:flex-row justify-center items-stretch sm:items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
+          <div className="inline-flex rounded-lg border bg-muted p-1 w-full sm:w-auto">
             <button
               onClick={() => setViewMode('current')}
-              className={`px-6 py-2 rounded-md text-sm font-medium transition-colors ${
+              className={`flex-1 sm:flex-none px-4 sm:px-6 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors ${
                 viewMode === 'current'
                   ? 'bg-background text-foreground shadow-sm'
                   : 'text-muted-foreground hover:text-foreground'
@@ -80,7 +80,7 @@ export default function Rankings() {
             </button>
             <button
               onClick={() => setViewMode('lifetime')}
-              className={`px-6 py-2 rounded-md text-sm font-medium transition-colors ${
+              className={`flex-1 sm:flex-none px-4 sm:px-6 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors ${
                 viewMode === 'lifetime'
                   ? 'bg-background text-foreground shadow-sm'
                   : 'text-muted-foreground hover:text-foreground'
@@ -90,10 +90,10 @@ export default function Rankings() {
             </button>
           </div>
 
-          <div className="flex items-center gap-2 flex-wrap">
-            <Filter className="h-4 w-4 text-muted-foreground" />
+          <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto">
+            <Filter className="h-4 w-4 text-muted-foreground flex-shrink-0" />
             <Select value={selectedCountry} onValueChange={setSelectedCountry}>
-              <SelectTrigger className="w-[200px] bg-background">
+              <SelectTrigger className="flex-1 sm:w-[200px] bg-background">
                 <SelectValue placeholder="Filter by country" />
               </SelectTrigger>
               <SelectContent className="bg-popover z-50">
@@ -108,7 +108,7 @@ export default function Rankings() {
 
             {currentCategory === "mixed_doubles" && (
               <Select value={selectedGender} onValueChange={setSelectedGender}>
-                <SelectTrigger className="w-[180px] bg-background">
+                <SelectTrigger className="flex-1 sm:w-[180px] bg-background">
                   <SelectValue placeholder="Filter by gender" />
                 </SelectTrigger>
                 <SelectContent className="bg-popover z-50">

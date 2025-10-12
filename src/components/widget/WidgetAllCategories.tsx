@@ -23,10 +23,10 @@ export const WidgetAllCategories = () => {
   const compact = searchParams.get("compact") === "true";
 
   return (
-    <div className="w-full p-4">
-      <div className="mb-4 flex items-center justify-between">
-        <h1 className="text-3xl font-bold">NPL Rankings</h1>
-        <span className="text-sm text-muted-foreground">{country}</span>
+    <div className="w-full p-3 sm:p-4">
+      <div className="mb-3 sm:mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+        <h1 className="text-2xl sm:text-3xl font-bold">NPL Rankings</h1>
+        <span className="text-xs sm:text-sm text-muted-foreground">{country}</span>
       </div>
 
       <Tabs defaultValue={defaultCategory} className="w-full">
@@ -50,11 +50,11 @@ export const WidgetAllCategories = () => {
         ))}
       </Tabs>
 
-      <div className="flex justify-center pt-4 mt-4 border-t">
-        <Link to={`/rankings?country=${country}`} target="_parent">
-          <Button variant="default">
+      <div className="flex justify-center pt-3 sm:pt-4 mt-3 sm:mt-4 border-t">
+        <Link to={`/rankings?country=${country}`} target="_parent" className="w-full sm:w-auto">
+          <Button variant="default" size="sm" className="w-full text-xs sm:text-sm">
             View All Rankings
-            <ExternalLink className="ml-2 h-4 w-4" />
+            <ExternalLink className="ml-2 h-3 w-3 sm:h-4 sm:w-4" />
           </Button>
         </Link>
       </div>

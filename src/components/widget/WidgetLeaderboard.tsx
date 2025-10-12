@@ -81,11 +81,11 @@ export const WidgetLeaderboard = ({
         country={country}
       />
 
-      <div className="flex justify-center pt-4">
-        <Link to={`/rankings?country=${country}&category=${category}`} target="_parent">
-          <Button variant="outline" size="sm" className="w-full sm:w-auto">
+      <div className="flex justify-center pt-3 sm:pt-4">
+        <Link to={`/rankings?country=${country}&category=${category}`} target="_parent" className="w-full sm:w-auto">
+          <Button variant="outline" size="sm" className="w-full text-xs sm:text-sm">
             View Full Rankings
-            <ExternalLink className="ml-2 h-4 w-4" />
+            <ExternalLink className="ml-2 h-3 w-3 sm:h-4 sm:w-4" />
           </Button>
         </Link>
       </div>
