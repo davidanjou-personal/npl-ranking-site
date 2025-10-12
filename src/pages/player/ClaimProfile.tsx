@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Navigation } from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
@@ -28,6 +28,26 @@ export default function ClaimProfile() {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  // Restore selected player from URL on mount
+  useEffect(() => {
+    const playerId = searchParams.get('playerId');
+    if (playerId && !selectedPlayer) {
+      const fetchPlayer = async () => {
+        const { data, error } = await supabase
+          .from('players_public')
+          .select('*')
+          .eq('id', playerId)
+          .maybeSingle();
+        
+        if (data && !error) {
+          setSelectedPlayer(data);
+        }
+      };
+      fetchPlayer();
+    }
+  }, [searchParams]);
 
   const handleSearch = async () => {
     if (!searchTerm.trim()) return;
@@ -59,23 +79,25 @@ export default function ClaimProfile() {
 
     setLoading(true);
     try {
-      const { data: session } = await supabase.auth.getSession();
-      if (!session?.session?.user) {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        const returnUrl = `/player/claim?playerId=${selectedPlayer.id}`;
         toast({
-          title: "Not authenticated",
-          description: "Please log in to claim a profile.",
+          title: "Authentication Required",
+          description: "Please sign in to claim a profile.",
           variant: "destructive",
         });
-        navigate("/auth");
+        navigate(`/auth?returnUrl=${encodeURIComponent(returnUrl)}`);
         return;
       }
 
       // Check if player is already claimed
       const { data: existingAccount } = await supabase
         .from("player_accounts")
-        .select("*")
+        .select("id")
         .eq("player_id", selectedPlayer.id)
-        .single();
+        .maybeSingle();
 
       if (existingAccount) {
         toast({
@@ -89,11 +111,11 @@ export default function ClaimProfile() {
       // Check if user already has a pending claim for this player
       const { data: existingClaim } = await supabase
         .from("player_claims")
-        .select("*")
-        .eq("user_id", session.session.user.id)
+        .select("id")
+        .eq("user_id", user.id)
         .eq("player_id", selectedPlayer.id)
         .eq("status", "pending")
-        .single();
+        .maybeSingle();
 
       if (existingClaim) {
         toast({
@@ -107,7 +129,7 @@ export default function ClaimProfile() {
       const { error: claimError } = await supabase
         .from("player_claims")
         .insert({
-          user_id: session.session.user.id,
+          user_id: user.id,
           player_id: selectedPlayer.id,
           claim_message: claimMessage,
           status: "pending",

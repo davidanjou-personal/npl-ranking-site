@@ -64,7 +64,7 @@ export default function PlayerProfile() {
     try {
       const { data: session } = await supabase.auth.getSession();
       if (!session?.session?.user) {
-        navigate("/auth");
+        navigate(`/auth?returnUrl=${encodeURIComponent('/player/profile')}`);
         return;
       }
 

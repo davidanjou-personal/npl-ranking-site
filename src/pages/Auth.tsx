@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,14 +23,26 @@ export default function Auth() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
+  const returnUrl = searchParams.get('returnUrl') || '/';
 
   useEffect(() => {
+    // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
-        navigate("/");
+        navigate(returnUrl);
       }
     });
-  }, [navigate]);
+
+    // Listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session && (event === 'SIGNED_IN' || event === 'USER_UPDATED')) {
+        navigate(returnUrl);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [navigate, returnUrl]);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,7 +70,7 @@ export default function Auth() {
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/`,
+            emailRedirectTo: `${window.location.origin}${returnUrl}`,
             data: {
               full_name: fullName,
             },
@@ -84,7 +96,7 @@ export default function Auth() {
           title: "Welcome back!",
           description: "Successfully signed in.",
         });
-        navigate("/");
+        navigate(returnUrl);
       }
     } catch (error: any) {
       toast({

@@ -52,14 +52,14 @@ export const PendingClaimsTab = () => {
       const claimsWithEmails = await Promise.all(
         (data || []).map(async (claim) => {
           const { data: profile } = await supabase
-            .from("profiles")
-            .select("email")
-            .eq("id", claim.user_id)
-            .single();
+            .from('profiles')
+            .select('email')
+            .eq('id', claim.user_id)
+            .maybeSingle();
           
           return {
             ...claim,
-            user_email: profile?.email || "Unknown",
+            user_email: profile?.email || 'Unknown',
           };
         })
       );
