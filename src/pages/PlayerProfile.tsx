@@ -7,7 +7,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Trophy, Calendar, Award, ArrowLeft, Mail, Globe, User } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Trophy, Calendar, Award, ArrowLeft, Mail, Globe, User, UserPlus } from "lucide-react";
 import { ExpiringPointsWarning } from "@/components/player/ExpiringPointsWarning";
 import { RankingChangeIndicator } from "@/components/player/RankingChangeIndicator";
 import { useLatestRankingChange } from "@/hooks/useRankingHistory";
@@ -67,6 +68,7 @@ export default function PlayerProfile() {
   const [rankings, setRankings] = useState<RankingData[]>([]);
   const [matchResults, setMatchResults] = useState<MatchResult[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isClaimed, setIsClaimed] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -86,6 +88,15 @@ export default function PlayerProfile() {
 
     if (!playerError && playerData) {
       setPlayer(playerData);
+      
+      // Check if profile is claimed
+      const { data: accountData } = await supabase
+        .from("player_accounts")
+        .select("id")
+        .eq("player_id", id)
+        .maybeSingle();
+      
+      setIsClaimed(!!accountData);
     }
 
     // Fetch current rankings (12-month)
@@ -202,6 +213,17 @@ export default function PlayerProfile() {
                   </div>
                 )}
               </div>
+              
+              {!isClaimed && (
+                <div className="mt-4">
+                  <Link to="/player/claim">
+                    <Button variant="secondary" size="sm">
+                      <UserPlus className="mr-2 h-4 w-4" />
+                      Claim This Profile
+                    </Button>
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
         </div>
