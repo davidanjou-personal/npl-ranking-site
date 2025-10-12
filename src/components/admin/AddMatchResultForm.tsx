@@ -4,10 +4,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 import type { Player, MatchFormData } from "@/types/admin";
 
 const matchSchema = z.object({
@@ -29,6 +32,7 @@ interface AddMatchResultFormProps {
 export function AddMatchResultForm({ players, onMatchAdded }: AddMatchResultFormProps) {
   const { toast } = useToast();
   const [playerResultCount, setPlayerResultCount] = useState(8);
+  const [openPlayerId, setOpenPlayerId] = useState<number | null>(null);
   const [matchData, setMatchData] = useState<MatchFormData>({
     tournament_name: "",
     match_date: "",
@@ -205,25 +209,55 @@ export function AddMatchResultForm({ players, onMatchAdded }: AddMatchResultForm
               <div key={index} className="flex gap-2 items-end">
                 <div className="flex-1 space-y-2">
                   <Label htmlFor={`player_${index}`}>Player</Label>
-                  <Select
-                    value={result.player_id}
-                    onValueChange={(value) => {
-                      const newResults = [...matchData.results];
-                      newResults[index].player_id = value;
-                      setMatchData({ ...matchData, results: newResults });
-                    }}
+                  <Popover 
+                    open={openPlayerId === index} 
+                    onOpenChange={(open) => setOpenPlayerId(open ? index : null)}
                   >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select player" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {players.map((player) => (
-                        <SelectItem key={player.id} value={player.id}>
-                          {player.name} ({player.country})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={openPlayerId === index}
+                        className="w-full justify-between"
+                      >
+                        {result.player_id
+                          ? players.find((player) => player.id === result.player_id)?.name + 
+                            ` (${players.find((player) => player.id === result.player_id)?.country})`
+                          : "Select player..."}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[400px] p-0" align="start">
+                      <Command>
+                        <CommandInput placeholder="Search player by name or country..." />
+                        <CommandList>
+                          <CommandEmpty>No player found.</CommandEmpty>
+                          <CommandGroup>
+                            {players.map((player) => (
+                              <CommandItem
+                                key={player.id}
+                                value={`${player.name} ${player.country} ${player.player_code || ''}`}
+                                onSelect={() => {
+                                  const newResults = [...matchData.results];
+                                  newResults[index].player_id = player.id;
+                                  setMatchData({ ...matchData, results: newResults });
+                                  setOpenPlayerId(null);
+                                }}
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    result.player_id === player.id ? "opacity-100" : "opacity-0"
+                                  )}
+                                />
+                                {player.name} ({player.country})
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                 </div>
                 <div className="flex-1 space-y-2">
                   <Label htmlFor={`position_${index}`}>Finishing Position</Label>
