@@ -85,9 +85,9 @@ export default function PlayerProfile() {
       if (account) {
         setPlayerAccount(account as PlayerAccount);
         setFormData({
-          date_of_birth: account.players.date_of_birth || "",
-          dupr_id: account.players.dupr_id || "",
-          country: account.players.country || "",
+          date_of_birth: account.players?.date_of_birth || "",
+          dupr_id: account.players?.dupr_id || "",
+          country: account.players?.country || "",
         });
       }
 
@@ -328,9 +328,9 @@ export default function PlayerProfile() {
                   <div className="flex items-center gap-6">
                     <div className="relative">
                       <Avatar className="h-24 w-24">
-                        <AvatarImage src={playerAccount.players.avatar_url || ""} />
+                        <AvatarImage src={playerAccount.players?.avatar_url || ""} />
                         <AvatarFallback>
-                          {playerAccount.players.name.substring(0, 2).toUpperCase()}
+                          {playerAccount.players?.name?.substring(0, 2).toUpperCase() || "??"}
                         </AvatarFallback>
                       </Avatar>
                       <label htmlFor="avatar-upload" className="absolute bottom-0 right-0 cursor-pointer">
@@ -347,9 +347,9 @@ export default function PlayerProfile() {
                       </label>
                     </div>
                     <div>
-                      <h3 className="text-2xl font-bold">{playerAccount.players.name}</h3>
+                      <h3 className="text-2xl font-bold">{playerAccount.players?.name || "Unknown"}</h3>
                       <Badge variant="outline" className="mt-1">
-                        {playerAccount.players.player_code}
+                        {playerAccount.players?.player_code || "N/A"}
                       </Badge>
                     </div>
                   </div>
@@ -363,14 +363,14 @@ export default function PlayerProfile() {
                           onChange={(e) => setFormData({ ...formData, country: e.target.value })}
                         />
                       ) : (
-                        <p className="text-sm text-muted-foreground mt-1">{playerAccount.players.country}</p>
+                        <p className="text-sm text-muted-foreground mt-1">{playerAccount.players?.country || "Not set"}</p>
                       )}
                     </div>
 
                     <div>
                       <Label>Gender</Label>
                       <p className="text-sm text-muted-foreground mt-1 capitalize">
-                        {playerAccount.players.gender}
+                        {playerAccount.players?.gender || "Not set"}
                       </p>
                       <p className="text-xs text-muted-foreground mt-1">
                         Contact admin to change
@@ -387,7 +387,7 @@ export default function PlayerProfile() {
                         />
                       ) : (
                         <p className="text-sm text-muted-foreground mt-1">
-                          {playerAccount.players.date_of_birth
+                          {playerAccount.players?.date_of_birth
                             ? format(new Date(playerAccount.players.date_of_birth), "PPP")
                             : "Not set"}
                         </p>
@@ -404,7 +404,7 @@ export default function PlayerProfile() {
                         />
                       ) : (
                         <p className="text-sm text-muted-foreground mt-1">
-                          {playerAccount.players.dupr_id || "Not set"}
+                          {playerAccount.players?.dupr_id || "Not set"}
                         </p>
                       )}
                     </div>
