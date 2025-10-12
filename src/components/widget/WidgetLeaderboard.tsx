@@ -70,7 +70,7 @@ export const WidgetLeaderboard = ({
       {!hideHeader && !hideHeaderParam && (
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-bold">{getCategoryName(category)}</h2>
-          <span className="text-sm text-muted-foreground">{country}</span>
+          <span className="text-sm text-muted-foreground">{country} Rankings</span>
         </div>
       )}
 
@@ -78,11 +78,12 @@ export const WidgetLeaderboard = ({
         players={players || []} 
         category={category}
         compact={compact || compactParam}
+        country={country}
       />
 
-      <div className="flex justify-center pt-2">
+      <div className="flex justify-center pt-4">
         <Link to={`/rankings?country=${country}&category=${category}`} target="_parent">
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" className="w-full sm:w-auto">
             View Full Rankings
             <ExternalLink className="ml-2 h-4 w-4" />
           </Button>

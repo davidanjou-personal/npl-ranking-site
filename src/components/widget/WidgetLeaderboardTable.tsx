@@ -14,12 +14,14 @@ interface WidgetLeaderboardTableProps {
   players: Player[];
   category: string;
   compact?: boolean;
+  country?: string;
 }
 
 export const WidgetLeaderboardTable = ({
   players,
   category,
   compact = false,
+  country = "Australia",
 }: WidgetLeaderboardTableProps) => {
   const navigate = useNavigate();
 
