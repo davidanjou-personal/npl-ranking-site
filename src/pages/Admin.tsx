@@ -63,7 +63,8 @@ export default function Admin() {
     const { data } = await supabase
       .from("players")
       .select("*")
-      .order("name");
+      .order("name")
+      .limit(5000);
     
     if (data) setPlayers(data as Player[]);
   };

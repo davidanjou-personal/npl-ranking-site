@@ -958,6 +958,13 @@ serve(async (req) => {
                 if (player.email) playersByEmail.set(player.email, player);
                 if (player.dupr_id) playersByDuprId.set(player.dupr_id, player);
                 
+                // Add to name lookup map
+                const normalizedName = originalRecord.name.toLowerCase().trim();
+                if (!playersByName.has(normalizedName)) {
+                  playersByName.set(normalizedName, []);
+                }
+                playersByName.get(normalizedName)!.push(player);
+                
                 if (record.category && record.event_date) {
                   const eventKey = `${record.tournament_name || `Bulk Import - ${fileName}`}|${record.event_date}|${record.category}`;
                   if (!eventKeyToResults.has(eventKey)) {
@@ -1010,6 +1017,13 @@ serve(async (req) => {
             { const code = normalizeCode(player.player_code); if (code) playersByCode.set(code, player); }
             if (player.email) playersByEmail.set(player.email, player);
             if (player.dupr_id) playersByDuprId.set(player.dupr_id, player);
+            
+            // Add to name lookup map
+            const normalizedName = originalRecord.name.toLowerCase().trim();
+            if (!playersByName.has(normalizedName)) {
+              playersByName.set(normalizedName, []);
+            }
+            playersByName.get(normalizedName)!.push(player);
             
             // Add to event key map if this is a match result
             if (record.category && record.event_date) {
