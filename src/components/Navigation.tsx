@@ -1,14 +1,22 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Trophy, LogOut, LayoutDashboard, Code2 } from "lucide-react";
+import { Trophy, LogOut, LayoutDashboard, Code2, Menu } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { User } from "@supabase/supabase-js";
 
 export const Navigation = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -68,9 +76,38 @@ export const Navigation = () => {
               <>
                 {isAdmin && (
                   <>
+                    {/* Mobile Admin Menu */}
+                    <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
+                      <SheetTrigger asChild className="md:hidden">
+                        <Button variant="outline" size="sm">
+                          <Menu className="h-4 w-4" />
+                        </Button>
+                      </SheetTrigger>
+                      <SheetContent side="right" className="w-64">
+                        <SheetHeader>
+                          <SheetTitle>Admin Menu</SheetTitle>
+                        </SheetHeader>
+                        <div className="flex flex-col gap-3 mt-6">
+                          <Link to="/admin" onClick={() => setIsMenuOpen(false)}>
+                            <Button variant="outline" size="sm" className="w-full justify-start">
+                              <LayoutDashboard className="mr-2 h-4 w-4" />
+                              Admin Dashboard
+                            </Button>
+                          </Link>
+                          <Link to="/widget/embed-guide" onClick={() => setIsMenuOpen(false)}>
+                            <Button variant="outline" size="sm" className="w-full justify-start">
+                              <Code2 className="mr-2 h-4 w-4" />
+                              Widget Embeds
+                            </Button>
+                          </Link>
+                        </div>
+                      </SheetContent>
+                    </Sheet>
+
+                    {/* Desktop Admin Links */}
                     <Link to="/admin" className="hidden md:block">
                       <Button variant="outline" size="sm">
-                        <LayoutDashboard className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                        <LayoutDashboard className="mr-2 h-4 w-4" />
                         <span className="hidden lg:inline">Admin Dashboard</span>
                         <span className="lg:hidden">Admin</span>
                       </Button>
