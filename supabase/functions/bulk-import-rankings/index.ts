@@ -1233,7 +1233,7 @@ serve(async (req) => {
       
       // Find or create match
       const { data: existingMatches } = await supabaseClient
-        .from('matches')
+        .from('events')
         .select('id')
         .eq('tournament_name', tournamentName)
         .eq('match_date', matchDate)
@@ -1249,7 +1249,7 @@ serve(async (req) => {
         
         // Update import_id to current import
         const { error: updateError } = await supabaseClient
-          .from('matches')
+          .from('events')
           .update({ import_id: importId })
           .eq('id', matchId);
         
@@ -1259,9 +1259,9 @@ serve(async (req) => {
         
         // Delete old results for this match
         const { error: deleteError } = await supabaseClient
-          .from('match_results')
+          .from('event_results')
           .delete()
-          .eq('match_id', matchId);
+          .eq('event_id', matchId);
         
         if (deleteError) {
           console.error(`Failed to delete old results for match ${matchId}:`, deleteError);
@@ -1271,7 +1271,7 @@ serve(async (req) => {
       } else {
         // Create new match
         const { data: newMatch, error: matchError } = await supabaseClient
-          .from('matches')
+          .from('events')
           .insert({
             tournament_name: tournamentName,
             match_date: matchDate,
@@ -1300,14 +1300,14 @@ serve(async (req) => {
       
       // Insert all results for this match
       const resultsToInsert = results.map(r => ({
-        match_id: matchId,
+        event_id: matchId,
         player_id: r.playerId,
         finishing_position: r.finishingPosition,
         points_awarded: r.points,
       }));
       
       const { error: resultsError } = await supabaseClient
-        .from('match_results')
+        .from('event_results')
         .insert(resultsToInsert);
       
       if (resultsError) {
