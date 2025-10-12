@@ -12,6 +12,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { User } from "@supabase/supabase-js";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export const Navigation = () => {
   const navigate = useNavigate();
@@ -66,6 +67,7 @@ export const Navigation = () => {
           </Link>
           
           <div className="flex items-center gap-1 sm:gap-2 md:gap-4 flex-wrap justify-end">
+            <ThemeToggle />
             <Link to="/rankings">
               <Button variant="ghost" size="sm" className="text-xs sm:text-sm px-2 sm:px-4">Rankings</Button>
             </Link>

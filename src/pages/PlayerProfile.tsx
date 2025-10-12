@@ -8,11 +8,15 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
-import { Trophy, Calendar, Award, ArrowLeft, Mail, Globe, User, UserPlus } from "lucide-react";
+import { Trophy, Calendar, Award, ArrowLeft, Mail, Globe, User, UserPlus, TrendingUp } from "lucide-react";
 import { ExpiringPointsWarning } from "@/components/player/ExpiringPointsWarning";
 import { RankingChangeIndicator } from "@/components/player/RankingChangeIndicator";
+import { PlayerStats } from "@/components/player/PlayerStats";
+import { TournamentHistory } from "@/components/player/TournamentHistory";
 import { useLatestRankingChange } from "@/hooks/useRankingHistory";
 import { useCurrentRankingsByCategory, calculateNationalRanks } from "@/hooks/useRankings";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 
 interface PlayerData {
   id: string;
@@ -37,6 +41,7 @@ interface MatchResult {
   points_awarded: number;
   finishing_position: string;
   events: {
+    id: string;
     tournament_name: string;
     match_date: string;
     category: string;
@@ -79,7 +84,6 @@ export default function PlayerProfile() {
   const fetchPlayerData = async () => {
     setLoading(true);
 
-    // Fetch player basic info (using public view to protect PII)
     const { data: playerData, error: playerError } = await supabase
       .from("players_public")
       .select("*")
@@ -89,7 +93,6 @@ export default function PlayerProfile() {
     if (!playerError && playerData) {
       setPlayer(playerData);
       
-      // Check if profile is claimed
       const { data: accountData } = await supabase
         .from("player_accounts")
         .select("id")
@@ -99,7 +102,6 @@ export default function PlayerProfile() {
       setIsClaimed(!!accountData);
     }
 
-    // Fetch current rankings (12-month)
     const { data: rankingsData, error: rankingsError } = await supabase
       .from("current_rankings")
       .select("category, total_points, rank")
@@ -109,7 +111,6 @@ export default function PlayerProfile() {
       setRankings(rankingsData);
     }
 
-    // Fetch event results
     const { data: resultsData, error: resultsError } = await supabase
       .from("event_results")
       .select(`
@@ -117,6 +118,7 @@ export default function PlayerProfile() {
         points_awarded,
         finishing_position,
         events (
+          id,
           tournament_name,
           match_date,
           category,
@@ -133,12 +135,52 @@ export default function PlayerProfile() {
     setLoading(false);
   };
 
+  // Calculate player stats
+  const playerStats = useMemo(() => {
+    if (!matchResults.length) return null;
+
+    const totalEvents = matchResults.length;
+    const totalPoints = matchResults.reduce((sum, r) => sum + r.points_awarded, 0);
+    
+    // Best finish
+    const finishOrder = ['winner', 'second', 'third', 'fourth', 'quarterfinalist', 'round_of_16', 'event_win'];
+    const bestFinish = finishOrder.find(pos => 
+      matchResults.some(r => r.finishing_position === pos)
+    ) || 'event_win';
+    
+    // Recent form (last 5 events) - calculate percentage based on points vs max possible
+    const recentEvents = matchResults.slice(0, 5);
+    const recentPoints = recentEvents.reduce((sum, r) => sum + r.points_awarded, 0);
+    const maxPossible = recentEvents.length * 1000; // Max tier1 winner points
+    const recentForm = Math.round((recentPoints / maxPossible) * 100);
+
+    return { totalEvents, totalPoints, bestFinish, recentForm };
+  }, [matchResults]);
+
+  // Transform match results to tournament history format
+  const tournamentHistory = useMemo(() => {
+    return matchResults.map(result => ({
+      id: result.events.id,
+      tournament_name: result.events.tournament_name,
+      match_date: result.events.match_date,
+      category: result.events.category,
+      tier: result.events.tier,
+      finishing_position: result.finishing_position,
+      points_awarded: result.points_awarded,
+    }));
+  }, [matchResults]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
         <Navigation />
-        <div className="container mx-auto px-4 py-12">
-          <p className="text-center text-muted-foreground">Loading player profile...</p>
+        <div className="container mx-auto px-4 py-8">
+          <Skeleton className="h-8 w-64 mb-4" />
+          <Skeleton className="h-32 w-full mb-6" />
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-32" />)}
+          </div>
+          <Skeleton className="h-64 w-full" />
         </div>
       </div>
     );
@@ -172,6 +214,25 @@ export default function PlayerProfile() {
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
+
+      {/* Breadcrumbs */}
+      <div className="container mx-auto px-4 pt-4">
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink href="/">Home</BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbLink href="/players">Players</BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>{player.name}</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+      </div>
 
       <div
         className="py-8 sm:py-12 px-4"
@@ -237,6 +298,18 @@ export default function PlayerProfile() {
           </div>
         )}
 
+        {/* Player Stats */}
+        {playerStats && (
+          <div className="mb-8">
+            <PlayerStats
+              totalEvents={playerStats.totalEvents}
+              totalPoints={playerStats.totalPoints}
+              bestFinish={playerStats.bestFinish}
+              recentForm={playerStats.recentForm}
+            />
+          </div>
+        )}
+
         {/* Current Rankings Section */}
         <div className="mb-8 sm:mb-12">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 gap-2">
@@ -256,7 +329,6 @@ export default function PlayerProfile() {
                   const { data: latestChange } = useLatestRankingChange(id!, ranking.category);
                   const { data: categoryData } = useCurrentRankingsByCategory(ranking.category);
                   
-                  // Calculate national rank for player's country
                   const nationalRankData = useMemo(() => {
                     if (!categoryData || !player?.country) return null;
                     const nationalRankings = calculateNationalRanks(categoryData, player.country);
@@ -266,7 +338,7 @@ export default function PlayerProfile() {
                   return (
                     <Card
                       key={ranking.category}
-                      className="p-6"
+                      className="p-6 hover-lift"
                       style={{
                         background: "var(--gradient-card)",
                         boxShadow: "var(--shadow-card)",
@@ -316,125 +388,14 @@ export default function PlayerProfile() {
 
         <Separator className="my-8" />
 
-        {/* Event Results Section */}
+        {/* Tournament History Section */}
         <div>
           <h2 className="text-xl sm:text-2xl font-bold text-foreground mb-4 sm:mb-6 flex items-center gap-2">
             <Award className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
-            Event History
+            Tournament History
           </h2>
 
-          {matchResults.length > 0 ? (
-            <Tabs defaultValue="all" className="w-full">
-              <TabsList className="mb-6">
-                <TabsTrigger value="all">All</TabsTrigger>
-                {Object.keys(categoryLabels).map((cat) => {
-                  const hasResults = matchResults.some(
-                    (r) => r.events?.category === cat
-                  );
-                  return hasResults ? (
-                    <TabsTrigger key={cat} value={cat}>
-                      {categoryLabels[cat]}
-                    </TabsTrigger>
-                  ) : null;
-                })}
-              </TabsList>
-
-              <TabsContent value="all">
-                <div className="space-y-3">
-                  {matchResults.map((result) => (
-                    <Card
-                      key={result.id}
-                      className="p-4 hover:shadow-lg transition-shadow"
-                    >
-                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-foreground mb-1">
-                          {result.events?.tournament_name}
-                        </h3>
-                        <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
-                          <span className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            {new Date(
-                              result.events?.match_date
-                            ).toLocaleDateString()}
-                          </span>
-                          <span>•</span>
-                          <span>
-                            {categoryLabels[result.events?.category]}
-                          </span>
-                        </div>
-                      </div>
-                        <div className="flex items-center gap-4">
-                          <Badge variant="outline">
-                            {positionLabels[result.finishing_position] ||
-                              result.finishing_position}
-                          </Badge>
-                          <div className="text-right">
-                            <p className="text-xl font-bold text-secondary">
-                              +{result.points_awarded}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              points
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    </Card>
-                  ))}
-                </div>
-              </TabsContent>
-
-              {Object.keys(categoryLabels).map((cat) => {
-                const categoryResults = matchResults.filter(
-                  (r) => r.events?.category === cat
-                );
-                return categoryResults.length > 0 ? (
-                  <TabsContent key={cat} value={cat}>
-                    <div className="space-y-3">
-                      {categoryResults.map((result) => (
-                        <Card
-                          key={result.id}
-                          className="p-4 hover:shadow-lg transition-shadow"
-                        >
-                          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                            <div className="flex-1">
-                              <h3 className="font-semibold text-foreground mb-1">
-                                {result.events?.tournament_name}
-                              </h3>
-                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                <Calendar className="h-3 w-3" />
-                                {new Date(
-                                  result.events?.match_date
-                                ).toLocaleDateString()}
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-4">
-                              <Badge variant="outline">
-                                {positionLabels[result.finishing_position] ||
-                                  result.finishing_position}
-                              </Badge>
-                              <div className="text-right">
-                                <p className="text-xl font-bold text-secondary">
-                                  +{result.points_awarded}
-                                </p>
-                                <p className="text-xs text-muted-foreground">
-                                  points
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        </Card>
-                      ))}
-                    </div>
-                  </TabsContent>
-                ) : null;
-              })}
-            </Tabs>
-          ) : (
-            <Card className="p-8 text-center">
-              <p className="text-muted-foreground">No event results found</p>
-            </Card>
-          )}
+          <TournamentHistory results={tournamentHistory} />
         </div>
       </div>
     </div>

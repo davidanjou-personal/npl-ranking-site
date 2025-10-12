@@ -14,6 +14,10 @@ import { ImportHistoryList } from "@/components/admin/ImportHistoryList";
 import { PendingClaimsTab } from "@/components/admin/PendingClaimsTab";
 import { ProfileUpdateRequestsTab } from "@/components/admin/ProfileUpdateRequestsTab";
 import { AdminDashboard } from "@/components/admin/AdminDashboard";
+import { BulkEditPlayers } from "@/components/admin/BulkEditPlayers";
+import { Button } from "@/components/ui/button";
+import { Download } from "lucide-react";
+import { exportPlayers, exportRankings, exportTournaments } from "@/utils/csvExport";
 import type { Player, MatchWithResults } from "@/types/admin";
 
 export default function Admin() {
@@ -122,6 +126,78 @@ export default function Admin() {
     if (data) setImports(data);
   };
 
+  const handleExportPlayers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("players")
+        .select("*")
+        .order("name");
+
+      if (error) throw error;
+      exportPlayers(data || []);
+      
+      toast({
+        title: "Export successful",
+        description: "Players data has been downloaded.",
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Export failed",
+        description: error.message,
+      });
+    }
+  };
+
+  const handleExportRankings = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("current_rankings")
+        .select("*")
+        .order("rank");
+
+      if (error) throw error;
+      exportRankings(data || [], 'current');
+      
+      toast({
+        title: "Export successful",
+        description: "Rankings data has been downloaded.",
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Export failed",
+        description: error.message,
+      });
+    }
+  };
+
+  const handleExportTournaments = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("events")
+        .select(`
+          *,
+          event_results(*)
+        `)
+        .order("match_date", { ascending: false });
+
+      if (error) throw error;
+      exportTournaments(data || []);
+      
+      toast({
+        title: "Export successful",
+        description: "Tournaments data has been downloaded.",
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Export failed",
+        description: error.message,
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
@@ -143,13 +219,14 @@ export default function Admin() {
         <h1 className="text-4xl font-bold mb-8 text-foreground">Admin Dashboard</h1>
 
         <Tabs defaultValue="dashboard" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-10 mb-8 overflow-x-auto">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-11 mb-8 overflow-x-auto">
             <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
             <TabsTrigger value="add-player">Add Player</TabsTrigger>
             <TabsTrigger value="add-result">Record Event</TabsTrigger>
             <TabsTrigger value="bulk-import-players">Import Players</TabsTrigger>
             <TabsTrigger value="bulk-import-matches">Import Events</TabsTrigger>
             <TabsTrigger value="view-players">View Players</TabsTrigger>
+            <TabsTrigger value="bulk-edit">Bulk Edit</TabsTrigger>
             <TabsTrigger value="view-matches">View Events</TabsTrigger>
             <TabsTrigger value="pending-claims">Claims</TabsTrigger>
             <TabsTrigger value="profile-updates">Updates</TabsTrigger>
@@ -188,6 +265,12 @@ export default function Admin() {
           </TabsContent>
 
           <TabsContent value="view-players">
+            <div className="flex justify-end mb-4">
+              <Button onClick={handleExportPlayers} variant="outline">
+                <Download className="mr-2 h-4 w-4" />
+                Export Players CSV
+              </Button>
+            </div>
             <PlayersTable players={players} onRefresh={fetchPlayers} />
             <div className="mt-4 flex items-center justify-between border-t pt-4">
               <p className="text-sm text-muted-foreground">
@@ -205,7 +288,21 @@ export default function Admin() {
             </div>
           </TabsContent>
 
+          <TabsContent value="bulk-edit">
+            <BulkEditPlayers players={players} onComplete={fetchPlayers} />
+          </TabsContent>
+
           <TabsContent value="view-matches">
+            <div className="flex justify-end gap-2 mb-4">
+              <Button onClick={handleExportRankings} variant="outline">
+                <Download className="mr-2 h-4 w-4" />
+                Export Rankings CSV
+              </Button>
+              <Button onClick={handleExportTournaments} variant="outline">
+                <Download className="mr-2 h-4 w-4" />
+                Export Tournaments CSV
+              </Button>
+            </div>
             <MatchesList matches={matches} onRefresh={fetchMatches} />
           </TabsContent>
 
