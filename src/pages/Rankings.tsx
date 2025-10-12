@@ -17,7 +17,7 @@ const categoryLabels: Record<string, string> = {
 };
 
 export default function Rankings() {
-  const [viewMode, setViewMode] = useState<'current' | 'lifetime'>('current');
+  const [viewMode, setViewMode] = useState<"current" | "lifetime">("current");
   const [selectedCountry, setSelectedCountry] = useState<string>("all");
   const [selectedGender, setSelectedGender] = useState<string>("all");
   const [currentCategory, setCurrentCategory] = useState<string>("mens_singles");
@@ -25,36 +25,27 @@ export default function Rankings() {
   // Fetch only the active category to build the country list and avoid global 1000-row caps
   const { data: currentCategoryData } = useCurrentRankingsByCategory(currentCategory);
   const { data: lifetimeCategoryData } = useAllTimeRankingsByCategory(currentCategory);
-  const categoryDataset = viewMode === 'current' ? currentCategoryData : lifetimeCategoryData;
+  const categoryDataset = viewMode === "current" ? currentCategoryData : lifetimeCategoryData;
 
   // Get unique countries based on the active category dataset
   const countries = useMemo(() => {
     const list = categoryDataset || [];
-    const uniqueCountries = new Set(
-      list
-        .map((p) => p.country)
-        .filter((country): country is string => !!country)
-    );
+    const uniqueCountries = new Set(list.map((p) => p.country).filter((country): country is string => !!country));
     return Array.from(uniqueCountries).sort();
   }, [categoryDataset]);
 
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
-      
-      <div 
-        className="py-12 sm:py-16 px-4"
-        style={{ background: "var(--gradient-hero)" }}
-      >
+
+      <div className="py-12 sm:py-16 px-4" style={{ background: "var(--gradient-hero)" }}>
         <div className="container mx-auto text-center">
           <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-primary-foreground mb-3 sm:mb-4 px-2">
-            {selectedCountry === 'all' 
-              ? 'NPL Global Rankings' 
-              : `${selectedCountry} National Rankings`}
+            {selectedCountry === "all" ? "Player Rankings" : `${selectedCountry} National Rankings`}
           </h1>
           <p className="text-base sm:text-lg md:text-xl text-primary-foreground/90 px-2">
-            {selectedCountry === 'all'
-              ? 'Official National Pickleball League Player Rankings'
+            {selectedCountry === "all"
+              ? "Official National Pickleball League Player Rankings"
               : `Rankings for ${selectedCountry} players in the NPL`}
           </p>
           <Link to="/how-it-works" className="inline-block mt-3 sm:mt-4">
@@ -69,21 +60,21 @@ export default function Rankings() {
         <div className="flex flex-col sm:flex-row justify-center items-stretch sm:items-center gap-3 sm:gap-4 mb-6 sm:mb-8">
           <div className="inline-flex rounded-lg border bg-muted p-1 w-full sm:w-auto">
             <button
-              onClick={() => setViewMode('current')}
+              onClick={() => setViewMode("current")}
               className={`flex-1 sm:flex-none px-4 sm:px-6 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors ${
-                viewMode === 'current'
-                  ? 'bg-background text-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground'
+                viewMode === "current"
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
               Current (12-month)
             </button>
             <button
-              onClick={() => setViewMode('lifetime')}
+              onClick={() => setViewMode("lifetime")}
               className={`flex-1 sm:flex-none px-4 sm:px-6 py-2 rounded-md text-xs sm:text-sm font-medium transition-colors ${
-                viewMode === 'lifetime'
-                  ? 'bg-background text-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground'
+                viewMode === "lifetime"
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
               All-Time
