@@ -23,6 +23,15 @@ interface MatchesListProps {
   onRefresh?: () => void;
 }
 
+interface TournamentGroup {
+  tournament_name: string;
+  match_date: string;
+  tier: string;
+  categories: string[];
+  is_public: boolean;
+  matches: MatchWithResults[];
+}
+
 const categoryLabels: Record<string, string> = {
   mens_singles: "Men's Singles",
   womens_singles: "Women's Singles",
@@ -48,21 +57,45 @@ export function MatchesList({ matches, onRefresh }: MatchesListProps) {
   const [deleting, setDeleting] = useState(false);
   const [togglingVisibility, setTogglingVisibility] = useState<string | null>(null);
 
-  const handleToggleVisibility = async (matchId: string, currentlyPublic: boolean) => {
-    setTogglingVisibility(matchId);
+  // Group matches by tournament name and date
+  const tournamentGroups = matches.reduce((groups, match) => {
+    const key = `${match.tournament_name}-${match.match_date}`;
+    if (!groups[key]) {
+      groups[key] = {
+        tournament_name: match.tournament_name,
+        match_date: match.match_date,
+        tier: match.tier,
+        categories: [match.category],
+        is_public: match.is_public,
+        matches: [match],
+      };
+    } else {
+      groups[key].categories.push(match.category);
+      groups[key].matches.push(match);
+    }
+    return groups;
+  }, {} as Record<string, TournamentGroup>);
+
+  const groupedTournaments = Object.values(tournamentGroups);
+
+  const handleToggleVisibility = async (tournamentName: string, matchDate: string, currentlyPublic: boolean) => {
+    const key = `${tournamentName}-${matchDate}`;
+    setTogglingVisibility(key);
     try {
+      // Update all events in this tournament group
       const { error } = await supabase
         .from('events')
         .update({ is_public: !currentlyPublic })
-        .eq('id', matchId);
+        .eq('tournament_name', tournamentName)
+        .eq('match_date', matchDate);
 
       if (error) throw error;
 
       toast({
-        title: currentlyPublic ? "Event hidden" : "Event made public",
+        title: currentlyPublic ? "Tournament hidden" : "Tournament made public",
         description: currentlyPublic 
-          ? "This event is now hidden from the tournaments page." 
-          : "This event is now visible on the tournaments page.",
+          ? "This tournament is now hidden from the tournaments page." 
+          : "This tournament is now visible on the tournaments page.",
       });
 
       onRefresh?.();
@@ -120,75 +153,95 @@ export function MatchesList({ matches, onRefresh }: MatchesListProps) {
   return (
     <>
       <div className="space-y-4">
-        {matches.map((match) => (
-          <Card key={match.id}>
-            <CardHeader>
-              <CardTitle className="text-lg flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span>{match.tournament_name}</span>
-                  {!match.is_public && (
-                    <Badge variant="outline" className="text-xs">
-                      <EyeOff className="h-3 w-3 mr-1" />
-                      Hidden
-                    </Badge>
-                  )}
-                </div>
-                <div className="flex items-center gap-2">
-                  <Badge variant="outline">{categoryLabels[match.category]}</Badge>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleToggleVisibility(match.id, match.is_public)}
-                    disabled={togglingVisibility === match.id}
-                    title={match.is_public ? "Hide from public" : "Show to public"}
-                  >
-                    {match.is_public ? (
-                      <Eye className="h-4 w-4" />
-                    ) : (
-                      <EyeOff className="h-4 w-4 text-muted-foreground" />
+        {groupedTournaments.map((group) => {
+          const key = `${group.tournament_name}-${group.match_date}`;
+          return (
+            <Card key={key}>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span>{group.tournament_name}</span>
+                    {!group.is_public && (
+                      <Badge variant="outline" className="text-xs">
+                        <EyeOff className="h-3 w-3 mr-1" />
+                        Hidden
+                      </Badge>
                     )}
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setEditingMatch(match)}
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setDeleteId(match.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleToggleVisibility(group.tournament_name, group.match_date, group.is_public)}
+                      disabled={togglingVisibility === key}
+                      title={group.is_public ? "Hide tournament from public" : "Show tournament to public"}
+                    >
+                      {group.is_public ? (
+                        <Eye className="h-4 w-4" />
+                      ) : (
+                        <EyeOff className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </Button>
+                  </div>
+                </CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  {new Date(group.match_date).toLocaleDateString()}
+                  {group.tier !== 'historic' && ` • ${group.tier.toUpperCase()}`}
+                </p>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {group.categories.map((cat, idx) => (
+                    <Badge key={`${cat}-${idx}`} variant="outline">
+                      {categoryLabels[cat]}
+                    </Badge>
+                  ))}
                 </div>
-              </CardTitle>
-            <p className="text-sm text-muted-foreground">
-              {new Date(match.match_date).toLocaleDateString()}
-              {match.tier !== 'historic' && ` • ${match.tier.toUpperCase()}`}
-            </p>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <h4 className="font-semibold text-sm">Results:</h4>
-              <ul className="space-y-1">
-                {match.match_results?.map((result) => (
-                  <li key={result.id} className="text-sm flex items-center justify-between">
-                    <span>
-                      {result.players?.name} -{" "}
-                      <span className="text-muted-foreground">
-                        {positionLabels[result.finishing_position]}
-                      </span>
-                    </span>
-                    <Badge variant="secondary">{result.points_awarded} pts</Badge>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            </CardContent>
-          </Card>
-        ))}
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {group.matches.map((match) => (
+                    <div key={match.id} className="border rounded-lg p-3 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Badge variant="secondary">{categoryLabels[match.category]}</Badge>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setEditingMatch(match)}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setDeleteId(match.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="space-y-1">
+                        <h4 className="font-semibold text-sm">Results:</h4>
+                        <ul className="space-y-1">
+                          {match.event_results?.map((result) => (
+                            <li key={result.id} className="text-sm flex items-center justify-between">
+                              <span>
+                                {result.players?.name} -{" "}
+                                <span className="text-muted-foreground">
+                                  {positionLabels[result.finishing_position]}
+                                </span>
+                              </span>
+                              <Badge variant="secondary">{result.points_awarded} pts</Badge>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
       {editingMatch && (
@@ -206,9 +259,9 @@ export function MatchesList({ matches, onRefresh }: MatchesListProps) {
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Match?</AlertDialogTitle>
+            <AlertDialogTitle>Delete Event?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete this match and all its results.
+              This will permanently delete this event and all its results.
               This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -219,7 +272,7 @@ export function MatchesList({ matches, onRefresh }: MatchesListProps) {
               disabled={deleting}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {deleting ? "Deleting..." : "Delete Match"}
+              {deleting ? "Deleting..." : "Delete Event"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
