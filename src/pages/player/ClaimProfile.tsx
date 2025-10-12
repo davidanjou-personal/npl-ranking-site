@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { Navigation } from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -132,8 +133,9 @@ export default function ClaimProfile() {
   };
 
   return (
-    <div className="min-h-screen bg-background py-12 px-4">
-      <div className="container max-w-4xl mx-auto">
+    <div className="min-h-screen bg-background">
+      <Navigation />
+      <div className="container max-w-4xl mx-auto py-12 px-4">
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-2">Claim Your Player Profile</h1>
           <p className="text-muted-foreground">

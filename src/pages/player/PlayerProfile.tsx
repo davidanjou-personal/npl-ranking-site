@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { Navigation } from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -239,16 +240,20 @@ export default function PlayerProfile() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
       </div>
     );
   }
 
   if (!playerAccount && pendingClaims.length === 0) {
     return (
-      <div className="min-h-screen bg-background py-12 px-4">
-        <div className="container max-w-2xl mx-auto text-center">
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <div className="container max-w-2xl mx-auto text-center py-12 px-4">
           <h1 className="text-4xl font-bold mb-4">No Profile Found</h1>
           <p className="text-muted-foreground mb-8">
             You haven't claimed a player profile yet.
@@ -262,8 +267,9 @@ export default function PlayerProfile() {
   }
 
   return (
-    <div className="min-h-screen bg-background py-12 px-4">
-      <div className="container max-w-4xl mx-auto">
+    <div className="min-h-screen bg-background">
+      <Navigation />
+      <div className="container max-w-4xl mx-auto py-12 px-4">
         {pendingClaims.length > 0 && !playerAccount && (
           <Card className="mb-6 border-yellow-500">
             <CardHeader>
