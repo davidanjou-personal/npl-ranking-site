@@ -22,6 +22,7 @@ export interface Match {
   match_date: string;
   tier: "tier1" | "tier2" | "tier3" | "tier4" | "historic";
   category: "mens_singles" | "womens_singles" | "mens_doubles" | "womens_doubles" | "mixed_doubles";
+  is_public: boolean;
   created_at?: string;
   created_by?: string;
 }

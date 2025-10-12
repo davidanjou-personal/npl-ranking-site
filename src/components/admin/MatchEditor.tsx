@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -61,6 +62,7 @@ export function MatchEditor({ match, open, onOpenChange, onSaved }: MatchEditorP
   const [matchDate, setMatchDate] = useState(match.match_date);
   const [category, setCategory] = useState<string>(match.category);
   const [tier, setTier] = useState<string>(match.tier);
+  const [isPublic, setIsPublic] = useState(match.is_public ?? true);
   
   const [results, setResults] = useState(
     match.match_results?.map(r => ({
@@ -83,6 +85,7 @@ export function MatchEditor({ match, open, onOpenChange, onSaved }: MatchEditorP
           match_date: matchDate,
           category: category as any,
           tier: tier as any,
+          is_public: isPublic,
         })
         .eq('id', match.id);
 
@@ -180,6 +183,20 @@ export function MatchEditor({ match, open, onOpenChange, onSaved }: MatchEditorP
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+
+            <div className="flex items-center justify-between border rounded-lg p-4">
+              <div className="space-y-0.5">
+                <Label htmlFor="visibility">Public Visibility</Label>
+                <p className="text-sm text-muted-foreground">
+                  Show this event on the public tournaments page
+                </p>
+              </div>
+              <Switch
+                id="visibility"
+                checked={isPublic}
+                onCheckedChange={setIsPublic}
+              />
             </div>
           </div>
 

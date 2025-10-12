@@ -25,6 +25,7 @@ export const useTournaments = (filters: TournamentFilters = {}) => {
       let query = supabase
         .from("events")
         .select("*")
+        .eq("is_public", true) // Only show public events
         .order("match_date", { ascending: false });
 
       if (filters.category) {

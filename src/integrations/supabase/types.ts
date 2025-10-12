@@ -130,6 +130,7 @@ export type Database = {
           created_by: string | null
           id: string
           import_id: string | null
+          is_public: boolean
           match_date: string
           tier: Database["public"]["Enums"]["tournament_tier"]
           tournament_name: string
@@ -140,6 +141,7 @@ export type Database = {
           created_by?: string | null
           id?: string
           import_id?: string | null
+          is_public?: boolean
           match_date: string
           tier?: Database["public"]["Enums"]["tournament_tier"]
           tournament_name: string
@@ -150,6 +152,7 @@ export type Database = {
           created_by?: string | null
           id?: string
           import_id?: string | null
+          is_public?: boolean
           match_date?: string
           tier?: Database["public"]["Enums"]["tournament_tier"]
           tournament_name?: string

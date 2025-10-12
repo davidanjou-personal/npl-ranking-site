@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2, Eye, EyeOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -46,6 +46,36 @@ export function MatchesList({ matches, onRefresh }: MatchesListProps) {
   const [editingMatch, setEditingMatch] = useState<MatchWithResults | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [togglingVisibility, setTogglingVisibility] = useState<string | null>(null);
+
+  const handleToggleVisibility = async (matchId: string, currentlyPublic: boolean) => {
+    setTogglingVisibility(matchId);
+    try {
+      const { error } = await supabase
+        .from('events')
+        .update({ is_public: !currentlyPublic })
+        .eq('id', matchId);
+
+      if (error) throw error;
+
+      toast({
+        title: currentlyPublic ? "Event hidden" : "Event made public",
+        description: currentlyPublic 
+          ? "This event is now hidden from the tournaments page." 
+          : "This event is now visible on the tournaments page.",
+      });
+
+      onRefresh?.();
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Update failed",
+        description: error.message,
+      });
+    } finally {
+      setTogglingVisibility(null);
+    }
+  };
 
   const handleDelete = async () => {
     if (!deleteId) return;
@@ -94,9 +124,30 @@ export function MatchesList({ matches, onRefresh }: MatchesListProps) {
           <Card key={match.id}>
             <CardHeader>
               <CardTitle className="text-lg flex items-center justify-between">
-                <span>{match.tournament_name}</span>
+                <div className="flex items-center gap-2">
+                  <span>{match.tournament_name}</span>
+                  {!match.is_public && (
+                    <Badge variant="outline" className="text-xs">
+                      <EyeOff className="h-3 w-3 mr-1" />
+                      Hidden
+                    </Badge>
+                  )}
+                </div>
                 <div className="flex items-center gap-2">
                   <Badge variant="outline">{categoryLabels[match.category]}</Badge>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleToggleVisibility(match.id, match.is_public)}
+                    disabled={togglingVisibility === match.id}
+                    title={match.is_public ? "Hide from public" : "Show to public"}
+                  >
+                    {match.is_public ? (
+                      <Eye className="h-4 w-4" />
+                    ) : (
+                      <EyeOff className="h-4 w-4 text-muted-foreground" />
+                    )}
+                  </Button>
                   <Button
                     variant="ghost"
                     size="sm"
