@@ -276,6 +276,53 @@ export type Database = {
           },
         ]
       }
+      player_merges: {
+        Row: {
+          events_transferred: number
+          id: string
+          merged_at: string
+          merged_by: string | null
+          merged_player_code: string
+          merged_player_data: Json
+          merged_player_id: string
+          merged_player_name: string
+          points_transferred: number
+          primary_player_id: string
+        }
+        Insert: {
+          events_transferred?: number
+          id?: string
+          merged_at?: string
+          merged_by?: string | null
+          merged_player_code: string
+          merged_player_data: Json
+          merged_player_id: string
+          merged_player_name: string
+          points_transferred?: number
+          primary_player_id: string
+        }
+        Update: {
+          events_transferred?: number
+          id?: string
+          merged_at?: string
+          merged_by?: string | null
+          merged_player_code?: string
+          merged_player_data?: Json
+          merged_player_id?: string
+          merged_player_name?: string
+          points_transferred?: number
+          primary_player_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "player_merges_primary_player_id_fkey"
+            columns: ["primary_player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       player_profile_updates: {
         Row: {
           created_at: string | null
@@ -694,6 +741,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      merge_players: {
+        Args: { duplicate_player_id: string; primary_player_id: string }
+        Returns: Json
       }
       update_player_rankings: {
         Args: Record<PropertyKey, never>

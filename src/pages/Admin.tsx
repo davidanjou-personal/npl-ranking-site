@@ -17,8 +17,9 @@ import { AdminDashboard } from "@/components/admin/AdminDashboard";
 import { BulkEditPlayers } from "@/components/admin/BulkEditPlayers";
 import { UpcomingTournamentForm } from "@/components/admin/UpcomingTournamentForm";
 import { UpcomingTournamentsList } from "@/components/admin/UpcomingTournamentsList";
+import { PlayerMergeDialog } from "@/components/admin/PlayerMergeDialog";
 import { Button } from "@/components/ui/button";
-import { Download } from "lucide-react";
+import { Download, Users } from "lucide-react";
 import { exportPlayers, exportRankings, exportTournaments } from "@/utils/csvExport";
 import type { Player, MatchWithResults } from "@/types/admin";
 
@@ -34,6 +35,7 @@ export default function Admin() {
   const [page, setPage] = useState(0);
   const [totalCount, setTotalCount] = useState<number | null>(null);
   const [loadingPage, setLoadingPage] = useState(false);
+  const [mergeDialogOpen, setMergeDialogOpen] = useState(false);
   
 
   useEffect(() => {
@@ -268,7 +270,11 @@ export default function Admin() {
           </TabsContent>
 
           <TabsContent value="view-players">
-            <div className="flex justify-end mb-4">
+            <div className="flex justify-end gap-2 mb-4">
+              <Button onClick={() => setMergeDialogOpen(true)} variant="outline">
+                <Users className="mr-2 h-4 w-4" />
+                Merge Players
+              </Button>
               <Button onClick={handleExportPlayers} variant="outline">
                 <Download className="mr-2 h-4 w-4" />
                 Export Players CSV
@@ -341,6 +347,15 @@ export default function Admin() {
             />
           </TabsContent>
         </Tabs>
+
+        <PlayerMergeDialog
+          open={mergeDialogOpen}
+          onOpenChange={setMergeDialogOpen}
+          onSuccess={() => {
+            fetchPlayers();
+            fetchMatches();
+          }}
+        />
       </div>
     </div>
   );
