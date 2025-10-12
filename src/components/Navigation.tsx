@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { LogOut, LayoutDashboard, Code2, Menu, UserPlus } from "lucide-react";
+import { LogOut, LayoutDashboard, Code2, Menu, UserPlus, Trophy, Users, Info, User as UserIcon } from "lucide-react";
 import nplLogo from "@/assets/npl-logo.svg";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/sheet";
 import { User } from "@supabase/supabase-js";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { Separator } from "@/components/ui/separator";
 
 export const Navigation = () => {
   const navigate = useNavigate();
@@ -68,35 +69,115 @@ export const Navigation = () => {
           
           <div className="flex items-center gap-1 sm:gap-2 md:gap-4 flex-wrap justify-end">
             <ThemeToggle />
-            <Link to="/rankings">
+            
+            {/* Rankings - always visible */}
+            <Link to="/rankings" className="hidden sm:block">
               <Button variant="ghost" size="sm" className="text-xs sm:text-sm px-2 sm:px-4">Rankings</Button>
             </Link>
-            <Link to="/tournaments" className="hidden md:block">
+            
+            {/* Desktop Navigation - hidden on mobile/tablet */}
+            <Link to="/tournaments" className="hidden lg:block">
               <Button variant="ghost" size="sm" className="text-xs sm:text-sm px-2 sm:px-4">Tournaments</Button>
             </Link>
             <Link to="/players" className="hidden lg:block">
               <Button variant="ghost" size="sm" className="text-xs sm:text-sm px-2 sm:px-4">Players</Button>
             </Link>
-            <Link to="/how-it-works" className="hidden sm:block">
+            <Link to="/how-it-works" className="hidden lg:block">
               <Button variant="ghost" size="sm" className="text-xs sm:text-sm">How It Works</Button>
             </Link>
             
             {user ? (
               <>
-                {isAdmin && (
+                {isAdmin ? (
                   <>
-                    {/* Mobile Admin Menu */}
-                    <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
-                      <SheetTrigger asChild className="md:hidden">
-                        <Button variant="outline" size="sm">
-                          <Menu className="h-4 w-4" />
-                        </Button>
-                      </SheetTrigger>
-                      <SheetContent side="right" className="w-64">
-                        <SheetHeader>
-                          <SheetTitle>Admin Menu</SheetTitle>
-                        </SheetHeader>
-                        <div className="flex flex-col gap-3 mt-6">
+                    <Link to="/admin" className="hidden lg:block">
+                      <Button variant="outline" size="sm">
+                        <LayoutDashboard className="mr-2 h-4 w-4" />
+                        Admin Dashboard
+                      </Button>
+                    </Link>
+                    <Link to="/widget/embed-guide" className="hidden lg:block">
+                      <Button variant="outline" size="sm">
+                        <Code2 className="mr-2 h-4 w-4" />
+                        Widget Embeds
+                      </Button>
+                    </Link>
+                    <Button variant="ghost" size="sm" onClick={handleSignOut} className="hidden lg:flex text-xs sm:text-sm px-2 sm:px-4">
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Sign Out
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Link to="/player/profile" className="hidden lg:block">
+                      <Button variant="outline" size="sm" className="text-xs sm:text-sm px-2 sm:px-4">
+                        My Profile
+                      </Button>
+                    </Link>
+                    <Button variant="ghost" size="sm" onClick={handleSignOut} className="hidden lg:flex text-xs sm:text-sm px-2 sm:px-4">
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Sign Out
+                    </Button>
+                  </>
+                )}
+              </>
+            ) : (
+              <>
+                <Link to="/player/claim" className="hidden lg:block">
+                  <Button variant="outline" size="sm" className="text-xs sm:text-sm px-3 sm:px-4">
+                    <UserPlus className="h-4 w-4 mr-2" />
+                    Claim Profile
+                  </Button>
+                </Link>
+                <Link to="/auth" className="hidden lg:block">
+                  <Button size="sm" className="text-xs sm:text-sm px-3 sm:px-4">Sign In</Button>
+                </Link>
+              </>
+            )}
+            
+            {/* Universal Mobile Menu - visible on mobile/tablet */}
+            <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
+              <SheetTrigger asChild className="lg:hidden">
+                <Button variant="outline" size="sm">
+                  <Menu className="h-4 w-4" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-64">
+                <SheetHeader>
+                  <SheetTitle>Menu</SheetTitle>
+                </SheetHeader>
+                <div className="flex flex-col gap-3 mt-6">
+                  {/* Common Navigation Items */}
+                  <Link to="/rankings" onClick={() => setIsMenuOpen(false)} className="sm:hidden">
+                    <Button variant="ghost" size="sm" className="w-full justify-start">
+                      <Trophy className="mr-2 h-4 w-4" />
+                      Rankings
+                    </Button>
+                  </Link>
+                  <Link to="/tournaments" onClick={() => setIsMenuOpen(false)}>
+                    <Button variant="ghost" size="sm" className="w-full justify-start">
+                      <Trophy className="mr-2 h-4 w-4" />
+                      Tournaments
+                    </Button>
+                  </Link>
+                  <Link to="/players" onClick={() => setIsMenuOpen(false)}>
+                    <Button variant="ghost" size="sm" className="w-full justify-start">
+                      <Users className="mr-2 h-4 w-4" />
+                      Players
+                    </Button>
+                  </Link>
+                  <Link to="/how-it-works" onClick={() => setIsMenuOpen(false)}>
+                    <Button variant="ghost" size="sm" className="w-full justify-start">
+                      <Info className="mr-2 h-4 w-4" />
+                      How It Works
+                    </Button>
+                  </Link>
+                  
+                  {user ? (
+                    <>
+                      {isAdmin && (
+                        <>
+                          <Separator className="my-2" />
                           <Link to="/admin" onClick={() => setIsMenuOpen(false)}>
                             <Button variant="outline" size="sm" className="w-full justify-start">
                               <LayoutDashboard className="mr-2 h-4 w-4" />
@@ -109,51 +190,52 @@ export const Navigation = () => {
                               Widget Embeds
                             </Button>
                           </Link>
-                        </div>
-                      </SheetContent>
-                    </Sheet>
-
-                    {/* Desktop Admin Links */}
-                    <Link to="/admin" className="hidden md:block">
-                      <Button variant="outline" size="sm">
-                        <LayoutDashboard className="mr-2 h-4 w-4" />
-                        <span className="hidden lg:inline">Admin Dashboard</span>
-                        <span className="lg:hidden">Admin</span>
+                        </>
+                      )}
+                      {!isAdmin && (
+                        <>
+                          <Separator className="my-2" />
+                          <Link to="/player/profile" onClick={() => setIsMenuOpen(false)}>
+                            <Button variant="outline" size="sm" className="w-full justify-start">
+                              <UserIcon className="mr-2 h-4 w-4" />
+                              My Profile
+                            </Button>
+                          </Link>
+                        </>
+                      )}
+                      <Separator className="my-2" />
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => {
+                          handleSignOut();
+                          setIsMenuOpen(false);
+                        }} 
+                        className="w-full justify-start"
+                      >
+                        <LogOut className="mr-2 h-4 w-4" />
+                        Sign Out
                       </Button>
-                    </Link>
-                    <Link to="/widget/embed-guide" className="hidden lg:block">
-                      <Button variant="outline" size="sm">
-                        <Code2 className="mr-2 h-4 w-4" />
-                        Widget Embeds
-                      </Button>
-                    </Link>
-                  </>
-                )}
-                {!isAdmin && (
-                  <Link to="/player/profile">
-                    <Button variant="outline" size="sm" className="text-xs sm:text-sm px-2 sm:px-4">
-                      My Profile
-                    </Button>
-                  </Link>
-                )}
-                <Button variant="ghost" size="sm" onClick={handleSignOut} className="text-xs sm:text-sm px-2 sm:px-4">
-                  <LogOut className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2" />
-                  <span className="hidden sm:inline">Sign Out</span>
-                </Button>
-              </>
-            ) : (
-              <>
-                <Link to="/player/claim" className="hidden sm:block">
-                  <Button variant="outline" size="sm" className="text-xs sm:text-sm px-3 sm:px-4">
-                    <UserPlus className="h-4 w-4 mr-2" />
-                    Claim Profile
-                  </Button>
-                </Link>
-                <Link to="/auth">
-                  <Button size="sm" className="text-xs sm:text-sm px-3 sm:px-4">Sign In</Button>
-                </Link>
-              </>
-            )}
+                    </>
+                  ) : (
+                    <>
+                      <Separator className="my-2" />
+                      <Link to="/player/claim" onClick={() => setIsMenuOpen(false)}>
+                        <Button variant="outline" size="sm" className="w-full justify-start">
+                          <UserPlus className="mr-2 h-4 w-4" />
+                          Claim Profile
+                        </Button>
+                      </Link>
+                      <Link to="/auth" onClick={() => setIsMenuOpen(false)}>
+                        <Button size="sm" className="w-full justify-start">
+                          Sign In
+                        </Button>
+                      </Link>
+                    </>
+                  )}
+                </div>
+              </SheetContent>
+            </Sheet>
           </div>
         </div>
       </div>
