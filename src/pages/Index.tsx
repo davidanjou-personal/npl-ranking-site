@@ -1,4 +1,5 @@
 import { Navigation } from "@/components/Navigation";
+import { Footer } from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Trophy, TrendingUp, Users, Award } from "lucide-react";
@@ -128,11 +129,7 @@ const Index = () => {
         </div>
       </section>
 
-      <footer className="border-t py-8 px-4 bg-card">
-        <div className="container mx-auto text-center text-muted-foreground">
-          <p>&copy; 2025 National Pickleball League. All rights reserved.</p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 };
