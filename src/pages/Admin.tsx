@@ -13,6 +13,7 @@ import { MatchesList } from "@/components/admin/MatchesList";
 import { ImportHistoryList } from "@/components/admin/ImportHistoryList";
 import { PendingClaimsTab } from "@/components/admin/PendingClaimsTab";
 import { ProfileUpdateRequestsTab } from "@/components/admin/ProfileUpdateRequestsTab";
+import { AdminDashboard } from "@/components/admin/AdminDashboard";
 import type { Player, MatchWithResults } from "@/types/admin";
 
 export default function Admin() {
@@ -142,8 +143,9 @@ export default function Admin() {
       <div className="container mx-auto px-4 py-12">
         <h1 className="text-4xl font-bold mb-8 text-foreground">Admin Dashboard</h1>
 
-        <Tabs defaultValue="add-player" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-9 mb-8 overflow-x-auto">
+        <Tabs defaultValue="dashboard" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-10 mb-8 overflow-x-auto">
+            <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
             <TabsTrigger value="add-player">Add Player</TabsTrigger>
             <TabsTrigger value="add-result">Record Event</TabsTrigger>
             <TabsTrigger value="bulk-import-players">Import Players</TabsTrigger>
@@ -154,6 +156,10 @@ export default function Admin() {
             <TabsTrigger value="profile-updates">Updates</TabsTrigger>
             <TabsTrigger value="import-history">History</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="dashboard">
+            <AdminDashboard />
+          </TabsContent>
 
           <TabsContent value="add-player">
             <AddPlayerForm onPlayerAdded={fetchPlayers} />

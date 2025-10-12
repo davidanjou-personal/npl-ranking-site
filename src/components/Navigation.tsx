@@ -69,6 +69,12 @@ export const Navigation = () => {
             <Link to="/rankings">
               <Button variant="ghost" size="sm" className="text-xs sm:text-sm px-2 sm:px-4">Rankings</Button>
             </Link>
+            <Link to="/tournaments" className="hidden md:block">
+              <Button variant="ghost" size="sm" className="text-xs sm:text-sm px-2 sm:px-4">Tournaments</Button>
+            </Link>
+            <Link to="/players" className="hidden lg:block">
+              <Button variant="ghost" size="sm" className="text-xs sm:text-sm px-2 sm:px-4">Players</Button>
+            </Link>
             <Link to="/how-it-works" className="hidden sm:block">
               <Button variant="ghost" size="sm" className="text-xs sm:text-sm">How It Works</Button>
             </Link>

@@ -77,7 +77,7 @@ export function useCurrentRankings() {
       if (error) throw error;
       return data as RankingData[];
     },
-    staleTime: 0,
+    staleTime: 5 * 60 * 1000, // 5 minutes
     refetchOnWindowFocus: true,
     refetchOnMount: 'always',
   });

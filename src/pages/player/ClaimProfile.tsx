@@ -35,7 +35,8 @@ export default function ClaimProfile() {
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .rpc('get_players_public')
+        .from('players_public')
+        .select('*')
         .or(`name.ilike.%${searchTerm}%,country.ilike.%${searchTerm}%,player_code.ilike.%${searchTerm}%`)
         .limit(10);
 

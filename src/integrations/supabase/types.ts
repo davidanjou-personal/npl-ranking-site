@@ -632,20 +632,6 @@ export type Database = {
           updated_at: string
         }[]
       }
-      get_players_public: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          avatar_url: string
-          country: string
-          created_at: string
-          dupr_id: string
-          gender: string
-          id: string
-          name: string
-          player_code: string
-          updated_at: string
-        }[]
-      }
       get_players_public_data: {
         Args: Record<PropertyKey, never>
         Returns: {

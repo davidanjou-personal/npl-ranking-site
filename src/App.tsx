@@ -10,6 +10,9 @@ import Auth from "./pages/Auth";
 import Admin from "./pages/Admin";
 import HowItWorks from "./pages/HowItWorks";
 import NotFound from "./pages/NotFound";
+import Tournaments from "./pages/Tournaments";
+import TournamentDetail from "./pages/TournamentDetail";
+import Players from "./pages/Players";
 import ClaimProfile from "./pages/player/ClaimProfile";
 import PlayerProfileManage from "./pages/player/PlayerProfile";
 import WidgetMensSingles from "./pages/widgets/WidgetMensSingles";
@@ -31,6 +34,9 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/rankings" element={<Rankings />} />
+          <Route path="/tournaments" element={<Tournaments />} />
+          <Route path="/tournaments/:id" element={<TournamentDetail />} />
+          <Route path="/players" element={<Players />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/player/claim" element={<ClaimProfile />} />
