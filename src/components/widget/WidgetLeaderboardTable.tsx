@@ -1,5 +1,4 @@
 import { Trophy, Medal } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 
 interface Player {
@@ -23,8 +22,6 @@ export const WidgetLeaderboardTable = ({
   compact = false,
   country = "Australia",
 }: WidgetLeaderboardTableProps) => {
-  const navigate = useNavigate();
-
   const getMedalIcon = (rank: number) => {
     if (rank === 1) return <Trophy className="h-5 w-5 text-yellow-500" />;
     if (rank === 2) return <Medal className="h-5 w-5 text-gray-400" />;
@@ -40,7 +37,7 @@ export const WidgetLeaderboardTable = ({
   };
 
   const handlePlayerClick = (playerId: string) => {
-    navigate(`/player/${playerId}`);
+    window.open(`/player/${playerId}`, '_blank');
   };
 
   return (
