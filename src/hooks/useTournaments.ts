@@ -82,6 +82,16 @@ export const useTournamentDetail = (eventId: string) => {
   return useQuery({
     queryKey: ["tournament", eventId],
     queryFn: async () => {
+      // First, get the event to find tournament name and date
+      const { data: initialEvent, error: initialError } = await supabase
+        .from("events")
+        .select("tournament_name, match_date, tier")
+        .eq("id", eventId)
+        .single();
+
+      if (initialError) throw initialError;
+
+      // Then fetch ALL events for this tournament (all categories)
       const { data, error } = await supabase
         .from("events")
         .select(`
@@ -97,11 +107,29 @@ export const useTournamentDetail = (eventId: string) => {
             )
           )
         `)
-        .eq("id", eventId)
-        .single();
+        .eq("tournament_name", initialEvent.tournament_name)
+        .eq("match_date", initialEvent.match_date)
+        .order("category", { ascending: true });
 
       if (error) throw error;
-      return data;
+
+      // Combine all event_results from all events
+      const allResults = data.flatMap(event => 
+        (event.event_results || []).map(result => ({
+          ...result,
+          category: event.category // Add category to each result
+        }))
+      );
+
+      // Return the first event with all combined results
+      return {
+        ...data[0],
+        tournament_name: initialEvent.tournament_name,
+        match_date: initialEvent.match_date,
+        tier: initialEvent.tier,
+        event_results: allResults,
+        all_events: data // Keep all events for reference
+      };
     },
     staleTime: 10 * 60 * 1000, // 10 minutes
   });

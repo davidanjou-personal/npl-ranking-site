@@ -40,9 +40,11 @@ export default function TournamentDetail() {
 
   const getPositionLabel = (position: string) => {
     const labels: Record<string, string> = {
+      winner: "Winner",
       first: "1st Place",
       second: "2nd Place",
       third: "3rd Place",
+      fourth: "4th Place",
       semifinalist: "Semi-Finalist",
       quarterfinalist: "Quarter-Finalist",
       r16: "Round of 16",
@@ -53,7 +55,7 @@ export default function TournamentDetail() {
   };
 
   const getPositionIcon = (position: string) => {
-    if (position === "first") return <Trophy className="h-5 w-5 text-yellow-500" />;
+    if (position === "winner" || position === "first") return <Trophy className="h-5 w-5 text-yellow-500" />;
     if (position === "second") return <Medal className="h-5 w-5 text-gray-400" />;
     if (position === "third") return <Medal className="h-5 w-5 text-amber-600" />;
     return null;
@@ -102,8 +104,15 @@ export default function TournamentDetail() {
   const categories = [...new Set(tournament.all_results.map((r: any) => r.category || tournament.category))];
   
   const sortedResults = [...(tournament.all_results || [])].sort((a, b) => {
-    const order = ["first", "second", "third", "semifinalist", "quarterfinalist", "r16", "r32", "r64"];
-    return order.indexOf(a.finishing_position) - order.indexOf(b.finishing_position);
+    const order = ["winner", "second", "third", "fourth", "semifinalist", "quarterfinalist", "r16", "r32", "r64"];
+    const indexA = order.indexOf(a.finishing_position);
+    const indexB = order.indexOf(b.finishing_position);
+    
+    // Handle unknown positions by putting them at the end
+    const finalA = indexA === -1 ? 999 : indexA;
+    const finalB = indexB === -1 ? 999 : indexB;
+    
+    return finalA - finalB;
   });
 
   return (
