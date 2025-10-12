@@ -94,13 +94,6 @@ export type Database = {
             referencedRelation: "players"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "match_results_player_id_fkey"
-            columns: ["player_id"]
-            isOneToOne: false
-            referencedRelation: "players_public"
-            referencedColumns: ["id"]
-          },
         ]
       }
       events: {
@@ -276,22 +269,7 @@ export type Database = {
           rank: number | null
           total_points: number | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "match_results_player_id_fkey"
-            columns: ["player_id"]
-            isOneToOne: false
-            referencedRelation: "players"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "match_results_player_id_fkey"
-            columns: ["player_id"]
-            isOneToOne: false
-            referencedRelation: "players_public"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       expiring_points: {
         Row: {
@@ -302,22 +280,7 @@ export type Database = {
           next_expiry_date: string | null
           player_id: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "match_results_player_id_fkey"
-            columns: ["player_id"]
-            isOneToOne: false
-            referencedRelation: "players"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "match_results_player_id_fkey"
-            columns: ["player_id"]
-            isOneToOne: false
-            referencedRelation: "players_public"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       match_results: {
         Row: {
@@ -370,13 +333,6 @@ export type Database = {
             columns: ["player_id"]
             isOneToOne: false
             referencedRelation: "players"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "match_results_player_id_fkey"
-            columns: ["player_id"]
-            isOneToOne: false
-            referencedRelation: "players_public"
             referencedColumns: ["id"]
           },
         ]
@@ -435,22 +391,7 @@ export type Database = {
           total_points: number | null
           updated_at: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "match_results_player_id_fkey"
-            columns: ["player_id"]
-            isOneToOne: false
-            referencedRelation: "players"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "match_results_player_id_fkey"
-            columns: ["player_id"]
-            isOneToOne: false
-            referencedRelation: "players_public"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       players_public: {
         Row: {
@@ -463,28 +404,6 @@ export type Database = {
           name: string | null
           player_code: string | null
           updated_at: string | null
-        }
-        Insert: {
-          avatar_url?: string | null
-          country?: string | null
-          created_at?: string | null
-          dupr_id?: string | null
-          gender?: string | null
-          id?: string | null
-          name?: string | null
-          player_code?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          avatar_url?: string | null
-          country?: string | null
-          created_at?: string | null
-          dupr_id?: string | null
-          gender?: string | null
-          id?: string | null
-          name?: string | null
-          player_code?: string | null
-          updated_at?: string | null
         }
         Relationships: []
       }
@@ -504,9 +423,32 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: string
       }
+      get_current_rankings: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          category: Database["public"]["Enums"]["player_category"]
+          country: string
+          gender: string
+          name: string
+          player_id: string
+          rank: number
+          total_points: number
+        }[]
+      }
       get_current_user_id: {
         Args: Record<PropertyKey, never>
         Returns: string
+      }
+      get_expiring_points: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          category: Database["public"]["Enums"]["player_category"]
+          country: string
+          expiring_points: number
+          name: string
+          next_expiry_date: string
+          player_id: string
+        }[]
       }
       get_player_ranking_summary: {
         Args: {
@@ -522,7 +464,36 @@ export type Database = {
           next_expiry_date: string
         }[]
       }
+      get_player_rankings: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          category: Database["public"]["Enums"]["player_category"]
+          country: string
+          created_at: string
+          gender: string
+          id: string
+          name: string
+          player_id: string
+          rank: number
+          total_points: number
+          updated_at: string
+        }[]
+      }
       get_players_public: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          avatar_url: string
+          country: string
+          created_at: string
+          dupr_id: string
+          gender: string
+          id: string
+          name: string
+          player_code: string
+          updated_at: string
+        }[]
+      }
+      get_players_public_data: {
         Args: Record<PropertyKey, never>
         Returns: {
           avatar_url: string
