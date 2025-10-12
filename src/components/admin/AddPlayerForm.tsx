@@ -30,7 +30,9 @@ export function AddPlayerForm({ onPlayerAdded }: AddPlayerFormProps) {
     email: "",
     date_of_birth: "",
     dupr_id: "",
+    alternate_names: [],
   });
+  const [alternateNameInput, setAlternateNameInput] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,6 +47,7 @@ export function AddPlayerForm({ onPlayerAdded }: AddPlayerFormProps) {
         email: formData.email || null,
         date_of_birth: formData.date_of_birth || null,
         dupr_id: formData.dupr_id || null,
+        alternate_names: formData.alternate_names && formData.alternate_names.length > 0 ? formData.alternate_names : null,
       };
       
       if (validatedData.player_code) {
@@ -68,7 +71,9 @@ export function AddPlayerForm({ onPlayerAdded }: AddPlayerFormProps) {
         email: "",
         date_of_birth: "",
         dupr_id: "",
+        alternate_names: [],
       });
+      setAlternateNameInput("");
 
       onPlayerAdded();
     } catch (error: any) {
@@ -158,6 +163,91 @@ export function AddPlayerForm({ onPlayerAdded }: AddPlayerFormProps) {
               />
             </div>
           </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="alternate_names">Alternate Names (optional)</Label>
+            <p className="text-sm text-muted-foreground">
+              Add nicknames or spelling variations (e.g., "Joey Wild" for Joseph Wild). Used for matching during bulk imports.
+            </p>
+            <div className="flex gap-2">
+              <Input
+                id="alternate_names"
+                value={alternateNameInput}
+                onChange={(e) => setAlternateNameInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const trimmed = alternateNameInput.trim();
+                    if (trimmed && !formData.alternate_names?.includes(trimmed)) {
+                      if ((formData.alternate_names?.length || 0) < 10) {
+                        setFormData({ 
+                          ...formData, 
+                          alternate_names: [...(formData.alternate_names || []), trimmed] 
+                        });
+                        setAlternateNameInput("");
+                      } else {
+                        toast({
+                          variant: "destructive",
+                          title: "Limit reached",
+                          description: "Maximum 10 alternate names allowed",
+                        });
+                      }
+                    }
+                  }
+                }}
+                placeholder="Type a name and press Enter"
+              />
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => {
+                  const trimmed = alternateNameInput.trim();
+                  if (trimmed && !formData.alternate_names?.includes(trimmed)) {
+                    if ((formData.alternate_names?.length || 0) < 10) {
+                      setFormData({ 
+                        ...formData, 
+                        alternate_names: [...(formData.alternate_names || []), trimmed] 
+                      });
+                      setAlternateNameInput("");
+                    } else {
+                      toast({
+                        variant: "destructive",
+                        title: "Limit reached",
+                        description: "Maximum 10 alternate names allowed",
+                      });
+                    }
+                  }
+                }}
+              >
+                Add
+              </Button>
+            </div>
+            {formData.alternate_names && formData.alternate_names.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-2">
+                {formData.alternate_names.map((name, index) => (
+                  <div
+                    key={index}
+                    className="bg-secondary text-secondary-foreground px-3 py-1 rounded-md text-sm flex items-center gap-2"
+                  >
+                    {name}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFormData({
+                          ...formData,
+                          alternate_names: formData.alternate_names?.filter((_, i) => i !== index),
+                        });
+                      }}
+                      className="text-muted-foreground hover:text-foreground"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+          
           <Button type="submit">Add Player</Button>
         </form>
       </CardContent>

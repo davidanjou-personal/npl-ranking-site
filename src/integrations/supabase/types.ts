@@ -322,6 +322,7 @@ export type Database = {
       }
       players: {
         Row: {
+          alternate_names: string[] | null
           avatar_url: string | null
           country: string
           created_at: string | null
@@ -335,6 +336,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          alternate_names?: string[] | null
           avatar_url?: string | null
           country: string
           created_at?: string | null
@@ -348,6 +350,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          alternate_names?: string[] | null
           avatar_url?: string | null
           country?: string
           created_at?: string | null

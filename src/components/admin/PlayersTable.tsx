@@ -27,6 +27,7 @@ interface Player {
   email?: string;
   date_of_birth?: string;
   dupr_id?: string;
+  alternate_names?: string[] | null;
 }
 
 interface PlayersTableProps {
@@ -70,6 +71,7 @@ export function PlayersTable({ players, onRefresh }: PlayersTableProps) {
         email: editForm.email || null,
         date_of_birth: editForm.date_of_birth || null,
         dupr_id: editForm.dupr_id || null,
+        alternate_names: editForm.alternate_names && editForm.alternate_names.length > 0 ? editForm.alternate_names : null,
       })
       .eq("id", editingId);
 
@@ -148,13 +150,14 @@ export function PlayersTable({ players, onRefresh }: PlayersTableProps) {
               <TableHead>Email</TableHead>
               <TableHead>DOB</TableHead>
               <TableHead>DUPR ID</TableHead>
+              <TableHead>Alternate Names</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {filteredPlayers.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center text-muted-foreground">
+                <TableCell colSpan={9} className="text-center text-muted-foreground">
                   No players found
                 </TableCell>
               </TableRow>
@@ -237,6 +240,28 @@ export function PlayersTable({ players, onRefresh }: PlayersTableProps) {
                       />
                     ) : (
                       <span className="text-muted-foreground">{player.dupr_id || "—"}</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {editingId === player.id ? (
+                      <Input
+                        value={editForm.alternate_names?.join(", ") || ""}
+                        onChange={(e) => {
+                          const names = e.target.value
+                            .split(",")
+                            .map(n => n.trim())
+                            .filter(n => n.length > 0);
+                          setEditForm({ ...editForm, alternate_names: names.length > 0 ? names : null });
+                        }}
+                        className="h-8"
+                        placeholder="Joey, Joe"
+                      />
+                    ) : (
+                      <span className="text-muted-foreground text-xs">
+                        {player.alternate_names && player.alternate_names.length > 0
+                          ? player.alternate_names.join(", ")
+                          : "—"}
+                      </span>
                     )}
                   </TableCell>
                   <TableCell className="text-right">

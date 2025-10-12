@@ -10,6 +10,7 @@ export interface Player {
   date_of_birth?: string | null;
   dupr_id?: string | null;
   avatar_url?: string | null;
+  alternate_names?: string[] | null;
   created_at?: string;
   updated_at?: string;
 }
@@ -61,6 +62,7 @@ export interface PlayerFormData {
   email?: string;
   date_of_birth?: string;
   dupr_id?: string;
+  alternate_names?: string[];
 }
 
 // Event form data (previously "match" form data)

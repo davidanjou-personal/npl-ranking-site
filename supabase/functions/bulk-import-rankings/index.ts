@@ -452,10 +452,24 @@ serve(async (req) => {
         const existing = playersByName.get(normalizedName) || [];
         existing.push(player);
         playersByName.set(normalizedName, existing);
+        
+        // Index by alternate names (for matching during imports)
+        if (player.alternate_names && Array.isArray(player.alternate_names)) {
+          for (const altName of player.alternate_names) {
+            if (altName && typeof altName === 'string') {
+              const normalizedAlt = altName.toLowerCase().trim();
+              if (normalizedAlt) {
+                const existingAlts = playersByName.get(normalizedAlt) || [];
+                existingAlts.push(player);
+                playersByName.set(normalizedAlt, existingAlts);
+              }
+            }
+          }
+        }
       }
     }
 
-    console.log(`Built lookup maps: ${playersByCode.size} codes, ${playersByEmail.size} emails, ${playersByDuprId.size} DUPR IDs, ${playersByName.size} unique names`);
+    console.log(`Built lookup maps: ${playersByCode.size} codes, ${playersByEmail.size} emails, ${playersByDuprId.size} DUPR IDs, ${playersByName.size} unique names (including alternates)`);
 
     // If no resolutions provided, check for duplicates and return them
     if (!resolutionMap) {
@@ -515,12 +529,25 @@ serve(async (req) => {
           }
         }
         
-        // 4. Check by player_name (fallback)
+        // 4. Check by player_name (including alternate names - fallback)
+        // Note: This checks both primary names and alternate names in the same lookup
+        // Multiple players could have the same name or alternate name (e.g., two "Joey Wilds")
         if (!matchedPlayer && record.player_name && record.player_name.trim() !== '') {
           const normalizedName = record.player_name.toLowerCase().trim();
           const existingPlayers = playersByName.get(normalizedName);
           if (existingPlayers && existingPlayers.length > 0) {
-            console.log(`Row ${i + 2} (${record.player_name}): Matched by name to ${existingPlayers.length} existing player(s)`);
+            // Check if any match is via alternate name for logging
+            const altMatches = existingPlayers.filter(p => 
+              p.alternate_names && 
+              Array.isArray(p.alternate_names) && 
+              p.alternate_names.some((alt: string) => alt.toLowerCase().trim() === normalizedName)
+            );
+            if (altMatches.length > 0) {
+              console.log(`Row ${i + 2} (${record.player_name}): Matched by alternate name to ${altMatches.length} existing player(s): ${altMatches.map(p => p.name).join(', ')}`);
+            } else {
+              console.log(`Row ${i + 2} (${record.player_name}): Matched by primary name to ${existingPlayers.length} existing player(s)`);
+            }
+            
             // For name matches, return all matching players (might be multiple)
             duplicates.push({
               csv_row: i + 2, // +2 because: +1 for 0-index, +1 for header row
