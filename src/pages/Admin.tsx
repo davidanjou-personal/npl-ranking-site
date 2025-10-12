@@ -107,8 +107,7 @@ export default function Admin() {
           )
         )
       `)
-      .order("match_date", { ascending: false })
-      .limit(50);
+      .order("match_date", { ascending: false });
     
     if (data) setMatches(data as MatchWithResults[]);
   };
