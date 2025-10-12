@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -147,6 +147,10 @@ export function BulkImportTab({ onImportComplete }: BulkImportTabProps) {
       <Card>
         <CardHeader>
           <CardTitle>Bulk Import Players</CardTitle>
+          <CardDescription>
+            Upload a CSV file with player information. Required fields: name, country, gender. 
+            Optional: player_code (auto-generated if not provided), email, date_of_birth, dupr_id.
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>

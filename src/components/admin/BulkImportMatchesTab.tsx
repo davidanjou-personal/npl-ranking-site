@@ -25,16 +25,16 @@ export function BulkImportMatchesTab({ onImportComplete }: BulkImportMatchesTabP
 
   const downloadTemplate = () => {
     const template = `player_name,player_code,country,gender,category,finishing_position,event_date,tournament_name,tier
-John Doe,NPL000000001,USA,male,mens_singles,1,2024-10-01,Spring Championship,tier2
-Jane Smith,NPL000000002,Canada,female,womens_singles,2,2024-10-01,Spring Championship,tier2
-Mike Johnson,NPL000000003,USA,male,mens_singles,5,2024-10-01,Spring Championship,tier2
-Sarah Lee,NPL000000004,Canada,female,womens_doubles,9,2024-10-01,Spring Championship,historic`;
+John Doe,NPL000000001,USA,male,mens_singles,winner,2024-10-01,Spring Championship,tier2
+Jane Smith,NPL000000002,Canada,female,womens_singles,second,2024-10-01,Spring Championship,tier2
+Mike Johnson,NPL000000003,USA,male,mens_singles,quarterfinalist,2024-10-01,Spring Championship,tier2
+Sarah Lee,NPL000000004,Canada,female,womens_doubles,round_of_16,2024-10-01,Spring Championship,tier2`;
     
     const blob = new Blob([template], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'match_import_template.csv';
+    a.download = 'event_results_import_template.csv';
     a.click();
     window.URL.revokeObjectURL(url);
   };
@@ -92,7 +92,7 @@ Sarah Lee,NPL000000004,Canada,female,womens_doubles,9,2024-10-01,Spring Champion
       } else {
         toast({
           title: "Import Successful",
-          description: `Successfully imported ${data.successful} matches with ${data.failed} failures.`,
+          description: `Successfully imported ${data.successful} events with ${data.failed} failures.`,
         });
         onImportComplete();
         setFile(null);
@@ -102,7 +102,7 @@ Sarah Lee,NPL000000004,Canada,female,womens_doubles,9,2024-10-01,Spring Champion
       toast({
         variant: "destructive",
         title: "Import Failed",
-        description: error.message || "Failed to import matches.",
+        description: error.message || "Failed to import event results.",
       });
     } finally {
       setImporting(false);
@@ -129,7 +129,7 @@ Sarah Lee,NPL000000004,Canada,female,womens_doubles,9,2024-10-01,Spring Champion
 
       toast({
         title: "Import Complete",
-        description: `Successfully imported ${data.successful} matches. ${data.failed} failed.`,
+        description: `Successfully imported ${data.successful} events. ${data.failed} failed.`,
       });
 
       if (data.errors && data.errors.length > 0) {
@@ -160,19 +160,21 @@ Sarah Lee,NPL000000004,Canada,female,womens_doubles,9,2024-10-01,Spring Champion
         <CardTitle>Bulk Import Event Results</CardTitle>
         <CardDescription>
           Upload a CSV file containing event results with player information.
-          The system will handle player creation/matching automatically.
+          The system will automatically match players by code, email, or DUPR ID, and create new players when needed.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <Alert>
           <AlertDescription>
-            CSV Format: player_name, player_code, country, gender, category, finishing_position, event_date, tournament_name, tier
+            <strong>CSV Format:</strong> player_name, player_code, country, gender, category, finishing_position, event_date, tournament_name, tier
+            <br /><br />
+            <strong>Categories:</strong> mens_singles, womens_singles, mens_doubles, womens_doubles, mixed_doubles
             <br />
-            Categories: mens_singles, womens_singles, mens_doubles, womens_doubles, mixed_doubles
+            <strong>Tiers:</strong> tier1, tier2, tier3, tier4, historic
             <br />
-            Positions: Use numbers (1=winner, 2=runner-up, 3=third, 4=fourth, 5-8=quarterfinalist, 9-16=round of 16, other=points awarded) OR text (winner, second, third, fourth, quarter_finalist, round_of_16, points_awarded)
-            <br />
-            Tiers: tier1, tier2, tier3, tier4, historic (for imported results with no tier)
+            <strong>Finishing Positions:</strong> winner, second, third, fourth, quarterfinalist, round_of_16, event_win
+            <br /><br />
+            <strong>Tip:</strong> Download the template below for the correct format with examples.
           </AlertDescription>
         </Alert>
 

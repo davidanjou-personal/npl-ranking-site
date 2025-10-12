@@ -77,7 +77,7 @@ export function AddMatchResultForm({ players, onMatchAdded }: AddMatchResultForm
 
       toast({
         title: "Success",
-        description: "Match result added successfully",
+        description: "Event result added successfully",
       });
 
       setMatchData({
@@ -122,7 +122,7 @@ export function AddMatchResultForm({ players, onMatchAdded }: AddMatchResultForm
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Record Match Result</CardTitle>
+        <CardTitle>Record Event Result</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -139,7 +139,7 @@ export function AddMatchResultForm({ players, onMatchAdded }: AddMatchResultForm
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="match_date">Date *</Label>
+              <Label htmlFor="match_date">Event Date *</Label>
               <Input
                 id="match_date"
                 type="date"
@@ -194,7 +194,7 @@ export function AddMatchResultForm({ players, onMatchAdded }: AddMatchResultForm
 
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <Label>Player Results *</Label>
+              <Label>Event Results *</Label>
               <Button type="button" variant="outline" size="sm" onClick={addPlayerResult}>
                 <Plus className="h-4 w-4 mr-2" />
                 Add Player
@@ -262,7 +262,7 @@ export function AddMatchResultForm({ players, onMatchAdded }: AddMatchResultForm
             ))}
           </div>
 
-          <Button type="submit">Record Match Result</Button>
+          <Button type="submit">Record Event Result</Button>
         </form>
       </CardContent>
     </Card>
