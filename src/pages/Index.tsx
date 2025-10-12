@@ -13,7 +13,7 @@ const Index = () => {
 
       <section className="py-16 sm:py-20 md:py-28 px-4 relative overflow-hidden" style={{ background: "var(--gradient-hero)" }}>
         <div className="container mx-auto text-center relative z-10">
-          <img src={nplLogo} alt="NPL Logo" className="h-20 w-20 sm:h-28 sm:w-28 mx-auto mb-6 sm:mb-8 drop-shadow-lg animate-fade-in" />
+          <img src={nplLogo} alt="NPL Logo" className="h-32 w-32 sm:h-40 sm:w-40 mx-auto mb-6 sm:mb-8 drop-shadow-lg animate-fade-in" />
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-heading font-bold text-primary-foreground mb-6 sm:mb-8 px-2 tracking-tight">
             National Pickleball League
           </h1>
