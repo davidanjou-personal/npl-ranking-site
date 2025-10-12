@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Trophy, LogOut, LayoutDashboard, Code2, Menu } from "lucide-react";
+import { Trophy, LogOut, LayoutDashboard, Code2, Menu, UserPlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import {
@@ -133,9 +133,17 @@ export const Navigation = () => {
                 </Button>
               </>
             ) : (
-              <Link to="/auth">
-                <Button size="sm" className="text-xs sm:text-sm px-3 sm:px-4">Sign In</Button>
-              </Link>
+              <>
+                <Link to="/player/claim" className="hidden sm:block">
+                  <Button variant="outline" size="sm" className="text-xs sm:text-sm px-3 sm:px-4">
+                    <UserPlus className="h-4 w-4 mr-2" />
+                    Claim Profile
+                  </Button>
+                </Link>
+                <Link to="/auth">
+                  <Button size="sm" className="text-xs sm:text-sm px-3 sm:px-4">Sign In</Button>
+                </Link>
+              </>
             )}
           </div>
         </div>

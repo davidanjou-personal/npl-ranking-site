@@ -2,6 +2,7 @@ import { Navigation } from "@/components/Navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Trophy, Calendar, TrendingUp, Info } from "lucide-react";
@@ -223,6 +224,73 @@ export default function HowItWorks() {
                   those points will count toward your current ranking until January 15, 2025, when they expire 
                   from the 12-month window. However, they remain in your all-time total forever.
                 </p>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+
+        {/* Player Profile Claims */}
+        <section className="mb-8 sm:mb-12">
+          <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-4 sm:mb-6 flex items-center gap-2">
+            <Trophy className="h-6 w-6 sm:h-7 sm:w-7 text-primary" />
+            Claiming Your Player Profile
+          </h2>
+
+          <Card style={{ background: "var(--gradient-card)", boxShadow: "var(--shadow-card)" }}>
+            <CardHeader>
+              <CardTitle>Get Access to Your Profile</CardTitle>
+              <CardDescription>
+                Take control of your player profile and keep your information up to date
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <h3 className="font-semibold text-foreground mb-2">How to Claim Your Profile:</h3>
+                <ol className="list-decimal list-inside space-y-2 text-muted-foreground">
+                  <li>Sign up or log in to your account</li>
+                  <li>Search for your player profile by name, country, or player code</li>
+                  <li>Submit a claim request for your profile</li>
+                  <li>An admin will review and approve your claim (usually within 24-48 hours)</li>
+                  <li>Once approved, you can manage your profile information</li>
+                </ol>
+              </div>
+              
+              <Separator />
+              
+              <div>
+                <h3 className="font-semibold text-foreground mb-2">What You Can Update:</h3>
+                <div className="grid sm:grid-cols-2 gap-3">
+                  <div className="p-3 bg-background/50 rounded-lg">
+                    <p className="font-medium text-sm mb-1 text-foreground">✓ Update Instantly</p>
+                    <ul className="text-sm text-muted-foreground space-y-1">
+                      <li>• Profile photo</li>
+                      <li>• Date of birth</li>
+                      <li>• DUPR ID</li>
+                      <li>• Country</li>
+                    </ul>
+                  </div>
+                  <div className="p-3 bg-background/50 rounded-lg">
+                    <p className="font-medium text-sm mb-1 text-foreground">⏳ Requires Admin Approval</p>
+                    <ul className="text-sm text-muted-foreground space-y-1">
+                      <li>• Name changes</li>
+                      <li>• Gender changes</li>
+                      <li>• Player code changes</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-3 pt-4">
+                <Link to="/player/claim">
+                  <Button size="lg" className="w-full sm:w-auto">
+                    Claim Your Profile
+                  </Button>
+                </Link>
+                <Link to="/auth">
+                  <Button size="lg" variant="outline" className="w-full sm:w-auto">
+                    Sign In / Sign Up
+                  </Button>
+                </Link>
               </div>
             </CardContent>
           </Card>
