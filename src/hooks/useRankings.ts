@@ -9,6 +9,58 @@ export interface RankingData {
   gender: string | null;
   total_points: number;
   rank: number;
+  nationalRank?: number; // Calculated on-the-fly when country filter is active
+}
+
+// Utility function to recalculate ranks within a country subset
+export function calculateNationalRanks(
+  data: RankingData[],
+  country: string
+): RankingData[] {
+  if (!country || country === 'all') {
+    return data;
+  }
+
+  // Filter by country
+  const countryPlayers = data.filter(
+    (p) => p.country?.toLowerCase() === country.toLowerCase()
+  );
+
+  // Sort by total_points descending
+  const sorted = [...countryPlayers].sort((a, b) => b.total_points - a.total_points);
+
+  // Assign national ranks (handling ties with same rank)
+  let currentRank = 1;
+  let previousPoints = -1;
+  
+  return sorted.map((player, index) => {
+    if (player.total_points !== previousPoints) {
+      currentRank = index + 1;
+      previousPoints = player.total_points;
+    }
+    
+    return {
+      ...player,
+      nationalRank: currentRank,
+    };
+  });
+}
+
+// Hook to get national rankings for a specific country
+export function useNationalRankings(
+  category: string,
+  country: string,
+  viewMode: 'current' | 'lifetime'
+) {
+  const currentQuery = useCurrentRankingsByCategory(category);
+  const lifetimeQuery = useAllTimeRankingsByCategory(category);
+  
+  const query = viewMode === 'current' ? currentQuery : lifetimeQuery;
+  
+  return {
+    ...query,
+    data: query.data ? calculateNationalRanks(query.data, country) : undefined,
+  };
 }
 
 export function useCurrentRankings() {

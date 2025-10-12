@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Navigation } from "@/components/Navigation";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,6 +11,7 @@ import { Trophy, Calendar, Award, ArrowLeft, Mail, Globe, User } from "lucide-re
 import { ExpiringPointsWarning } from "@/components/player/ExpiringPointsWarning";
 import { RankingChangeIndicator } from "@/components/player/RankingChangeIndicator";
 import { useLatestRankingChange } from "@/hooks/useRankingHistory";
+import { useCurrentRankingsByCategory, calculateNationalRanks } from "@/hooks/useRankings";
 
 interface PlayerData {
   id: string;
@@ -231,6 +232,14 @@ export default function PlayerProfile() {
               {rankings.map((ranking) => {
                 const RankingCard = () => {
                   const { data: latestChange } = useLatestRankingChange(id!, ranking.category);
+                  const { data: categoryData } = useCurrentRankingsByCategory(ranking.category);
+                  
+                  // Calculate national rank for player's country
+                  const nationalRankData = useMemo(() => {
+                    if (!categoryData || !player?.country) return null;
+                    const nationalRankings = calculateNationalRanks(categoryData, player.country);
+                    return nationalRankings.find(r => r.player_id === id);
+                  }, [categoryData]);
                   
                   return (
                     <Card
@@ -245,15 +254,22 @@ export default function PlayerProfile() {
                         <h3 className="font-semibold text-foreground">
                           {categoryLabels[ranking.category]}
                         </h3>
-                        <div className="flex items-center gap-2">
-                          <Badge variant="secondary">Rank #{ranking.rank}</Badge>
-                          {latestChange && (
-                            <RankingChangeIndicator
-                              oldRank={latestChange.old_rank}
-                              newRank={latestChange.new_rank}
-                              oldPoints={latestChange.old_points}
-                              newPoints={latestChange.new_points}
-                            />
+                        <div className="flex flex-col items-end gap-1">
+                          <div className="flex items-center gap-2">
+                            <Badge variant="secondary">Global #{ranking.rank}</Badge>
+                            {latestChange && (
+                              <RankingChangeIndicator
+                                oldRank={latestChange.old_rank}
+                                newRank={latestChange.new_rank}
+                                oldPoints={latestChange.old_points}
+                                newPoints={latestChange.new_points}
+                              />
+                            )}
+                          </div>
+                          {nationalRankData?.nationalRank && player?.country && (
+                            <Badge variant="outline" className="text-xs">
+                              {player.country} #{nationalRankData.nationalRank}
+                            </Badge>
                           )}
                         </div>
                       </div>

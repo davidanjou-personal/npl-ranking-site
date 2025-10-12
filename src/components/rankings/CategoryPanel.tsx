@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { PlayerRankingCard } from "@/components/rankings/PlayerRankingCard";
-import { useAllTimeRankingsByCategory, useCurrentRankingsByCategory, type RankingData } from "@/hooks/useRankings";
+import { useAllTimeRankingsByCategory, useCurrentRankingsByCategory, calculateNationalRanks, type RankingData } from "@/hooks/useRankings";
 
 export type ViewMode = 'current' | 'lifetime';
 
@@ -18,9 +18,16 @@ export function CategoryPanel({ category, viewMode, selectedCountry, selectedGen
   const data: RankingData[] | undefined = viewMode === 'current' ? currentData : lifetimeData;
   const loading = viewMode === 'current' ? loadingCurrent : loadingLifetime;
 
-  const filtered = (data || [])
+  // Filter by country and gender
+  let filtered = (data || [])
     .filter((p) => selectedCountry === 'all' || (p.country || '').toLowerCase() === selectedCountry.toLowerCase())
     .filter((p) => category !== 'mixed_doubles' || selectedGender === 'all' || (p.gender || '').toLowerCase() === selectedGender.toLowerCase());
+
+  // Calculate national ranks if country filter is active
+  const isNationalView = selectedCountry !== 'all';
+  if (isNationalView && selectedCountry) {
+    filtered = calculateNationalRanks(filtered, selectedCountry);
+  }
 
   if (loading) {
     return (
@@ -41,6 +48,8 @@ export function CategoryPanel({ category, viewMode, selectedCountry, selectedGen
             name={player.name}
             country={player.country || undefined}
             totalPoints={player.total_points}
+            nationalRank={player.nationalRank}
+            showNationalRank={isNationalView}
           />
         ))
       ) : (

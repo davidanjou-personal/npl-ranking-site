@@ -8,6 +8,8 @@ interface PlayerRankingCardProps {
   name: string;
   country?: string;
   totalPoints: number;
+  nationalRank?: number;
+  showNationalRank?: boolean;
 }
 
 const getRankIcon = (rank: number) => {
@@ -17,7 +19,18 @@ const getRankIcon = (rank: number) => {
   return null;
 };
 
-export function PlayerRankingCard({ playerId, rank, name, country, totalPoints }: PlayerRankingCardProps) {
+export function PlayerRankingCard({ 
+  playerId, 
+  rank, 
+  name, 
+  country, 
+  totalPoints,
+  nationalRank,
+  showNationalRank = false 
+}: PlayerRankingCardProps) {
+  // When showing national rank, display it as primary, global as secondary
+  const displayRank = showNationalRank && nationalRank ? nationalRank : rank;
+  
   return (
     <Link to={`/player/${playerId}`}>
       <div
@@ -28,7 +41,7 @@ export function PlayerRankingCard({ playerId, rank, name, country, totalPoints }
         }}
       >
         <div className="flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 text-primary font-bold text-xl">
-          {getRankIcon(rank) || `#${rank}`}
+          {getRankIcon(displayRank) || `#${displayRank}`}
         </div>
         
         <div className="flex-1">
@@ -42,6 +55,16 @@ export function PlayerRankingCard({ playerId, rank, name, country, totalPoints }
               </Badge>
             )}
           </div>
+          {showNationalRank && nationalRank && (
+            <div className="flex items-center gap-2 mt-1">
+              <Badge variant="secondary" className="text-xs">
+                National #{nationalRank}
+              </Badge>
+              <Badge variant="outline" className="text-xs text-muted-foreground">
+                Global #{rank}
+              </Badge>
+            </div>
+          )}
         </div>
         
         <div className="text-right">

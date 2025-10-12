@@ -48,10 +48,14 @@ export default function Rankings() {
       >
         <div className="container mx-auto text-center">
           <h1 className="text-5xl font-bold text-primary-foreground mb-4">
-            NPL Rankings
+            {selectedCountry === 'all' 
+              ? 'NPL Global Rankings' 
+              : `${selectedCountry} National Rankings`}
           </h1>
           <p className="text-xl text-primary-foreground/90">
-            Official National Pickleball League Player Rankings
+            {selectedCountry === 'all'
+              ? 'Official National Pickleball League Player Rankings'
+              : `Rankings for ${selectedCountry} players in the NPL`}
           </p>
           <Link to="/how-it-works" className="inline-block mt-4">
             <p className="text-sm text-primary-foreground/80 hover:text-primary-foreground underline transition-colors">
