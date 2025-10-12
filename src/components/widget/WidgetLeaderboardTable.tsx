@@ -47,27 +47,30 @@ export const WidgetLeaderboardTable = ({
     <div className="w-full">
       {/* Mobile View - Cards */}
       <div className="md:hidden space-y-2">
-        {players.map((player) => (
-          <Card
-            key={player.player_id}
-            className="p-3 cursor-pointer hover:bg-accent transition-colors"
-            onClick={() => handlePlayerClick(player.player_id)}
-          >
-            <div className="flex items-center gap-3">
-              <div className="flex items-center justify-center w-8 h-8 rounded-full bg-muted">
-                {getMedalEmoji(player.rank) || (
-                  <span className="text-sm font-semibold">{player.rank}</span>
-                )}
+        {players.map((player, index) => {
+          const displayRank = index + 1;
+          return (
+            <Card
+              key={player.player_id}
+              className="p-3 cursor-pointer hover:bg-accent transition-colors"
+              onClick={() => handlePlayerClick(player.player_id)}
+            >
+              <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center w-8 h-8 rounded-full bg-muted">
+                  {getMedalEmoji(displayRank) || (
+                    <span className="text-sm font-semibold">{displayRank}</span>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold truncate">{player.name}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {player.country} • {player.total_points.toLocaleString()} pts
+                  </p>
+                </div>
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold truncate">{player.name}</p>
-                <p className="text-sm text-muted-foreground">
-                  {player.country} • {player.total_points.toLocaleString()} pts
-                </p>
-              </div>
-            </div>
-          </Card>
-        ))}
+            </Card>
+          );
+        })}
       </div>
 
       {/* Desktop View - Table */}
@@ -82,27 +85,30 @@ export const WidgetLeaderboardTable = ({
             </tr>
           </thead>
           <tbody>
-            {players.map((player) => (
-              <tr
-                key={player.player_id}
-                className="border-b cursor-pointer hover:bg-accent/50 transition-colors"
-                onClick={() => handlePlayerClick(player.player_id)}
-              >
-                <td className="p-3">
-                  <div className="flex items-center gap-2">
-                    {getMedalIcon(player.rank)}
-                    <span className={player.rank <= 3 ? "font-semibold" : ""}>
-                      {player.rank}
-                    </span>
-                  </div>
-                </td>
-                <td className="p-3 font-medium">{player.name}</td>
-                <td className="p-3 text-muted-foreground">{player.country}</td>
-                <td className="p-3 text-right font-semibold">
-                  {player.total_points.toLocaleString()}
-                </td>
-              </tr>
-            ))}
+            {players.map((player, index) => {
+              const displayRank = index + 1;
+              return (
+                <tr
+                  key={player.player_id}
+                  className="border-b cursor-pointer hover:bg-accent/50 transition-colors"
+                  onClick={() => handlePlayerClick(player.player_id)}
+                >
+                  <td className="p-3">
+                    <div className="flex items-center gap-2">
+                      {getMedalIcon(displayRank)}
+                      <span className={displayRank <= 3 ? "font-semibold" : ""}>
+                        {displayRank}
+                      </span>
+                    </div>
+                  </td>
+                  <td className="p-3 font-medium">{player.name}</td>
+                  <td className="p-3 text-muted-foreground">{player.country}</td>
+                  <td className="p-3 text-right font-semibold">
+                    {player.total_points.toLocaleString()}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
