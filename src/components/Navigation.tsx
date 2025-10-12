@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Trophy, LogOut, LayoutDashboard, Code2, Menu, UserPlus } from "lucide-react";
+import { LogOut, LayoutDashboard, Code2, Menu, UserPlus } from "lucide-react";
+import nplLogo from "@/assets/npl-logo.svg";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import {
@@ -55,13 +56,13 @@ export const Navigation = () => {
   };
 
   return (
-    <nav className="border-b bg-card">
+    <nav className="border-b bg-card/80 backdrop-blur-sm sticky top-0 z-50">
       <div className="container mx-auto px-4 py-3 sm:py-4">
         <div className="flex items-center justify-between gap-2">
-          <Link to="/" className="flex items-center gap-2 text-lg sm:text-xl font-bold text-foreground">
-            <Trophy className="h-5 w-5 sm:h-6 sm:w-6 text-primary flex-shrink-0" />
-            <span className="hidden xs:inline sm:inline">NPL Rankings</span>
-            <span className="inline xs:hidden sm:hidden">NPL</span>
+          <Link to="/" className="flex items-center gap-3 text-lg sm:text-xl font-bold text-foreground hover:opacity-90 transition-opacity">
+            <img src={nplLogo} alt="NPL Logo" className="h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0" />
+            <span className="hidden xs:inline sm:inline font-heading">NPL Rankings</span>
+            <span className="inline xs:hidden sm:hidden font-heading">NPL</span>
           </Link>
           
           <div className="flex items-center gap-1 sm:gap-2 md:gap-4 flex-wrap justify-end">

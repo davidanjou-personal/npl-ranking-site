@@ -17,16 +17,17 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 217 33% 17%;
 
-    --primary: 162 76% 33%;
+    /* NPL Brand Colors - Matching #2bb673 */
+    --primary: 150 65% 45%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 162 76% 40%;
+    --secondary: 150 60% 35%;
     --secondary-foreground: 0 0% 100%;
 
     --muted: 210 40% 96%;
     --muted-foreground: 217 13% 45%;
 
-    --accent: 162 86% 28%;
+    --accent: 150 70% 50%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
@@ -34,21 +35,25 @@ All colors MUST be HSL.
 
     --border: 214 32% 91%;
     --input: 214 32% 91%;
-    --ring: 162 76% 33%;
+    --ring: 150 65% 45%;
 
     --radius: 0.75rem;
 
-    /* NPL theme gradients */
-    --gradient-hero: linear-gradient(135deg, hsl(162 76% 28%) 0%, hsl(162 76% 38%) 100%);
-    --gradient-card: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(210 40% 98%) 100%);
-    --gradient-accent: linear-gradient(135deg, hsl(162 76% 33%) 0%, hsl(162 76% 43%) 100%);
-
-    /* Shadows */
-    --shadow-card: 0 4px 20px -2px hsl(162 76% 33% / 0.1);
-    --shadow-hover: 0 8px 30px -4px hsl(162 76% 33% / 0.2);
+    /* Premium NPL Gradients */
+    --gradient-hero: linear-gradient(135deg, hsl(150 70% 40%) 0%, hsl(150 65% 50%) 100%);
+    --gradient-card: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(150 30% 98%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(150 65% 45%) 0%, hsl(150 70% 55%) 100%);
+    --gradient-glass: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%);
+    
+    /* Premium Shadows */
+    --shadow-card: 0 4px 20px -2px hsl(150 65% 45% / 0.1);
+    --shadow-hover: 0 8px 30px -4px hsl(150 65% 45% / 0.2);
+    --shadow-premium: 0 10px 40px -8px hsl(150 65% 45% / 0.15);
+    --shadow-premium-lg: 0 20px 50px -12px hsl(150 65% 45% / 0.25);
     
     /* Transitions */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
   }
 
   .dark {
@@ -61,16 +66,16 @@ All colors MUST be HSL.
     --popover: 217 33% 14%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 162 76% 40%;
+    --primary: 150 65% 50%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 162 76% 45%;
+    --secondary: 150 60% 40%;
     --secondary-foreground: 0 0% 100%;
 
     --muted: 217 33% 20%;
     --muted-foreground: 217 13% 65%;
 
-    --accent: 162 86% 35%;
+    --accent: 150 70% 55%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
@@ -78,14 +83,17 @@ All colors MUST be HSL.
 
     --border: 217 33% 20%;
     --input: 217 33% 20%;
-    --ring: 162 76% 40%;
+    --ring: 150 65% 50%;
 
-    --gradient-hero: linear-gradient(135deg, hsl(162 76% 35%) 0%, hsl(162 76% 45%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(150 65% 35%) 0%, hsl(150 70% 45%) 100%);
     --gradient-card: linear-gradient(180deg, hsl(217 33% 14%) 0%, hsl(217 33% 18%) 100%);
-    --gradient-accent: linear-gradient(135deg, hsl(162 76% 33%) 0%, hsl(162 76% 43%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(150 65% 40%) 0%, hsl(150 70% 50%) 100%);
+    --gradient-glass: linear-gradient(135deg, rgba(23, 37, 50, 0.95) 0%, rgba(23, 37, 50, 0.8) 100%);
 
     --shadow-card: 0 4px 20px -2px hsl(0 0% 0% / 0.3);
     --shadow-hover: 0 8px 30px -4px hsl(0 0% 0% / 0.5);
+    --shadow-premium: 0 10px 40px -8px hsl(0 0% 0% / 0.4);
+    --shadow-premium-lg: 0 20px 50px -12px hsl(0 0% 0% / 0.6);
   }
 }
 
@@ -95,6 +103,35 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading;
+  }
+}
+
+/* Premium Utilities */
+@layer utilities {
+  .glass-card {
+    background: var(--gradient-glass);
+    backdrop-filter: blur(10px);
+    border: 1px solid hsl(var(--border) / 0.5);
+  }
+  
+  .hover-lift {
+    transition: var(--transition-smooth);
+  }
+  
+  .hover-lift:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-hover);
+  }
+  
+  .text-gradient {
+    background: var(--gradient-accent);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
 }

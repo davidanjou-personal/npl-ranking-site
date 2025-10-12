@@ -34,30 +34,27 @@ export function PlayerRankingCard({
   return (
     <Link to={`/player/${playerId}`}>
       <div
-        className="flex items-center gap-4 p-4 rounded-lg transition-all hover:shadow-[var(--shadow-hover)] cursor-pointer"
-        style={{ 
-          background: "var(--gradient-card)",
-          boxShadow: "var(--shadow-card)"
-        }}
+        className="glass-card flex items-center gap-4 sm:gap-6 p-5 sm:p-6 rounded-xl hover-lift cursor-pointer group"
+        style={{ boxShadow: "var(--shadow-premium)" }}
       >
-        <div className="flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 text-primary font-bold text-xl">
+        <div className="flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 border-2 border-primary/20 text-primary font-bold text-lg sm:text-xl group-hover:scale-110 group-hover:border-primary/40 transition-all">
           {getRankIcon(displayRank) || `#${displayRank}`}
         </div>
         
-        <div className="flex-1">
-          <div className="flex items-center gap-2 mb-1">
-            <h3 className="text-lg font-bold text-foreground hover:text-primary transition-colors">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1 flex-wrap">
+            <h3 className="text-lg sm:text-xl font-heading font-bold text-foreground group-hover:text-primary transition-colors">
               {name}
             </h3>
             {country && (
-              <Badge variant="outline" className="text-xs">
+              <Badge variant="outline" className="text-xs font-medium">
                 {country}
               </Badge>
             )}
           </div>
           {showNationalRank && nationalRank && (
-            <div className="flex items-center gap-2 mt-1">
-              <Badge variant="secondary" className="text-xs">
+            <div className="flex items-center gap-2 mt-2 flex-wrap">
+              <Badge variant="default" className="text-xs font-semibold bg-gradient-to-r from-primary to-secondary">
                 National #{nationalRank}
               </Badge>
               <Badge variant="outline" className="text-xs text-muted-foreground">
@@ -67,9 +64,9 @@ export function PlayerRankingCard({
           )}
         </div>
         
-        <div className="text-right">
-          <p className="text-2xl font-bold text-secondary">{totalPoints}</p>
-          <p className="text-xs text-muted-foreground">points</p>
+        <div className="text-right flex-shrink-0">
+          <p className="text-2xl sm:text-3xl font-heading font-bold bg-gradient-to-br from-secondary to-primary bg-clip-text text-transparent">{totalPoints}</p>
+          <p className="text-xs text-muted-foreground font-medium">points</p>
         </div>
       </div>
     </Link>
