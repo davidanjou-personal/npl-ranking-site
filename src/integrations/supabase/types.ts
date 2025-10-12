@@ -392,6 +392,45 @@ export type Database = {
         }
         Relationships: []
       }
+      upcoming_tournaments: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          is_featured: boolean | null
+          location: string | null
+          registration_url: string
+          tournament_date: string
+          tournament_name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_featured?: boolean | null
+          location?: string | null
+          registration_url: string
+          tournament_date: string
+          tournament_name: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_featured?: boolean | null
+          location?: string | null
+          registration_url?: string
+          tournament_date?: string
+          tournament_name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string | null

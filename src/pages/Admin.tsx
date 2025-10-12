@@ -15,6 +15,8 @@ import { PendingClaimsTab } from "@/components/admin/PendingClaimsTab";
 import { ProfileUpdateRequestsTab } from "@/components/admin/ProfileUpdateRequestsTab";
 import { AdminDashboard } from "@/components/admin/AdminDashboard";
 import { BulkEditPlayers } from "@/components/admin/BulkEditPlayers";
+import { UpcomingTournamentForm } from "@/components/admin/UpcomingTournamentForm";
+import { UpcomingTournamentsList } from "@/components/admin/UpcomingTournamentsList";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 import { exportPlayers, exportRankings, exportTournaments } from "@/utils/csvExport";
@@ -219,7 +221,7 @@ export default function Admin() {
         <h1 className="text-4xl font-bold mb-8 text-foreground">Admin Dashboard</h1>
 
         <Tabs defaultValue="dashboard" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-11 mb-8 overflow-x-auto">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-12 mb-8 overflow-x-auto">
             <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
             <TabsTrigger value="add-player">Add Player</TabsTrigger>
             <TabsTrigger value="add-result">Record Event</TabsTrigger>
@@ -228,6 +230,7 @@ export default function Admin() {
             <TabsTrigger value="view-players">View Players</TabsTrigger>
             <TabsTrigger value="bulk-edit">Bulk Edit</TabsTrigger>
             <TabsTrigger value="view-matches">View Events</TabsTrigger>
+            <TabsTrigger value="upcoming-tournaments">Tournaments</TabsTrigger>
             <TabsTrigger value="pending-claims">Claims</TabsTrigger>
             <TabsTrigger value="profile-updates">Updates</TabsTrigger>
             <TabsTrigger value="import-history">History</TabsTrigger>
@@ -304,6 +307,19 @@ export default function Admin() {
               </Button>
             </div>
             <MatchesList matches={matches} onRefresh={fetchMatches} />
+          </TabsContent>
+
+          <TabsContent value="upcoming-tournaments">
+            <div className="space-y-8">
+              <div>
+                <h3 className="text-2xl font-bold mb-4">Add Upcoming Tournament</h3>
+                <UpcomingTournamentForm />
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold mb-4">Manage Tournaments</h3>
+                <UpcomingTournamentsList />
+              </div>
+            </div>
           </TabsContent>
 
           <TabsContent value="pending-claims">

@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { Trophy, TrendingUp, Users, Award } from "lucide-react";
 import nplLogo from "@/assets/npl-logo-light.svg";
 import { LatestResults } from "@/components/home/LatestResults";
+import { UpcomingTournaments } from "@/components/home/UpcomingTournaments";
 
 const Index = () => {
   return (
@@ -97,6 +98,12 @@ const Index = () => {
       </section>
 
       <section className="py-16 sm:py-20 px-4 bg-muted/30">
+        <div className="container mx-auto max-w-6xl">
+          <UpcomingTournaments />
+        </div>
+      </section>
+
+      <section className="py-16 sm:py-20 px-4">
         <div className="container mx-auto max-w-4xl">
           <LatestResults />
         </div>
