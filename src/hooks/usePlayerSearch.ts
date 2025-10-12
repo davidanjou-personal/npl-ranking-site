@@ -39,10 +39,7 @@ export const usePlayerSearch = (searchTerm: string, enabled: boolean = true) => 
 
       const { data, error } = await supabase
         .from("players_public")
-        .select(`
-          *,
-          current_rankings:current_rankings(rank, total_points, category)
-        `)
+        .select("*")
         .or(`name.ilike.%${debouncedSearch}%,country.ilike.%${debouncedSearch}%,player_code.ilike.%${debouncedSearch}%`)
         .limit(50);
 
