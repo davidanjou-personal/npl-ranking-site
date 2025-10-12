@@ -25,9 +25,10 @@ export function BulkImportMatchesTab({ onImportComplete }: BulkImportMatchesTabP
 
   const downloadTemplate = () => {
     const template = `player_name,player_code,country,gender,category,finishing_position,event_date,tournament_name,tier
-John Doe,NPL000000001,USA,male,mens_singles,winner,2024-10-01,Spring Championship,tier2
-Jane Smith,NPL000000002,Canada,female,womens_singles,second,2024-10-01,Spring Championship,tier2
-Mike Johnson,NPL000000003,USA,male,mens_singles,third,2024-10-01,Spring Championship,historic`;
+John Doe,NPL000000001,USA,male,mens_singles,1,2024-10-01,Spring Championship,tier2
+Jane Smith,NPL000000002,Canada,female,womens_singles,2,2024-10-01,Spring Championship,tier2
+Mike Johnson,NPL000000003,USA,male,mens_singles,5,2024-10-01,Spring Championship,tier2
+Sarah Lee,NPL000000004,Canada,female,womens_doubles,9,2024-10-01,Spring Championship,historic`;
     
     const blob = new Blob([template], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
@@ -169,7 +170,7 @@ Mike Johnson,NPL000000003,USA,male,mens_singles,third,2024-10-01,Spring Champion
             <br />
             Categories: mens_singles, womens_singles, mens_doubles, womens_doubles, mixed_doubles
             <br />
-            Positions: winner, second, third, fourth, quarter_finalist, round_of_16, points_awarded
+            Positions: Use numbers (1=winner, 2=runner-up, 3=third, 4=fourth, 5-8=quarterfinalist, 9-16=round of 16, other=points awarded) OR text (winner, second, third, fourth, quarter_finalist, round_of_16, points_awarded)
             <br />
             Tiers: tier1, tier2, tier3, tier4, historic (for imported results with no tier)
           </AlertDescription>

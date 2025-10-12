@@ -112,6 +112,18 @@ function normalizeCode(value?: string): string {
 function normalizeFinishingPosition(value?: string): string {
   if (!value) return 'event_win'; // Default fallback (database value)
   
+  // Check if value is numeric
+  const numValue = parseInt(value.trim(), 10);
+  if (!isNaN(numValue)) {
+    if (numValue === 1) return 'winner';
+    if (numValue === 2) return 'second';
+    if (numValue === 3) return 'third';
+    if (numValue === 4) return 'fourth';
+    if (numValue >= 5 && numValue <= 8) return 'quarterfinalist';
+    if (numValue >= 9 && numValue <= 16) return 'round_of_16';
+    return 'event_win'; // 17+ or any other number
+  }
+  
   const normalized = value.toLowerCase().trim().replace(/[^a-z0-9_]/g, '_');
   
   const validPositions = [
