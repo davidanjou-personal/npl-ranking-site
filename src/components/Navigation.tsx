@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { LogOut, LayoutDashboard, Code2, Menu, UserPlus } from "lucide-react";
-import nplLogo from "@/assets/npl-logo-light.svg";
+import nplLogo from "@/assets/npl-logo.svg";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import {
