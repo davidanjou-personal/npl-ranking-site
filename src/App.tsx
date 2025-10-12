@@ -10,6 +10,13 @@ import Auth from "./pages/Auth";
 import Admin from "./pages/Admin";
 import HowItWorks from "./pages/HowItWorks";
 import NotFound from "./pages/NotFound";
+import WidgetMensSingles from "./pages/widgets/WidgetMensSingles";
+import WidgetWomensSingles from "./pages/widgets/WidgetWomensSingles";
+import WidgetMensDoubles from "./pages/widgets/WidgetMensDoubles";
+import WidgetWomensDoubles from "./pages/widgets/WidgetWomensDoubles";
+import WidgetMixedDoubles from "./pages/widgets/WidgetMixedDoubles";
+import WidgetAllCategoriesPage from "./pages/widgets/WidgetAllCategoriesPage";
+import WidgetEmbedGuide from "./pages/widgets/WidgetEmbedGuide";
 
 const queryClient = new QueryClient();
 
@@ -26,6 +33,16 @@ const App = () => (
           <Route path="/auth" element={<Auth />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/how-it-works" element={<HowItWorks />} />
+          
+          {/* Widget Routes */}
+          <Route path="/widget/mens-singles" element={<WidgetMensSingles />} />
+          <Route path="/widget/womens-singles" element={<WidgetWomensSingles />} />
+          <Route path="/widget/mens-doubles" element={<WidgetMensDoubles />} />
+          <Route path="/widget/womens-doubles" element={<WidgetWomensDoubles />} />
+          <Route path="/widget/mixed-doubles" element={<WidgetMixedDoubles />} />
+          <Route path="/widget/all-categories" element={<WidgetAllCategoriesPage />} />
+          <Route path="/widget/embed-guide" element={<WidgetEmbedGuide />} />
+          
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

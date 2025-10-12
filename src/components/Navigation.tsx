@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Trophy, LogOut, LayoutDashboard } from "lucide-react";
+import { Trophy, LogOut, LayoutDashboard, Code2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { User } from "@supabase/supabase-js";
@@ -66,12 +66,20 @@ export const Navigation = () => {
             {user ? (
               <>
                 {isAdmin && (
-                  <Link to="/admin">
-                    <Button variant="outline">
-                      <LayoutDashboard className="mr-2 h-4 w-4" />
-                      Admin Dashboard
-                    </Button>
-                  </Link>
+                  <>
+                    <Link to="/admin">
+                      <Button variant="outline">
+                        <LayoutDashboard className="mr-2 h-4 w-4" />
+                        Admin Dashboard
+                      </Button>
+                    </Link>
+                    <Link to="/widget/embed-guide">
+                      <Button variant="outline">
+                        <Code2 className="mr-2 h-4 w-4" />
+                        Widget Embeds
+                      </Button>
+                    </Link>
+                  </>
                 )}
                 <Button variant="ghost" onClick={handleSignOut}>
                   <LogOut className="mr-2 h-4 w-4" />
