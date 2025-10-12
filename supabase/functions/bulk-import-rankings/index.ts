@@ -225,6 +225,11 @@ serve(async (req) => {
     let resolutionMap: Record<string, string> | null = null;
     let newPlayerCompletions: Record<string, any> | null = null;
 
+    // Security limits
+    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+    const MAX_ROWS = 10000;
+    const MAX_FIELD_LENGTH = 500;
+
     if (contentType.includes('application/json')) {
       const payload = await req.json();
       
@@ -234,6 +239,12 @@ serve(async (req) => {
       newPlayerCompletions = payload.newPlayerCompletions ?? null;
       if (!csvText) {
         throw new Error('No CSV content provided');
+      }
+      
+      // Check file size for JSON payload
+      const textSize = new TextEncoder().encode(csvText).length;
+      if (textSize > MAX_FILE_SIZE) {
+        throw new Error(`File too large. Maximum size is ${MAX_FILE_SIZE / (1024 * 1024)}MB`);
       }
     } else {
       // Parse form data
@@ -247,6 +258,12 @@ serve(async (req) => {
       if (!file) {
         throw new Error('No file provided');
       }
+      
+      // Check file size
+      if (file.size > MAX_FILE_SIZE) {
+        throw new Error(`File too large. Maximum size is ${MAX_FILE_SIZE / (1024 * 1024)}MB`);
+      }
+      
       csvText = await file.text();
       fileName = file.name || fileName;
     }
@@ -276,6 +293,11 @@ serve(async (req) => {
     
     if (lines.length < 2) {
       throw new Error('File is empty or has no data rows');
+    }
+    
+    // Check row count limit
+    if (lines.length - 1 > MAX_ROWS) {
+      throw new Error(`Too many rows. Maximum is ${MAX_ROWS} rows, but file contains ${lines.length - 1} rows`);
     }
 
     // Parse header row and build column index map (case-insensitive, with aliases)
@@ -345,6 +367,14 @@ serve(async (req) => {
         const dobVal = getCol('date_of_birth');
         const duprIdVal = getCol('dupr_id');
         const playerCodeVal = getCol('player_code');
+        
+        // Validate field lengths to prevent DoS
+        if (playerName.length > MAX_FIELD_LENGTH) {
+          throw new Error(`Player name too long (max ${MAX_FIELD_LENGTH} characters)`);
+        }
+        if (tournamentNameVal && tournamentNameVal.length > MAX_FIELD_LENGTH) {
+          throw new Error(`Tournament name too long (max ${MAX_FIELD_LENGTH} characters)`);
+        }
 
         const gender = normalizeGender(genderVal);
         const category = normalizeCategory(categoryVal);
