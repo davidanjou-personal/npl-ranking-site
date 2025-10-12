@@ -11,6 +11,8 @@ import { BulkImportTab } from "@/components/admin/BulkImportTab";
 import { BulkImportMatchesTab } from "@/components/admin/BulkImportMatchesTab";
 import { MatchesList } from "@/components/admin/MatchesList";
 import { ImportHistoryList } from "@/components/admin/ImportHistoryList";
+import { PendingClaimsTab } from "@/components/admin/PendingClaimsTab";
+import { ProfileUpdateRequestsTab } from "@/components/admin/ProfileUpdateRequestsTab";
 import type { Player, MatchWithResults } from "@/types/admin";
 
 export default function Admin() {
@@ -141,14 +143,16 @@ export default function Admin() {
         <h1 className="text-4xl font-bold mb-8 text-foreground">Admin Dashboard</h1>
 
         <Tabs defaultValue="add-player" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 mb-8">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-9 mb-8 overflow-x-auto">
             <TabsTrigger value="add-player">Add Player</TabsTrigger>
             <TabsTrigger value="add-result">Record Event</TabsTrigger>
             <TabsTrigger value="bulk-import-players">Import Players</TabsTrigger>
             <TabsTrigger value="bulk-import-matches">Import Events</TabsTrigger>
             <TabsTrigger value="view-players">View Players</TabsTrigger>
             <TabsTrigger value="view-matches">View Events</TabsTrigger>
-            <TabsTrigger value="import-history">Import History</TabsTrigger>
+            <TabsTrigger value="pending-claims">Claims</TabsTrigger>
+            <TabsTrigger value="profile-updates">Updates</TabsTrigger>
+            <TabsTrigger value="import-history">History</TabsTrigger>
           </TabsList>
 
           <TabsContent value="add-player">
@@ -198,6 +202,14 @@ export default function Admin() {
 
           <TabsContent value="view-matches">
             <MatchesList matches={matches} onRefresh={fetchMatches} />
+          </TabsContent>
+
+          <TabsContent value="pending-claims">
+            <PendingClaimsTab />
+          </TabsContent>
+
+          <TabsContent value="profile-updates">
+            <ProfileUpdateRequestsTab />
           </TabsContent>
 
           <TabsContent value="import-history">

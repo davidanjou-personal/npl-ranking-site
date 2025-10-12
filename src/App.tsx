@@ -10,6 +10,8 @@ import Auth from "./pages/Auth";
 import Admin from "./pages/Admin";
 import HowItWorks from "./pages/HowItWorks";
 import NotFound from "./pages/NotFound";
+import ClaimProfile from "./pages/player/ClaimProfile";
+import PlayerProfileManage from "./pages/player/PlayerProfile";
 import WidgetMensSingles from "./pages/widgets/WidgetMensSingles";
 import WidgetWomensSingles from "./pages/widgets/WidgetWomensSingles";
 import WidgetMensDoubles from "./pages/widgets/WidgetMensDoubles";
@@ -29,9 +31,11 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/rankings" element={<Rankings />} />
-          <Route path="/player/:id" element={<PlayerProfile />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/admin" element={<Admin />} />
+          <Route path="/player/claim" element={<ClaimProfile />} />
+          <Route path="/player/profile" element={<PlayerProfileManage />} />
+          <Route path="/player/:id" element={<PlayerProfile />} />
           <Route path="/how-it-works" element={<HowItWorks />} />
           
           {/* Widget Routes */}

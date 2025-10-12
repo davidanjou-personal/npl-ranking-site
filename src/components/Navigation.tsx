@@ -120,6 +120,13 @@ export const Navigation = () => {
                     </Link>
                   </>
                 )}
+                {!isAdmin && (
+                  <Link to="/player/profile">
+                    <Button variant="outline" size="sm" className="text-xs sm:text-sm px-2 sm:px-4">
+                      My Profile
+                    </Button>
+                  </Link>
+                )}
                 <Button variant="ghost" size="sm" onClick={handleSignOut} className="text-xs sm:text-sm px-2 sm:px-4">
                   <LogOut className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2" />
                   <span className="hidden sm:inline">Sign Out</span>
