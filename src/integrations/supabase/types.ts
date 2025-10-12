@@ -94,6 +94,13 @@ export type Database = {
             referencedRelation: "players"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "match_results_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       events: {
@@ -277,6 +284,13 @@ export type Database = {
             referencedRelation: "players"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "match_results_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       expiring_points: {
@@ -294,6 +308,13 @@ export type Database = {
             columns: ["player_id"]
             isOneToOne: false
             referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "match_results_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players_public"
             referencedColumns: ["id"]
           },
         ]
@@ -351,6 +372,13 @@ export type Database = {
             referencedRelation: "players"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "match_results_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       matches: {
@@ -397,8 +425,11 @@ export type Database = {
       player_rankings: {
         Row: {
           category: Database["public"]["Enums"]["player_category"] | null
+          country: string | null
           created_at: string | null
+          gender: string | null
           id: string | null
+          name: string | null
           player_id: string | null
           rank: number | null
           total_points: number | null
@@ -410,6 +441,13 @@ export type Database = {
             columns: ["player_id"]
             isOneToOne: false
             referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "match_results_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players_public"
             referencedColumns: ["id"]
           },
         ]
@@ -425,6 +463,28 @@ export type Database = {
           name: string | null
           player_code: string | null
           updated_at: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          country?: string | null
+          created_at?: string | null
+          dupr_id?: string | null
+          gender?: string | null
+          id?: string | null
+          name?: string | null
+          player_code?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          country?: string | null
+          created_at?: string | null
+          dupr_id?: string | null
+          gender?: string | null
+          id?: string | null
+          name?: string | null
+          player_code?: string | null
+          updated_at?: string | null
         }
         Relationships: []
       }
