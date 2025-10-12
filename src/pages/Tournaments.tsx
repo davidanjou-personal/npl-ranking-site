@@ -94,7 +94,7 @@ export default function Tournaments() {
         ) : tournaments && tournaments.length > 0 ? (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {tournaments.map((tournament) => (
-              <Link key={tournament.id} to={`/tournaments/${tournament.id}`}>
+              <Link key={`${tournament.tournament_name}-${tournament.match_date}`} to={`/tournaments/${tournament.earliest_event_id}`}>
                 <Card className="h-full hover:border-primary transition-colors cursor-pointer">
                   <CardHeader>
                     <div className="flex items-start justify-between mb-2">
@@ -110,10 +110,16 @@ export default function Tournaments() {
                       <Calendar className="h-4 w-4 mr-2" />
                       {formatDate(tournament.match_date)}
                     </div>
-                    <div className="flex items-center text-sm text-muted-foreground">
-                      <MapPin className="h-4 w-4 mr-2" />
-                      {getCategoryLabel(tournament.category)}
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {tournament.categories.map((cat) => (
+                        <Badge key={cat} variant="outline" className="text-xs">
+                          {getCategoryLabel(cat)}
+                        </Badge>
+                      ))}
                     </div>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      {tournament.event_count} {tournament.event_count === 1 ? 'category' : 'categories'}
+                    </p>
                   </CardContent>
                 </Card>
               </Link>

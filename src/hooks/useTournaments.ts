@@ -9,6 +9,15 @@ interface TournamentFilters {
   limit?: number;
 }
 
+interface GroupedTournament {
+  tournament_name: string;
+  match_date: string;
+  tier: string;
+  categories: string[];
+  event_count: number;
+  earliest_event_id: string;
+}
+
 export const useTournaments = (filters: TournamentFilters = {}) => {
   return useQuery({
     queryKey: ["tournaments", filters],
@@ -30,13 +39,39 @@ export const useTournaments = (filters: TournamentFilters = {}) => {
       if (filters.endDate) {
         query = query.lte("match_date", filters.endDate);
       }
-      if (filters.limit) {
-        query = query.limit(filters.limit);
-      }
 
       const { data, error } = await query;
       if (error) throw error;
-      return data || [];
+      
+      // Group events by tournament name and date
+      const groupedMap = new Map<string, GroupedTournament>();
+      
+      (data || []).forEach((event) => {
+        const key = `${event.tournament_name}-${event.match_date}`;
+        
+        if (!groupedMap.has(key)) {
+          groupedMap.set(key, {
+            tournament_name: event.tournament_name,
+            match_date: event.match_date,
+            tier: event.tier,
+            categories: [event.category],
+            event_count: 1,
+            earliest_event_id: event.id,
+          });
+        } else {
+          const existing = groupedMap.get(key)!;
+          existing.categories.push(event.category);
+          existing.event_count++;
+        }
+      });
+
+      const grouped = Array.from(groupedMap.values());
+      
+      if (filters.limit) {
+        return grouped.slice(0, filters.limit);
+      }
+      
+      return grouped;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
   });

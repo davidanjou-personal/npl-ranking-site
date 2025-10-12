@@ -11,7 +11,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 
 export default function TournamentDetail() {
   const { id } = useParams<{ id: string }>();
-  const { data: tournament, isLoading } = useTournamentDetail(id || "");
+  const { data: eventData, isLoading } = useTournamentDetail(id || "");
+  
+  // Group all events from the same tournament
+  const tournament = eventData ? {
+    ...eventData,
+    all_results: eventData.event_results || [],
+  } : null;
 
   const getCategoryLabel = (category: string) => {
     const labels: Record<string, string> = {
@@ -92,7 +98,10 @@ export default function TournamentDetail() {
     );
   }
 
-  const sortedResults = [...(tournament.event_results || [])].sort((a, b) => {
+  // Get all categories for this tournament (same name and date)
+  const categories = [...new Set(tournament.all_results.map((r: any) => r.category || tournament.category))];
+  
+  const sortedResults = [...(tournament.all_results || [])].sort((a, b) => {
     const order = ["first", "second", "third", "semifinalist", "quarterfinalist", "r16", "r32", "r64"];
     return order.indexOf(a.finishing_position) - order.indexOf(b.finishing_position);
   });
@@ -113,28 +122,32 @@ export default function TournamentDetail() {
             <div className="flex items-start justify-between mb-4">
               <div className="flex-1">
                 <CardTitle className="text-3xl mb-2">{tournament.tournament_name}</CardTitle>
-                <div className="flex flex-wrap gap-4 text-muted-foreground">
+                <div className="flex flex-wrap gap-4 text-muted-foreground mb-3">
                   <div className="flex items-center">
                     <Calendar className="h-4 w-4 mr-2" />
                     {formatDate(tournament.match_date)}
                   </div>
-                  <div className="flex items-center">
-                    <MapPin className="h-4 w-4 mr-2" />
-                    {getCategoryLabel(tournament.category)}
-                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {categories.map((cat) => (
+                    <Badge key={cat} variant="outline">
+                      {getCategoryLabel(cat)}
+                    </Badge>
+                  ))}
                 </div>
               </div>
               <Badge variant={tournament.tier === 'tier1' ? 'default' : 'secondary'} className="text-lg px-4 py-2">
-                Tier {tournament.tier.toUpperCase()}
+                {tournament.tier.toUpperCase()}
               </Badge>
             </div>
           </CardHeader>
           <CardContent>
-            <h3 className="text-xl font-semibold mb-4">Results</h3>
+            <h3 className="text-xl font-semibold mb-4">Results - All Categories</h3>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[80px]">Position</TableHead>
+                  <TableHead>Category</TableHead>
+                  <TableHead className="w-[120px]">Position</TableHead>
                   <TableHead>Player</TableHead>
                   <TableHead>Country</TableHead>
                   <TableHead className="text-right">Points</TableHead>
@@ -143,6 +156,11 @@ export default function TournamentDetail() {
               <TableBody>
                 {sortedResults.map((result: any) => (
                   <TableRow key={result.id}>
+                    <TableCell>
+                      <Badge variant="outline" className="text-xs">
+                        {getCategoryLabel(result.category || tournament.category)}
+                      </Badge>
+                    </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         {getPositionIcon(result.finishing_position)}
