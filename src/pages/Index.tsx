@@ -2,7 +2,7 @@ import { Navigation } from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Trophy, TrendingUp, Users, Award } from "lucide-react";
-import nplLogo from "@/assets/npl-logo.svg";
+import nplLogo from "@/assets/npl-logo-light.svg";
 
 const Index = () => {
   return (
@@ -10,11 +10,6 @@ const Index = () => {
       <Navigation />
 
       <section className="py-16 sm:py-20 md:py-28 px-4 relative overflow-hidden" style={{ background: "var(--gradient-hero)" }}>
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute inset-0" style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
-          }} />
-        </div>
         <div className="container mx-auto text-center relative z-10">
           <img src={nplLogo} alt="NPL Logo" className="h-20 w-20 sm:h-28 sm:w-28 mx-auto mb-6 sm:mb-8 drop-shadow-lg animate-fade-in" />
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-heading font-bold text-primary-foreground mb-6 sm:mb-8 px-2 tracking-tight">
@@ -54,8 +49,8 @@ const Index = () => {
               className="glass-card p-8 sm:p-10 rounded-xl text-center hover-lift group"
               style={{ boxShadow: "var(--shadow-premium)" }}
             >
-              <div className="bg-secondary/10 w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6 group-hover:scale-110 transition-transform">
-                <TrendingUp className="h-8 w-8 sm:h-10 sm:w-10 text-secondary" />
+              <div className="bg-primary/10 w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6 group-hover:scale-110 transition-transform">
+                <TrendingUp className="h-8 w-8 sm:h-10 sm:w-10 text-primary" />
               </div>
               <h3 className="text-xl sm:text-2xl font-heading font-bold mb-3 text-foreground">Points Awarded</h3>
               <p className="text-muted-foreground leading-relaxed">
@@ -67,8 +62,8 @@ const Index = () => {
               className="glass-card p-8 sm:p-10 rounded-xl text-center hover-lift group"
               style={{ boxShadow: "var(--shadow-premium)" }}
             >
-              <div className="bg-accent/10 w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6 group-hover:scale-110 transition-transform">
-                <Award className="h-8 w-8 sm:h-10 sm:w-10 text-accent" />
+              <div className="bg-primary/10 w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6 group-hover:scale-110 transition-transform">
+                <Award className="h-8 w-8 sm:h-10 sm:w-10 text-primary" />
               </div>
               <h3 className="text-xl sm:text-2xl font-heading font-bold mb-3 text-foreground">Rankings Updated</h3>
               <p className="text-muted-foreground leading-relaxed">Player rankings are updated in real-time based on total points</p>
@@ -89,8 +84,8 @@ const Index = () => {
                   className="glass-card p-6 sm:p-8 rounded-xl text-center hover-lift group"
                   style={{ boxShadow: "var(--shadow-card)" }}
                 >
-                  <div className="bg-secondary/10 w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4 group-hover:scale-110 transition-transform">
-                    <Trophy className="h-6 w-6 sm:h-7 sm:w-7 text-secondary" />
+                  <div className="bg-primary/10 w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4 group-hover:scale-110 transition-transform">
+                    <Trophy className="h-6 w-6 sm:h-7 sm:w-7 text-primary" />
                   </div>
                   <h3 className="text-sm sm:text-base font-heading font-bold text-foreground">{category}</h3>
                 </div>
