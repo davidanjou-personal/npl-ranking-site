@@ -22,7 +22,7 @@ const Index = () => {
             className="h-32 w-32 sm:h-40 sm:w-40 mx-auto mb-6 sm:mb-8 drop-shadow-lg animate-fade-in"
           />
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-heading font-bold text-primary-foreground mb-6 sm:mb-8 px-2 tracking-tight">
-            NPL Rankings
+            Pickleball Rankings
           </h1>
           <p className="text-lg sm:text-xl md:text-2xl text-primary-foreground/95 mb-8 sm:mb-10 max-w-3xl mx-auto px-2 leading-relaxed">
             Australia's premier pickleball competition. Track player ratings and follow the best place to play
