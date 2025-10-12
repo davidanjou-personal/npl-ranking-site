@@ -294,11 +294,11 @@ export default function PlayerProfile() {
 
         <Separator className="my-8" />
 
-        {/* Match Results Section */}
+        {/* Event Results Section */}
         <div>
           <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center gap-2">
             <Award className="h-6 w-6 text-primary" />
-            Match History
+            Event History
           </h2>
 
           {matchResults.length > 0 ? (
@@ -410,7 +410,7 @@ export default function PlayerProfile() {
             </Tabs>
           ) : (
             <Card className="p-8 text-center">
-              <p className="text-muted-foreground">No match results found</p>
+              <p className="text-muted-foreground">No event results found</p>
             </Card>
           )}
         </div>

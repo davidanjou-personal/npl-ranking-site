@@ -97,7 +97,7 @@ export function AddMatchResultForm({ players, onMatchAdded }: AddMatchResultForm
       toast({
         variant: "destructive",
         title: "Error",
-        description: error.message || "Failed to add match result",
+        description: error.message || "Failed to add event result",
       });
     }
   };

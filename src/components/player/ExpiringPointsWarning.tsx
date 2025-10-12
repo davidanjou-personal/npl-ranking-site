@@ -76,7 +76,7 @@ export function ExpiringPointsWarning({ playerId, showAllPlayers = false }: Expi
         <AlertCircle className="h-4 w-4" />
         <AlertTitle>Points Expiring Soon</AlertTitle>
         <AlertDescription>
-          The following points will expire within 30 days. Record new match results to maintain your ranking.
+          The following points will expire within 30 days. Record new event results to maintain your ranking.
         </AlertDescription>
       </Alert>
 

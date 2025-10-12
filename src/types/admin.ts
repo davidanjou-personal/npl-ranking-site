@@ -14,6 +14,7 @@ export interface Player {
   updated_at?: string;
 }
 
+// Event data (previously called "match")
 export interface Match {
   id: string;
   tournament_name: string;
@@ -24,6 +25,7 @@ export interface Match {
   created_by?: string;
 }
 
+// Event result for a player (previously called "match_result")
 export interface MatchResult {
   id: string;
   match_id: string;
@@ -33,6 +35,7 @@ export interface MatchResult {
   created_at?: string;
 }
 
+// Event with all player results
 export interface MatchWithResults extends Match {
   match_results: Array<MatchResult & { players: Partial<Player> }>;
 }
@@ -58,6 +61,7 @@ export interface PlayerFormData {
   dupr_id?: string;
 }
 
+// Event form data (previously "match" form data)
 export interface MatchFormData {
   tournament_name: string;
   match_date: string;

@@ -81,7 +81,7 @@ export function MatchesList({ matches, onRefresh }: MatchesListProps) {
     return (
       <Card>
         <CardContent className="p-8 text-center">
-          <p className="text-muted-foreground">No match results recorded yet</p>
+          <p className="text-muted-foreground">No event results recorded yet</p>
         </CardContent>
       </Card>
     );

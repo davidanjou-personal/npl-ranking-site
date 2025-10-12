@@ -51,7 +51,7 @@ const Index = () => {
               <TrendingUp className="h-12 w-12 text-secondary mx-auto mb-4" />
               <h3 className="text-xl font-bold mb-2 text-foreground">Points Awarded</h3>
               <p className="text-muted-foreground">
-                Match results are recorded and points are automatically calculated
+                Event results are recorded and points are automatically calculated
               </p>
             </div>
 

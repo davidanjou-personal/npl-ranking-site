@@ -157,9 +157,9 @@ Sarah Lee,NPL000000004,Canada,female,womens_doubles,9,2024-10-01,Spring Champion
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Bulk Import Match Results</CardTitle>
+        <CardTitle>Bulk Import Event Results</CardTitle>
         <CardDescription>
-          Upload a CSV file containing match results with player information.
+          Upload a CSV file containing event results with player information.
           The system will handle player creation/matching automatically.
         </CardDescription>
       </CardHeader>
@@ -195,7 +195,7 @@ Sarah Lee,NPL000000004,Canada,female,womens_doubles,9,2024-10-01,Spring Champion
               disabled={!file || importing}
               className="w-full"
             >
-              {importing ? "Importing..." : "Import Match Results"}
+              {importing ? "Importing..." : "Import Event Results"}
             </Button>
           </div>
         ) : (

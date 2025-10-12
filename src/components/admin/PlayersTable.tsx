@@ -280,7 +280,7 @@ export function PlayersTable({ players, onRefresh }: PlayersTableProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Player</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete <strong>{playerToDelete?.name}</strong>? This will also delete all their match results and rankings. This action cannot be undone.
+              Are you sure you want to delete <strong>{playerToDelete?.name}</strong>? This will also delete all their event results and rankings. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

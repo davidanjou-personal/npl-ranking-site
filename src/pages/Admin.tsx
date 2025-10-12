@@ -143,11 +143,11 @@ export default function Admin() {
         <Tabs defaultValue="add-player" className="w-full">
           <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 mb-8">
             <TabsTrigger value="add-player">Add Player</TabsTrigger>
-            <TabsTrigger value="add-result">Record Match</TabsTrigger>
+            <TabsTrigger value="add-result">Record Event</TabsTrigger>
             <TabsTrigger value="bulk-import-players">Import Players</TabsTrigger>
-            <TabsTrigger value="bulk-import-matches">Import Matches</TabsTrigger>
+            <TabsTrigger value="bulk-import-matches">Import Events</TabsTrigger>
             <TabsTrigger value="view-players">View Players</TabsTrigger>
-            <TabsTrigger value="view-matches">View Matches</TabsTrigger>
+            <TabsTrigger value="view-matches">View Events</TabsTrigger>
             <TabsTrigger value="import-history">Import History</TabsTrigger>
           </TabsList>
 

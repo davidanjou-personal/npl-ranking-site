@@ -185,7 +185,7 @@ export function MatchEditor({ match, open, onOpenChange, onSaved }: MatchEditorP
 
           {/* Results */}
           <div className="space-y-3">
-            <h3 className="font-semibold">Match Results</h3>
+            <h3 className="font-semibold">Event Results</h3>
             {results.map((result, idx) => (
               <div key={result.id} className="border rounded-lg p-4 space-y-3">
                 <div className="font-medium">{result.playerName}</div>
