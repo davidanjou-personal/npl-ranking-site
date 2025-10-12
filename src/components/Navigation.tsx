@@ -59,6 +59,9 @@ export const Navigation = () => {
             <Link to="/rankings">
               <Button variant="ghost">Rankings</Button>
             </Link>
+            <Link to="/how-it-works">
+              <Button variant="ghost">How It Works</Button>
+            </Link>
             
             {user ? (
               <>

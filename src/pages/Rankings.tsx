@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { Navigation } from "@/components/Navigation";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -52,6 +53,11 @@ export default function Rankings() {
           <p className="text-xl text-primary-foreground/90">
             Official National Pickleball League Player Rankings
           </p>
+          <Link to="/how-it-works" className="inline-block mt-4">
+            <p className="text-sm text-primary-foreground/80 hover:text-primary-foreground underline transition-colors">
+              How do rankings work?
+            </p>
+          </Link>
         </div>
       </div>
 

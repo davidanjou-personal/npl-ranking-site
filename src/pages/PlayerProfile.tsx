@@ -216,10 +216,15 @@ export default function PlayerProfile() {
 
         {/* Current Rankings Section */}
         <div className="mb-12">
-          <h2 className="text-2xl font-bold text-foreground mb-6 flex items-center gap-2">
-            <Trophy className="h-6 w-6 text-primary" />
-            Current Rankings (12-month)
-          </h2>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
+              <Trophy className="h-6 w-6 text-primary" />
+              Current Rankings (12-month)
+            </h2>
+            <Link to="/how-it-works" className="text-sm text-muted-foreground hover:text-foreground underline transition-colors">
+              How do rankings work?
+            </Link>
+          </div>
 
           {rankings.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
