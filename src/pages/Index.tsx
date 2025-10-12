@@ -11,11 +11,18 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <Navigation />
 
-      <section className="py-16 sm:py-20 md:py-28 px-4 relative overflow-hidden" style={{ background: "var(--gradient-hero)" }}>
+      <section
+        className="py-16 sm:py-20 md:py-28 px-4 relative overflow-hidden"
+        style={{ background: "var(--gradient-hero)" }}
+      >
         <div className="container mx-auto text-center relative z-10">
-          <img src={nplLogo} alt="NPL Logo" className="h-32 w-32 sm:h-40 sm:w-40 mx-auto mb-6 sm:mb-8 drop-shadow-lg animate-fade-in" />
+          <img
+            src={nplLogo}
+            alt="NPL Logo"
+            className="h-32 w-32 sm:h-40 sm:w-40 mx-auto mb-6 sm:mb-8 drop-shadow-lg animate-fade-in"
+          />
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-heading font-bold text-primary-foreground mb-6 sm:mb-8 px-2 tracking-tight">
-            National Pickleball League
+            NPL Rankings
           </h1>
           <p className="text-lg sm:text-xl md:text-2xl text-primary-foreground/95 mb-8 sm:mb-10 max-w-3xl mx-auto px-2 leading-relaxed">
             Australia's premier pickleball competition. Track player ratings and follow the best place to play
@@ -23,7 +30,11 @@ const Index = () => {
           </p>
           <div className="flex justify-center gap-4">
             <Link to="/rankings">
-              <Button size="lg" variant="secondary" className="text-base sm:text-lg px-8 py-6 sm:px-10 sm:py-7 w-full sm:w-auto font-semibold hover-lift shadow-lg">
+              <Button
+                size="lg"
+                variant="secondary"
+                className="text-base sm:text-lg px-8 py-6 sm:px-10 sm:py-7 w-full sm:w-auto font-semibold hover-lift shadow-lg"
+              >
                 View Rankings
               </Button>
             </Link>
@@ -33,7 +44,9 @@ const Index = () => {
 
       <section className="py-16 sm:py-20 px-4 bg-muted/30">
         <div className="container mx-auto">
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-heading font-bold text-center mb-12 sm:mb-16 text-foreground">How It Works</h2>
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-heading font-bold text-center mb-12 sm:mb-16 text-foreground">
+            How It Works
+          </h2>
 
           <div className="grid md:grid-cols-3 gap-8 sm:gap-10 max-w-6xl mx-auto">
             <div
@@ -44,7 +57,9 @@ const Index = () => {
                 <Users className="h-8 w-8 sm:h-10 sm:w-10 text-primary" />
               </div>
               <h3 className="text-xl sm:text-2xl font-heading font-bold mb-3 text-foreground">Players Compete</h3>
-              <p className="text-muted-foreground leading-relaxed">Players compete in official tournaments across various categories</p>
+              <p className="text-muted-foreground leading-relaxed">
+                Players compete in official tournaments across various categories
+              </p>
             </div>
 
             <div
@@ -68,7 +83,9 @@ const Index = () => {
                 <Award className="h-8 w-8 sm:h-10 sm:w-10 text-primary" />
               </div>
               <h3 className="text-xl sm:text-2xl font-heading font-bold mb-3 text-foreground">Rankings Updated</h3>
-              <p className="text-muted-foreground leading-relaxed">Player rankings are updated in real-time based on total points</p>
+              <p className="text-muted-foreground leading-relaxed">
+                Player rankings are updated in real-time based on total points
+              </p>
             </div>
           </div>
         </div>
@@ -76,7 +93,9 @@ const Index = () => {
 
       <section className="py-16 sm:py-20 px-4">
         <div className="container mx-auto">
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-heading font-bold text-center mb-12 sm:mb-16 text-foreground">Categories</h2>
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-heading font-bold text-center mb-12 sm:mb-16 text-foreground">
+            Categories
+          </h2>
 
           <div className="grid grid-cols-2 md:grid-cols-5 gap-6 sm:gap-8 max-w-6xl mx-auto">
             {["Men's Singles", "Women's Singles", "Men's Doubles", "Women's Doubles", "Mixed Doubles"].map(
