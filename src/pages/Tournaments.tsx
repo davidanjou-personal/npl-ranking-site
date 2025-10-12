@@ -111,14 +111,14 @@ export default function Tournaments() {
                       {formatDate(tournament.match_date)}
                     </div>
                     <div className="flex flex-wrap gap-1 mt-2">
-                      {tournament.categories.map((cat) => (
+                      {(tournament.categories || []).map((cat) => (
                         <Badge key={cat} variant="outline" className="text-xs">
                           {getCategoryLabel(cat)}
                         </Badge>
                       ))}
                     </div>
                     <p className="text-xs text-muted-foreground mt-2">
-                      {tournament.event_count} {tournament.event_count === 1 ? 'category' : 'categories'}
+                      {tournament.event_count || 1} {(tournament.event_count || 1) === 1 ? 'category' : 'categories'}
                     </p>
                   </CardContent>
                 </Card>
