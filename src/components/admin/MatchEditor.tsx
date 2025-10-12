@@ -75,9 +75,9 @@ export function MatchEditor({ match, open, onOpenChange, onSaved }: MatchEditorP
   const handleSave = async () => {
     setSaving(true);
     try {
-      // Update match details
-      const { error: matchError } = await supabase
-        .from('matches')
+      // Update event details
+      const { error: eventError } = await supabase
+        .from('events')
         .update({
           tournament_name: tournamentName,
           match_date: matchDate,
@@ -86,12 +86,12 @@ export function MatchEditor({ match, open, onOpenChange, onSaved }: MatchEditorP
         })
         .eq('id', match.id);
 
-      if (matchError) throw matchError;
+      if (eventError) throw eventError;
 
       // Update each result
       for (const result of results) {
         const { error: resultError } = await supabase
-          .from('match_results')
+          .from('event_results')
           .update({
             finishing_position: result.finishingPosition as any,
             points_awarded: result.pointsAwarded,
@@ -102,7 +102,7 @@ export function MatchEditor({ match, open, onOpenChange, onSaved }: MatchEditorP
       }
 
       toast({
-        title: "Match updated",
+        title: "Event updated",
         description: "Match details have been saved successfully.",
       });
 

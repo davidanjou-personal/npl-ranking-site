@@ -28,7 +28,8 @@ export interface Match {
 // Event result for a player (previously called "match_result")
 export interface MatchResult {
   id: string;
-  match_id: string;
+  event_id: string; // Renamed from match_id
+  match_id?: string; // Backward compatibility
   player_id: string;
   finishing_position: "winner" | "second" | "third" | "fourth" | "quarterfinalist" | "round_of_16" | "event_win";
   points_awarded: number;
@@ -37,7 +38,8 @@ export interface MatchResult {
 
 // Event with all player results
 export interface MatchWithResults extends Match {
-  match_results: Array<MatchResult & { players: Partial<Player> }>;
+  event_results: Array<MatchResult & { players: Partial<Player> }>;
+  match_results?: Array<MatchResult & { players: Partial<Player> }>; // Backward compatibility
 }
 
 export interface DuplicatePlayer {

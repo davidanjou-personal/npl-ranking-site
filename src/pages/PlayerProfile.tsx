@@ -35,7 +35,7 @@ interface MatchResult {
   id: string;
   points_awarded: number;
   finishing_position: string;
-  matches: {
+  events: {
     tournament_name: string;
     match_date: string;
     category: string;
@@ -98,14 +98,14 @@ export default function PlayerProfile() {
       setRankings(rankingsData);
     }
 
-    // Fetch match results
+    // Fetch event results
     const { data: resultsData, error: resultsError } = await supabase
-      .from("match_results")
+      .from("event_results")
       .select(`
         id,
         points_awarded,
         finishing_position,
-        matches (
+        events (
           tournament_name,
           match_date,
           category,
@@ -113,7 +113,7 @@ export default function PlayerProfile() {
         )
       `)
       .eq("player_id", id)
-      .order("matches(match_date)", { ascending: false });
+      .order("events(match_date)", { ascending: false });
 
     if (!resultsError && resultsData) {
       setMatchResults(resultsData as any);
@@ -307,7 +307,7 @@ export default function PlayerProfile() {
                 <TabsTrigger value="all">All</TabsTrigger>
                 {Object.keys(categoryLabels).map((cat) => {
                   const hasResults = matchResults.some(
-                    (r) => r.matches?.category === cat
+                    (r) => r.events?.category === cat
                   );
                   return hasResults ? (
                     <TabsTrigger key={cat} value={cat}>
@@ -325,23 +325,23 @@ export default function PlayerProfile() {
                       className="p-4 hover:shadow-lg transition-shadow"
                     >
                       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-foreground mb-1">
-                            {result.matches?.tournament_name}
-                          </h3>
-                          <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
-                            <span className="flex items-center gap-1">
-                              <Calendar className="h-3 w-3" />
-                              {new Date(
-                                result.matches?.match_date
-                              ).toLocaleDateString()}
-                            </span>
-                            <span>•</span>
-                            <span>
-                              {categoryLabels[result.matches?.category]}
-                            </span>
-                          </div>
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-foreground mb-1">
+                          {result.events?.tournament_name}
+                        </h3>
+                        <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            <Calendar className="h-3 w-3" />
+                            {new Date(
+                              result.events?.match_date
+                            ).toLocaleDateString()}
+                          </span>
+                          <span>•</span>
+                          <span>
+                            {categoryLabels[result.events?.category]}
+                          </span>
                         </div>
+                      </div>
                         <div className="flex items-center gap-4">
                           <Badge variant="outline">
                             {positionLabels[result.finishing_position] ||
@@ -364,7 +364,7 @@ export default function PlayerProfile() {
 
               {Object.keys(categoryLabels).map((cat) => {
                 const categoryResults = matchResults.filter(
-                  (r) => r.matches?.category === cat
+                  (r) => r.events?.category === cat
                 );
                 return categoryResults.length > 0 ? (
                   <TabsContent key={cat} value={cat}>
@@ -377,12 +377,12 @@ export default function PlayerProfile() {
                           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                             <div className="flex-1">
                               <h3 className="font-semibold text-foreground mb-1">
-                                {result.matches?.tournament_name}
+                                {result.events?.tournament_name}
                               </h3>
                               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                 <Calendar className="h-3 w-3" />
                                 {new Date(
-                                  result.matches?.match_date
+                                  result.events?.match_date
                                 ).toLocaleDateString()}
                               </div>
                             </div>

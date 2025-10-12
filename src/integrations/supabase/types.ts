@@ -47,68 +47,42 @@ export type Database = {
         }
         Relationships: []
       }
-      import_history: {
-        Row: {
-          created_at: string
-          error_log: Json | null
-          failed_rows: number
-          file_name: string
-          id: string
-          imported_by: string
-          successful_rows: number
-          total_rows: number
-        }
-        Insert: {
-          created_at?: string
-          error_log?: Json | null
-          failed_rows: number
-          file_name: string
-          id?: string
-          imported_by: string
-          successful_rows: number
-          total_rows: number
-        }
-        Update: {
-          created_at?: string
-          error_log?: Json | null
-          failed_rows?: number
-          file_name?: string
-          id?: string
-          imported_by?: string
-          successful_rows?: number
-          total_rows?: number
-        }
-        Relationships: []
-      }
-      match_results: {
+      event_results: {
         Row: {
           created_at: string | null
+          event_id: string | null
           finishing_position: Database["public"]["Enums"]["finishing_position"]
           id: string
-          match_id: string | null
           player_id: string | null
           points_awarded: number
         }
         Insert: {
           created_at?: string | null
+          event_id?: string | null
           finishing_position: Database["public"]["Enums"]["finishing_position"]
           id?: string
-          match_id?: string | null
           player_id?: string | null
           points_awarded?: number
         }
         Update: {
           created_at?: string | null
+          event_id?: string | null
           finishing_position?: Database["public"]["Enums"]["finishing_position"]
           id?: string
-          match_id?: string | null
           player_id?: string | null
           points_awarded?: number
         }
         Relationships: [
           {
             foreignKeyName: "match_results_match_id_fkey"
-            columns: ["match_id"]
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "match_results_match_id_fkey"
+            columns: ["event_id"]
             isOneToOne: false
             referencedRelation: "matches"
             referencedColumns: ["id"]
@@ -122,7 +96,7 @@ export type Database = {
           },
         ]
       }
-      matches: {
+      events: {
         Row: {
           category: Database["public"]["Enums"]["player_category"]
           created_at: string | null
@@ -162,6 +136,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      import_history: {
+        Row: {
+          created_at: string
+          error_log: Json | null
+          failed_rows: number
+          file_name: string
+          id: string
+          imported_by: string
+          successful_rows: number
+          total_rows: number
+        }
+        Insert: {
+          created_at?: string
+          error_log?: Json | null
+          failed_rows: number
+          file_name: string
+          id?: string
+          imported_by: string
+          successful_rows: number
+          total_rows: number
+        }
+        Update: {
+          created_at?: string
+          error_log?: Json | null
+          failed_rows?: number
+          file_name?: string
+          id?: string
+          imported_by?: string
+          successful_rows?: number
+          total_rows?: number
+        }
+        Relationships: []
       }
       players: {
         Row: {
@@ -287,6 +294,102 @@ export type Database = {
             columns: ["player_id"]
             isOneToOne: false
             referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      match_results: {
+        Row: {
+          created_at: string | null
+          finishing_position:
+            | Database["public"]["Enums"]["finishing_position"]
+            | null
+          id: string | null
+          match_id: string | null
+          player_id: string | null
+          points_awarded: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          finishing_position?:
+            | Database["public"]["Enums"]["finishing_position"]
+            | null
+          id?: string | null
+          match_id?: string | null
+          player_id?: string | null
+          points_awarded?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          finishing_position?:
+            | Database["public"]["Enums"]["finishing_position"]
+            | null
+          id?: string | null
+          match_id?: string | null
+          player_id?: string | null
+          points_awarded?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "match_results_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "match_results_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "match_results_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      matches: {
+        Row: {
+          category: Database["public"]["Enums"]["player_category"] | null
+          created_at: string | null
+          created_by: string | null
+          id: string | null
+          import_id: string | null
+          match_date: string | null
+          tier: Database["public"]["Enums"]["tournament_tier"] | null
+          tournament_name: string | null
+        }
+        Insert: {
+          category?: Database["public"]["Enums"]["player_category"] | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string | null
+          import_id?: string | null
+          match_date?: string | null
+          tier?: Database["public"]["Enums"]["tournament_tier"] | null
+          tournament_name?: string | null
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["player_category"] | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string | null
+          import_id?: string | null
+          match_date?: string | null
+          tier?: Database["public"]["Enums"]["tournament_tier"] | null
+          tournament_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "matches_import_id_fkey"
+            columns: ["import_id"]
+            isOneToOne: false
+            referencedRelation: "import_history"
             referencedColumns: ["id"]
           },
         ]

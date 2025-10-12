@@ -53,15 +53,15 @@ export function MatchesList({ matches, onRefresh }: MatchesListProps) {
     setDeleting(true);
     try {
       const { error } = await supabase
-        .from('matches')
+        .from('events')
         .delete()
         .eq('id', deleteId);
 
       if (error) throw error;
 
       toast({
-        title: "Match deleted",
-        description: "The match and its results have been removed.",
+        title: "Event deleted",
+        description: "The event and its results have been removed.",
       });
 
       onRefresh?.();

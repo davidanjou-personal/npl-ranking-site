@@ -93,10 +93,10 @@ export default function Admin() {
 
   const fetchMatches = async () => {
     const { data } = await supabase
-      .from("matches")
+      .from("events")
       .select(`
         *,
-        match_results (
+        event_results (
           *,
           players (
             name,

@@ -42,14 +42,14 @@ export function ImportHistoryList({ imports, onRefresh }: ImportHistoryListProps
 
     setDeleting(true);
     try {
-      // First, delete all matches associated with this import
-      // This will cascade delete match_results automatically
-      const { error: matchesError } = await supabase
-        .from('matches')
+      // First, delete all events associated with this import
+      // This will cascade delete event_results automatically
+      const { error: eventsError } = await supabase
+        .from('events')
         .delete()
         .eq('import_id', deleteId);
 
-      if (matchesError) throw matchesError;
+      if (eventsError) throw eventsError;
 
       // Then delete the import history record
       const { error: historyError } = await supabase
@@ -61,7 +61,7 @@ export function ImportHistoryList({ imports, onRefresh }: ImportHistoryListProps
 
       toast({
         title: "Import deleted",
-        description: "All matches and results from this import have been removed.",
+        description: "All events and results from this import have been removed.",
       });
 
       onRefresh();
@@ -162,7 +162,7 @@ export function ImportHistoryList({ imports, onRefresh }: ImportHistoryListProps
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Import?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete all matches and results created by this import.
+              This will permanently delete all events and results created by this import.
               This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>

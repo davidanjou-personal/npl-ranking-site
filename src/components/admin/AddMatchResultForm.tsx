@@ -51,7 +51,7 @@ export function AddMatchResultForm({ players, onMatchAdded }: AddMatchResultForm
       });
 
       const { data: match, error: matchError } = await supabase
-        .from("matches")
+        .from("events")
         .insert([{
           tournament_name: validatedData.tournament_name,
           match_date: validatedData.match_date,
@@ -64,13 +64,13 @@ export function AddMatchResultForm({ players, onMatchAdded }: AddMatchResultForm
       if (matchError) throw matchError;
 
       const resultsToInsert = validatedData.results.map(result => ({
-        match_id: match.id,
+        event_id: match.id,
         player_id: result.player_id,
         finishing_position: result.finishing_position,
       }));
 
       const { error: resultsError } = await supabase
-        .from("match_results")
+        .from("event_results")
         .insert(resultsToInsert);
 
       if (resultsError) throw resultsError;
