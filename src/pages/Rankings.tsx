@@ -114,7 +114,7 @@ export default function Rankings() {
         </div>
 
         <Tabs defaultValue="mens_singles" className="w-full" onValueChange={setCurrentCategory}>
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 mb-8 h-auto">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-6 mb-8 h-auto">
             {Object.entries(categoryLabels).map(([key, label]) => (
               <TabsTrigger key={key} value={key} className="text-xs md:text-sm px-2 sm:px-3">
                 {label}
