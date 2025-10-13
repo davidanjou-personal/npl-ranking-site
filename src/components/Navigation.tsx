@@ -61,10 +61,13 @@ export const Navigation = () => {
     <nav className="border-b bg-card/80 backdrop-blur-sm sticky top-0 z-50">
       <div className="container mx-auto px-4 py-3 sm:py-4">
         <div className="flex items-center justify-between gap-2">
-          <Link to="/" className="flex items-center gap-3 text-lg sm:text-xl font-bold text-foreground hover:opacity-90 transition-opacity">
+          <Link to="/" className="flex items-center hover:opacity-90 transition-opacity">
             <img src={nplLogo} alt="NPL Logo" className="h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0" />
-            <span className="font-heading truncate">Pickleball Rankings</span>
           </Link>
+          
+          <h1 className="absolute left-1/2 -translate-x-1/2 text-lg sm:text-xl font-bold font-heading text-foreground">
+            Pickleball Rankings
+          </h1>
           
           <div className="flex items-center gap-1 sm:gap-2 md:gap-4 flex-wrap justify-end">
             <ThemeToggle />
