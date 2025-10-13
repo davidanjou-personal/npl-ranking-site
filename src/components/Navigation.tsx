@@ -63,8 +63,7 @@ export const Navigation = () => {
         <div className="flex items-center justify-between gap-2">
           <Link to="/" className="flex items-center gap-3 text-lg sm:text-xl font-bold text-foreground hover:opacity-90 transition-opacity">
             <img src={nplLogo} alt="NPL Logo" className="h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0" />
-            <span className="hidden xs:inline sm:inline font-heading">NPL Rankings</span>
-            <span className="inline xs:hidden sm:hidden font-heading">NPL</span>
+            <span className="font-heading truncate">Pickleball Rankings</span>
           </Link>
           
           <div className="flex items-center gap-1 sm:gap-2 md:gap-4 flex-wrap justify-end">
