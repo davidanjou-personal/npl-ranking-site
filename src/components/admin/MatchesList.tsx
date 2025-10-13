@@ -38,7 +38,8 @@ const categoryLabels: Record<string, string> = {
   womens_singles: "Women's Singles",
   mens_doubles: "Men's Doubles",
   womens_doubles: "Women's Doubles",
-  mixed_doubles: "Mixed Doubles",
+  mens_mixed_doubles: "Men's Mixed Doubles",
+  womens_mixed_doubles: "Women's Mixed Doubles",
 };
 
 const positionLabels: Record<string, string> = {

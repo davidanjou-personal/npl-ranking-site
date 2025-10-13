@@ -14,28 +14,18 @@ const categoryLabels: Record<string, string> = {
   womens_singles: "Women's Singles",
   mens_doubles: "Men's Doubles",
   womens_doubles: "Women's Doubles",
-  mixed_doubles_male: "Men's Mixed",
-  mixed_doubles_female: "Women's Mixed",
+  mens_mixed_doubles: "Men's Mixed Doubles",
+  womens_mixed_doubles: "Women's Mixed Doubles",
 };
 
-// Map display keys to actual backend categories
+// Map display keys to actual backend categories (now 1:1 mapping)
 const categoryMapping: Record<string, string> = {
   mens_singles: "mens_singles",
   womens_singles: "womens_singles",
   mens_doubles: "mens_doubles",
   womens_doubles: "womens_doubles",
-  mixed_doubles_male: "mixed_doubles",
-  mixed_doubles_female: "mixed_doubles",
-};
-
-// Map display keys to gender filters
-const genderMapping: Record<string, string> = {
-  mens_singles: "all",
-  womens_singles: "all",
-  mens_doubles: "all",
-  womens_doubles: "all",
-  mixed_doubles_male: "male",
-  mixed_doubles_female: "female",
+  mens_mixed_doubles: "mens_mixed_doubles",
+  womens_mixed_doubles: "womens_mixed_doubles",
 };
 
 export default function Rankings() {
@@ -138,7 +128,7 @@ export default function Rankings() {
                 category={categoryMapping[key] || key}
                 viewMode={viewMode}
                 selectedCountry={selectedCountry}
-                selectedGender={genderMapping[key] || "all"}
+                selectedGender="all"
               />
             </TabsContent>
           ))}

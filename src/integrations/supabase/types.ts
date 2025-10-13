@@ -768,6 +768,8 @@ export type Database = {
         | "mens_doubles"
         | "womens_doubles"
         | "mixed_doubles"
+        | "mens_mixed_doubles"
+        | "womens_mixed_doubles"
       tournament_tier: "tier1" | "tier2" | "tier3" | "tier4" | "historic"
     }
     CompositeTypes: {
@@ -913,6 +915,8 @@ export const Constants = {
         "mens_doubles",
         "womens_doubles",
         "mixed_doubles",
+        "mens_mixed_doubles",
+        "womens_mixed_doubles",
       ],
       tournament_tier: ["tier1", "tier2", "tier3", "tier4", "historic"],
     },

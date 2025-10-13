@@ -12,7 +12,7 @@ export interface RankingData {
   nationalRank?: number; // Calculated on-the-fly when country filter is active
 }
 
-// Utility function to recalculate ranks within a country subset
+// Utility function to recalculate national ranks within a country
 export function calculateNationalRanks(
   data: RankingData[],
   country: string
@@ -42,30 +42,6 @@ export function calculateNationalRanks(
     return {
       ...player,
       nationalRank: currentRank,
-    };
-  });
-}
-
-// Utility function to recalculate ranks for a filtered subset (e.g., gender-filtered mixed doubles)
-export function recalculateRanks(data: RankingData[]): RankingData[] {
-  if (!data || data.length === 0) return data;
-
-  // Sort by total_points descending
-  const sorted = [...data].sort((a, b) => b.total_points - a.total_points);
-
-  // Assign new ranks (handling ties with same rank)
-  let currentRank = 1;
-  let previousPoints = -1;
-  
-  return sorted.map((player, index) => {
-    if (player.total_points !== previousPoints) {
-      currentRank = index + 1;
-      previousPoints = player.total_points;
-    }
-    
-    return {
-      ...player,
-      rank: currentRank,
     };
   });
 }

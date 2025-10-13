@@ -61,7 +61,8 @@ export function ExpiringPointsWarning({ playerId, showAllPlayers = false }: Expi
     womens_singles: "Women's Singles",
     mens_doubles: "Men's Doubles",
     womens_doubles: "Women's Doubles",
-    mixed_doubles: "Mixed Doubles",
+    mens_mixed_doubles: "Men's Mixed Doubles",
+    womens_mixed_doubles: "Women's Mixed Doubles",
   };
 
   const getUrgencyColor = (days: number) => {

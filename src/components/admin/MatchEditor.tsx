@@ -33,7 +33,8 @@ const categoryOptions = [
   { value: "womens_singles", label: "Women's Singles" },
   { value: "mens_doubles", label: "Men's Doubles" },
   { value: "womens_doubles", label: "Women's Doubles" },
-  { value: "mixed_doubles", label: "Mixed Doubles" },
+  { value: "mens_mixed_doubles", label: "Men's Mixed Doubles" },
+  { value: "womens_mixed_doubles", label: "Women's Mixed Doubles" },
 ];
 
 const tierOptions = [

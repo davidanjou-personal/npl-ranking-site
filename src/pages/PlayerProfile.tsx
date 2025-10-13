@@ -14,7 +14,7 @@ import { RankingChangeIndicator } from "@/components/player/RankingChangeIndicat
 import { PlayerStats } from "@/components/player/PlayerStats";
 import { TournamentHistory } from "@/components/player/TournamentHistory";
 import { useLatestRankingChange } from "@/hooks/useRankingHistory";
-import { useCurrentRankingsByCategory, calculateNationalRanks, recalculateRanks } from "@/hooks/useRankings";
+import { useCurrentRankingsByCategory, calculateNationalRanks } from "@/hooks/useRankings";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb";
 
@@ -54,7 +54,8 @@ const categoryLabels: Record<string, string> = {
   womens_singles: "Women's Singles",
   mens_doubles: "Men's Doubles",
   womens_doubles: "Women's Doubles",
-  mixed_doubles: "Mixed Doubles",
+  mens_mixed_doubles: "Men's Mixed Doubles",
+  womens_mixed_doubles: "Women's Mixed Doubles",
 };
 
 const positionLabels: Record<string, string> = {
@@ -107,37 +108,9 @@ export default function PlayerProfile() {
       .select("category, total_points, rank")
       .eq("player_id", id);
 
-    if (!rankingsError && rankingsData && playerData?.gender) {
-      // Recalculate mixed doubles ranks based on gender
-      const updatedRankings = await Promise.all(
-        rankingsData.map(async (ranking) => {
-          if (ranking.category !== 'mixed_doubles') {
-            return ranking;
-          }
-          
-          // Fetch all mixed doubles rankings for recalculation
-          const { data: allMixedDoubles } = await supabase
-            .from('current_rankings')
-            .select('player_id, category, total_points, rank, gender, name, country')
-            .eq('category', 'mixed_doubles')
-            .eq('gender', playerData.gender);
-          
-          if (allMixedDoubles) {
-            const recalculated = recalculateRanks(allMixedDoubles);
-            const playerRanking = recalculated.find(r => r.player_id === id);
-            if (playerRanking) {
-              return {
-                ...ranking,
-                rank: playerRanking.rank
-              };
-            }
-          }
-          
-          return ranking;
-        })
-      );
-      
-      setRankings(updatedRankings);
+    if (!rankingsError && rankingsData) {
+      // Rankings are now correct from the database - no recalculation needed
+      setRankings(rankingsData);
     }
 
     const { data: resultsData, error: resultsError } = await supabase

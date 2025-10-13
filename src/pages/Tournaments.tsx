@@ -30,7 +30,8 @@ export default function Tournaments() {
       womens_singles: "Women's Singles",
       mens_doubles: "Men's Doubles",
       womens_doubles: "Women's Doubles",
-      mixed_doubles: "Mixed Doubles",
+      mens_mixed_doubles: "Men's Mixed Doubles",
+      womens_mixed_doubles: "Women's Mixed Doubles",
     };
     return labels[category] || category;
   };
@@ -130,7 +131,8 @@ export default function Tournaments() {
               <SelectItem value="womens_singles">Women's Singles</SelectItem>
               <SelectItem value="mens_doubles">Men's Doubles</SelectItem>
               <SelectItem value="womens_doubles">Women's Doubles</SelectItem>
-              <SelectItem value="mixed_doubles">Mixed Doubles</SelectItem>
+              <SelectItem value="mens_mixed_doubles">Men's Mixed Doubles</SelectItem>
+              <SelectItem value="womens_mixed_doubles">Women's Mixed Doubles</SelectItem>
             </SelectContent>
           </Select>
 

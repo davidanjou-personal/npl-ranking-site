@@ -17,7 +17,7 @@ const matchSchema = z.object({
   tournament_name: z.string().min(1, "Tournament name is required").max(200),
   match_date: z.string().min(1, "Date is required"),
   tier: z.enum(["tier1", "tier2", "tier3", "tier4", "historic"]),
-  category: z.enum(["mens_singles", "womens_singles", "mens_doubles", "womens_doubles", "mixed_doubles"]),
+  category: z.enum(["mens_singles", "womens_singles", "mens_doubles", "womens_doubles", "mens_mixed_doubles", "womens_mixed_doubles"]),
   results: z.array(z.object({
     player_id: z.string().uuid(),
     finishing_position: z.enum(["winner", "second", "third", "fourth", "quarterfinalist", "round_of_16", "event_win"])
@@ -190,7 +190,8 @@ export function AddMatchResultForm({ players, onMatchAdded }: AddMatchResultForm
                   <SelectItem value="womens_singles">Women's Singles</SelectItem>
                   <SelectItem value="mens_doubles">Men's Doubles</SelectItem>
                   <SelectItem value="womens_doubles">Women's Doubles</SelectItem>
-                  <SelectItem value="mixed_doubles">Mixed Doubles</SelectItem>
+                  <SelectItem value="mens_mixed_doubles">Men's Mixed Doubles</SelectItem>
+                  <SelectItem value="womens_mixed_doubles">Women's Mixed Doubles</SelectItem>
                 </SelectContent>
               </Select>
             </div>

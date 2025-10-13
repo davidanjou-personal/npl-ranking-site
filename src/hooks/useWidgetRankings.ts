@@ -1,15 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-// Map display keys to actual backend categories and gender filters
+// Map display keys to actual backend categories
 const categoryMapping: Record<string, { category: string; gender?: string }> = {
   mens_singles: { category: "mens_singles" },
   womens_singles: { category: "womens_singles" },
   mens_doubles: { category: "mens_doubles" },
   womens_doubles: { category: "womens_doubles" },
-  mixed_doubles: { category: "mixed_doubles" },
-  mixed_doubles_male: { category: "mixed_doubles", gender: "male" },
-  mixed_doubles_female: { category: "mixed_doubles", gender: "female" },
+  mens_mixed_doubles: { category: "mens_mixed_doubles" },
+  womens_mixed_doubles: { category: "womens_mixed_doubles" },
 };
 
 export const useWidgetRankings = (
@@ -28,10 +27,7 @@ export const useWidgetRankings = (
         .eq("category", mapping.category as any)
         .eq("country", country);
       
-      // Apply gender filter if specified
-      if (mapping.gender) {
-        query = query.eq("gender", mapping.gender);
-      }
+      // Gender filter no longer needed - categories are gender-specific
       
       const { data, error } = await query
         .order("rank")

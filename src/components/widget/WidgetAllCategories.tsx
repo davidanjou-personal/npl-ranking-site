@@ -11,18 +11,18 @@ const categories = [
   { value: "womens_singles", label: "Women's Singles" },
   { value: "mens_doubles", label: "Men's Doubles" },
   { value: "womens_doubles", label: "Women's Doubles" },
-  { value: "mixed_doubles_male", label: "Men's Mixed" },
-  { value: "mixed_doubles_female", label: "Women's Mixed" },
+  { value: "mens_mixed_doubles", label: "Men's Mixed Doubles" },
+  { value: "womens_mixed_doubles", label: "Women's Mixed Doubles" },
 ];
 
-// Map display keys to actual backend categories
+// Map display keys to actual backend categories (now 1:1)
 const categoryMapping: Record<string, string> = {
   mens_singles: "mens_singles",
   womens_singles: "womens_singles",
   mens_doubles: "mens_doubles",
   womens_doubles: "womens_doubles",
-  mixed_doubles_male: "mixed_doubles",
-  mixed_doubles_female: "mixed_doubles",
+  mens_mixed_doubles: "mens_mixed_doubles",
+  womens_mixed_doubles: "womens_mixed_doubles",
 };
 
 export const WidgetAllCategories = () => {

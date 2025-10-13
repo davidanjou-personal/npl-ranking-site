@@ -46,7 +46,7 @@ interface DuplicateMatch {
 }
 
 // Normalization helpers
-const allowedCategories = new Set(['mens_singles','womens_singles','mens_doubles','womens_doubles','mixed_doubles']);
+const allowedCategories = new Set(['mens_singles','womens_singles','mens_doubles','womens_doubles','mens_mixed_doubles','womens_mixed_doubles','mixed_doubles']);
 
 function normalizeGender(value?: string): 'male' | 'female' | null {
   if (!value) return null;
@@ -76,10 +76,14 @@ function normalizeCategory(value?: string): string {
     'md': 'mens_doubles',
     'womens_doubles': 'womens_doubles',
     'wd': 'womens_doubles',
-    'mixed_doubles': 'mixed_doubles',
+    'mixed_doubles': 'mixed_doubles', // Backward compatibility - will be converted based on gender
     'mixed': 'mixed_doubles',
     'xd': 'mixed_doubles',
     'mx': 'mixed_doubles',
+    'mens_mixed_doubles': 'mens_mixed_doubles',
+    'womens_mixed_doubles': 'womens_mixed_doubles',
+    'mens_mixed': 'mens_mixed_doubles',
+    'womens_mixed': 'womens_mixed_doubles',
   };
   if (map[v]) v = map[v];
   return allowedCategories.has(v) ? v : '';
@@ -383,12 +387,18 @@ serve(async (req) => {
         const finishingPosition = normalizeFinishingPosition(finishingPositionVal);
         const tier = normalizeTier(tierVal);
 
+        // If category is still mixed_doubles (legacy), infer gender-specific category
+        let finalCategory = category;
+        if (category === 'mixed_doubles' && gender) {
+          finalCategory = gender === 'male' ? 'mens_mixed_doubles' : 'womens_mixed_doubles';
+        }
+
         records.push({
           player_name: playerName,
           player_code: playerCodeVal ? normalizeCode(playerCodeVal) : undefined,
           country: countryVal,
           gender: (gender ?? undefined) as any,
-          category: category || '',
+          category: finalCategory || '',
           points: parseInt(pointsVal || '0') || 0,
           finishing_position: finishingPosition,
           event_date: eventDate ?? '',

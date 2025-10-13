@@ -21,7 +21,7 @@ export interface Match {
   tournament_name: string;
   match_date: string;
   tier: "tier1" | "tier2" | "tier3" | "tier4" | "historic";
-  category: "mens_singles" | "womens_singles" | "mens_doubles" | "womens_doubles" | "mixed_doubles";
+  category: "mens_singles" | "womens_singles" | "mens_doubles" | "womens_doubles" | "mens_mixed_doubles" | "womens_mixed_doubles";
   is_public: boolean;
   created_at?: string;
   created_by?: string;
@@ -71,7 +71,7 @@ export interface MatchFormData {
   tournament_name: string;
   match_date: string;
   tier: "tier1" | "tier2" | "tier3" | "tier4" | "historic";
-  category: "mens_singles" | "womens_singles" | "mens_doubles" | "womens_doubles" | "mixed_doubles";
+  category: "mens_singles" | "womens_singles" | "mens_doubles" | "womens_doubles" | "mens_mixed_doubles" | "womens_mixed_doubles";
   results: Array<{
     player_id: string;
     finishing_position: "winner" | "second" | "third" | "fourth" | "quarterfinalist" | "round_of_16" | "event_win";

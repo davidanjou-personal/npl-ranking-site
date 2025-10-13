@@ -168,7 +168,7 @@ Sarah Lee,NPL000000004,Canada,female,womens_doubles,round_of_16,2024-10-01,Sprin
           <AlertDescription>
             <strong>CSV Format:</strong> player_name, player_code, country, gender, category, finishing_position, event_date, tournament_name, tier
             <br /><br />
-            <strong>Categories:</strong> mens_singles, womens_singles, mens_doubles, womens_doubles, mixed_doubles
+            <strong>Categories:</strong> mens_singles, womens_singles, mens_doubles, womens_doubles, mens_mixed_doubles, womens_mixed_doubles
             <br />
             <strong>Tiers:</strong> tier1, tier2, tier3, tier4, historic
             <br />

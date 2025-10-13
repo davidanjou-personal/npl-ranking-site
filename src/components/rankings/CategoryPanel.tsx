@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { PlayerRankingCard } from "@/components/rankings/PlayerRankingCard";
-import { useAllTimeRankingsByCategory, useCurrentRankingsByCategory, calculateNationalRanks, recalculateRanks, type RankingData } from "@/hooks/useRankings";
+import { useAllTimeRankingsByCategory, useCurrentRankingsByCategory, calculateNationalRanks, type RankingData } from "@/hooks/useRankings";
 
 export type ViewMode = 'current' | 'lifetime';
 
@@ -18,16 +18,9 @@ export function CategoryPanel({ category, viewMode, selectedCountry, selectedGen
   const data: RankingData[] | undefined = viewMode === 'current' ? currentData : lifetimeData;
   const loading = viewMode === 'current' ? loadingCurrent : loadingLifetime;
 
-  // Filter by country and gender
+  // Filter by country only (gender is now handled at the database level)
   let filtered = (data || [])
-    .filter((p) => selectedCountry === 'all' || (p.country || '').toLowerCase() === selectedCountry.toLowerCase())
-    .filter((p) => category !== 'mixed_doubles' || selectedGender === 'all' || (p.gender || '').toLowerCase() === selectedGender.toLowerCase());
-
-  // Recalculate ranks if gender filter is active for mixed doubles
-  const isGenderFiltered = category === 'mixed_doubles' && selectedGender !== 'all';
-  if (isGenderFiltered) {
-    filtered = recalculateRanks(filtered);
-  }
+    .filter((p) => selectedCountry === 'all' || (p.country || '').toLowerCase() === selectedCountry.toLowerCase());
 
   // Calculate national ranks if country filter is active
   const isNationalView = selectedCountry !== 'all';
