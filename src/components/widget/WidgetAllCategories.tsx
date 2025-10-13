@@ -11,8 +11,8 @@ const categories = [
   { value: "womens_singles", label: "Women's Singles" },
   { value: "mens_doubles", label: "Men's Doubles" },
   { value: "womens_doubles", label: "Women's Doubles" },
-  { value: "mens_mixed_doubles", label: "Men's Mixed Doubles" },
-  { value: "womens_mixed_doubles", label: "Women's Mixed Doubles" },
+  { value: "mens_mixed_doubles", label: "Men's Mixed" },
+  { value: "womens_mixed_doubles", label: "Women's Mixed" },
 ];
 
 // Map display keys to actual backend categories (now 1:1)
@@ -41,9 +41,9 @@ export const WidgetAllCategories = () => {
       </div>
 
       <Tabs defaultValue={defaultCategory} className="w-full">
-        <TabsList className="w-full grid grid-cols-3 md:grid-cols-6 gap-1 mb-4">
+        <TabsList className="w-full grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-1 mb-4">
           {categories.map((cat) => (
-            <TabsTrigger key={cat.value} value={cat.value} className="text-xs md:text-sm">
+            <TabsTrigger key={cat.value} value={cat.value} className="text-xs md:text-sm px-2 sm:px-3">
               {cat.label}
             </TabsTrigger>
           ))}
