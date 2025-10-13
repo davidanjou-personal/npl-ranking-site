@@ -98,7 +98,7 @@ const Index = () => {
             Categories
           </h2>
 
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-6 sm:gap-8 max-w-6xl mx-auto">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6 sm:gap-8 max-w-6xl mx-auto">
             {["Men's Singles", "Women's Singles", "Men's Doubles", "Women's Doubles", "Mixed Doubles"].map(
               (category) => (
                 <div
