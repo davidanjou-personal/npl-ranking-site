@@ -20,6 +20,8 @@ import WidgetWomensSingles from "./pages/widgets/WidgetWomensSingles";
 import WidgetMensDoubles from "./pages/widgets/WidgetMensDoubles";
 import WidgetWomensDoubles from "./pages/widgets/WidgetWomensDoubles";
 import WidgetMixedDoubles from "./pages/widgets/WidgetMixedDoubles";
+import WidgetMixedDoublesMens from "./pages/widgets/WidgetMixedDoublesMens";
+import WidgetMixedDoublesWomens from "./pages/widgets/WidgetMixedDoublesWomens";
 import WidgetAllCategoriesPage from "./pages/widgets/WidgetAllCategoriesPage";
 import WidgetEmbedGuide from "./pages/widgets/WidgetEmbedGuide";
 
@@ -50,6 +52,8 @@ const App = () => (
           <Route path="/widget/mens-doubles" element={<WidgetMensDoubles />} />
           <Route path="/widget/womens-doubles" element={<WidgetWomensDoubles />} />
           <Route path="/widget/mixed-doubles" element={<WidgetMixedDoubles />} />
+          <Route path="/widget/mixed-doubles-mens" element={<WidgetMixedDoublesMens />} />
+          <Route path="/widget/mixed-doubles-womens" element={<WidgetMixedDoublesWomens />} />
           <Route path="/widget/all-categories" element={<WidgetAllCategoriesPage />} />
           <Route path="/widget/embed-guide" element={<WidgetEmbedGuide />} />
           

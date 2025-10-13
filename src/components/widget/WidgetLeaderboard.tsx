@@ -38,6 +38,8 @@ export const WidgetLeaderboard = ({
       mens_doubles: "Men's Doubles",
       womens_doubles: "Women's Doubles",
       mixed_doubles: "Mixed Doubles",
+      mixed_doubles_male: "Men's Mixed Doubles",
+      mixed_doubles_female: "Women's Mixed Doubles",
     };
     return names[cat] || cat;
   };

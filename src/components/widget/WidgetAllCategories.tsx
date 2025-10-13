@@ -11,8 +11,19 @@ const categories = [
   { value: "womens_singles", label: "Women's Singles" },
   { value: "mens_doubles", label: "Men's Doubles" },
   { value: "womens_doubles", label: "Women's Doubles" },
-  { value: "mixed_doubles", label: "Mixed Doubles" },
+  { value: "mixed_doubles_male", label: "Men's Mixed" },
+  { value: "mixed_doubles_female", label: "Women's Mixed" },
 ];
+
+// Map display keys to actual backend categories
+const categoryMapping: Record<string, string> = {
+  mens_singles: "mens_singles",
+  womens_singles: "womens_singles",
+  mens_doubles: "mens_doubles",
+  womens_doubles: "womens_doubles",
+  mixed_doubles_male: "mixed_doubles",
+  mixed_doubles_female: "mixed_doubles",
+};
 
 export const WidgetAllCategories = () => {
   const [searchParams] = useSearchParams();
@@ -30,7 +41,7 @@ export const WidgetAllCategories = () => {
       </div>
 
       <Tabs defaultValue={defaultCategory} className="w-full">
-        <TabsList className="w-full grid grid-cols-2 md:grid-cols-5 gap-1 mb-4">
+        <TabsList className="w-full grid grid-cols-3 md:grid-cols-6 gap-1 mb-4">
           {categories.map((cat) => (
             <TabsTrigger key={cat.value} value={cat.value} className="text-xs md:text-sm">
               {cat.label}
@@ -41,7 +52,7 @@ export const WidgetAllCategories = () => {
         {categories.map((cat) => (
           <TabsContent key={cat.value} value={cat.value} className="space-y-4">
             <CategoryContent 
-              category={cat.value} 
+              category={categoryMapping[cat.value] || cat.value}
               country={country} 
               limit={limit}
               compact={compact}

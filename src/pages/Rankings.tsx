@@ -14,18 +14,41 @@ const categoryLabels: Record<string, string> = {
   womens_singles: "Women's Singles",
   mens_doubles: "Men's Doubles",
   womens_doubles: "Women's Doubles",
-  mixed_doubles: "Mixed Doubles",
+  mixed_doubles_male: "Men's Mixed",
+  mixed_doubles_female: "Women's Mixed",
+};
+
+// Map display keys to actual backend categories
+const categoryMapping: Record<string, string> = {
+  mens_singles: "mens_singles",
+  womens_singles: "womens_singles",
+  mens_doubles: "mens_doubles",
+  womens_doubles: "womens_doubles",
+  mixed_doubles_male: "mixed_doubles",
+  mixed_doubles_female: "mixed_doubles",
+};
+
+// Map display keys to gender filters
+const genderMapping: Record<string, string> = {
+  mens_singles: "all",
+  womens_singles: "all",
+  mens_doubles: "all",
+  womens_doubles: "all",
+  mixed_doubles_male: "male",
+  mixed_doubles_female: "female",
 };
 
 export default function Rankings() {
   const [viewMode, setViewMode] = useState<"current" | "lifetime">("current");
   const [selectedCountry, setSelectedCountry] = useState<string>("all");
-  const [selectedGender, setSelectedGender] = useState<string>("all");
   const [currentCategory, setCurrentCategory] = useState<string>("mens_singles");
 
+  // Map display category to actual backend category
+  const actualCategory = categoryMapping[currentCategory] || currentCategory;
+
   // Fetch only the active category to build the country list and avoid global 1000-row caps
-  const { data: currentCategoryData } = useCurrentRankingsByCategory(currentCategory);
-  const { data: lifetimeCategoryData } = useAllTimeRankingsByCategory(currentCategory);
+  const { data: currentCategoryData } = useCurrentRankingsByCategory(actualCategory);
+  const { data: lifetimeCategoryData } = useAllTimeRankingsByCategory(actualCategory);
   const categoryDataset = viewMode === "current" ? currentCategoryData : lifetimeCategoryData;
 
   // Get unique countries based on the active category dataset
@@ -97,24 +120,11 @@ export default function Rankings() {
                 ))}
               </SelectContent>
             </Select>
-
-            {currentCategory === "mixed_doubles" && (
-              <Select value={selectedGender} onValueChange={setSelectedGender}>
-                <SelectTrigger className="flex-1 sm:w-[180px] bg-background">
-                  <SelectValue placeholder="Filter by gender" />
-                </SelectTrigger>
-                <SelectContent className="bg-popover z-50">
-                  <SelectItem value="all">All Genders</SelectItem>
-                  <SelectItem value="male">Male</SelectItem>
-                  <SelectItem value="female">Female</SelectItem>
-                </SelectContent>
-              </Select>
-            )}
           </div>
         </div>
 
         <Tabs defaultValue="mens_singles" className="w-full" onValueChange={setCurrentCategory}>
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 mb-8 h-auto">
+          <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6 mb-8 h-auto">
             {Object.entries(categoryLabels).map(([key, label]) => (
               <TabsTrigger key={key} value={key} className="text-xs md:text-sm">
                 {label}
@@ -125,10 +135,10 @@ export default function Rankings() {
           {Object.entries(categoryLabels).map(([key]) => (
             <TabsContent key={key} value={key}>
               <CategoryPanel
-                category={key}
+                category={categoryMapping[key] || key}
                 viewMode={viewMode}
                 selectedCountry={selectedCountry}
-                selectedGender={selectedGender}
+                selectedGender={genderMapping[key] || "all"}
               />
             </TabsContent>
           ))}
