@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { LogOut, LayoutDashboard, Code2, Menu, UserPlus, Trophy, Users, Info, User as UserIcon } from "lucide-react";
+import { LogOut, LayoutDashboard, Code2, Menu, UserPlus, Trophy, Users, Info, User as UserIcon, Calendar } from "lucide-react";
 import nplLogo from "@/assets/npl-logo.svg";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
@@ -161,8 +161,8 @@ export const Navigation = () => {
                   </Link>
                   <Link to="/tournaments" onClick={() => setIsMenuOpen(false)}>
                     <Button variant="ghost" size="sm" className="w-full justify-start">
-                      <Trophy className="mr-2 h-4 w-4" />
-                      Tournaments
+                <Calendar className="mr-2 h-4 w-4" />
+                Tournaments
                     </Button>
                   </Link>
                   <Link to="/players" onClick={() => setIsMenuOpen(false)}>
