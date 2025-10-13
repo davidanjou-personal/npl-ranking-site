@@ -69,13 +69,13 @@ export const UpcomingTournaments = () => {
             style={{ boxShadow: "var(--shadow-card)" }}
           >
             {tournament.is_featured && (
-              <Badge className="absolute top-4 right-4 bg-primary text-primary-foreground">
+              <Badge className="inline-flex items-center w-fit mb-2 bg-primary text-primary-foreground">
                 <Star className="h-3 w-3 mr-1" />
                 Featured
               </Badge>
             )}
             
-            <h3 className="text-xl font-heading font-bold mb-4 text-foreground pr-20">
+            <h3 className="text-xl font-heading font-bold mb-4 text-foreground">
               {tournament.tournament_name}
             </h3>
             
