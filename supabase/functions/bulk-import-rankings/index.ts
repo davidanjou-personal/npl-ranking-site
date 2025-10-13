@@ -114,7 +114,7 @@ function normalizeCode(value?: string): string {
 }
 
 function normalizeFinishingPosition(value?: string): string {
-  if (!value) return 'event_win'; // Default fallback (database value)
+  if (!value) return 'points_awarded'; // Default fallback
   
   // Check if value is numeric
   const numValue = parseInt(value.trim(), 10);
@@ -125,14 +125,14 @@ function normalizeFinishingPosition(value?: string): string {
     if (numValue === 4) return 'fourth';
     if (numValue >= 5 && numValue <= 8) return 'quarterfinalist';
     if (numValue >= 9 && numValue <= 16) return 'round_of_16';
-    return 'event_win'; // 17+ or any other number
+    return 'points_awarded'; // 17+ or any other number
   }
   
   const normalized = value.toLowerCase().trim().replace(/[^a-z0-9_]/g, '_');
   
   const validPositions = [
     'winner', 'second', 'third', 'fourth', 
-    'quarterfinalist', 'round_of_16', 'event_win'
+    'quarterfinalist', 'round_of_16', 'points_awarded'
   ];
   
   // Direct match
@@ -140,12 +140,10 @@ function normalizeFinishingPosition(value?: string): string {
     return normalized;
   }
   
-  // Handle common variations and new nomenclature
+  // Handle common variations
   const positionMap: Record<string, string> = {
-    // New nomenclature support
-    'points_awarded': 'event_win',
+    'points_awarded': 'points_awarded',
     'quarter_finalist': 'quarterfinalist',
-    // Existing mappings
     '1st': 'winner',
     'first': 'winner',
     '1st_place': 'winner',
@@ -166,11 +164,12 @@ function normalizeFinishingPosition(value?: string): string {
     'r16': 'round_of_16',
     'round16': 'round_of_16',
     'last_16': 'round_of_16',
-    'participation': 'event_win',
-    'competed': 'event_win',
+    'participation': 'points_awarded',
+    'competed': 'points_awarded',
+    'event_win': 'points_awarded', // Backward compatibility
   };
   
-  return positionMap[normalized] || 'event_win';
+  return positionMap[normalized] || 'points_awarded';
 }
 
 function normalizeTier(value?: string): string {

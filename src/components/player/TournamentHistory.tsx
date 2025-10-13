@@ -50,7 +50,7 @@ export const TournamentHistory = ({ results }: TournamentHistoryProps) => {
       semifinalist: "Semi Final",
       quarterfinalist: "Quarter Final",
       round_of_16: "Round of 16",
-      event_win: "Points Awarded",
+      points_awarded: "Points Awarded",
       r32: "Round of 32",
       r64: "Round of 64",
     };

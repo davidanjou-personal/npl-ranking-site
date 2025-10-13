@@ -4,7 +4,7 @@ import { TrendingUp, Trophy, Calendar, Award } from "lucide-react";
 interface PlayerStatsProps {
   totalEvents: number;
   totalPoints: number;
-  bestFinish: string;
+  bestFinish: string | null;
   recentForm: number; // percentage
 }
 
@@ -14,9 +14,11 @@ export const PlayerStats = ({
   bestFinish,
   recentForm,
 }: PlayerStatsProps) => {
-  const getFinishLabel = (finish: string) => {
+  const getFinishLabel = (finish: string | null) => {
+    if (finish === null) {
+      return "N/A";
+    }
     const labels: Record<string, string> = {
-      event_win: "1st Place",
       winner: "1st Place",
       first: "1st Place",
       second: "2nd Place",
@@ -60,7 +62,9 @@ export const PlayerStats = ({
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">{getFinishLabel(bestFinish)}</div>
-          <p className="text-xs text-muted-foreground">Career best</p>
+          <p className="text-xs text-muted-foreground">
+            {bestFinish === null ? "No competitive finishes recorded" : "Career best"}
+          </p>
         </CardContent>
       </Card>
 

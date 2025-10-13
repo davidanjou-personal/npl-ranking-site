@@ -172,7 +172,7 @@ Sarah Lee,NPL000000004,Canada,female,womens_doubles,round_of_16,2024-10-01,Sprin
             <br />
             <strong>Tiers:</strong> tier1, tier2, tier3, tier4, historic
             <br />
-            <strong>Finishing Positions:</strong> winner, second, third, fourth, quarterfinalist, round_of_16, event_win
+            <strong>Finishing Positions:</strong> winner, second, third, fourth, quarterfinalist, round_of_16, points_awarded
             <br /><br />
             <strong>Tip:</strong> Download the template below for the correct format with examples.
           </AlertDescription>

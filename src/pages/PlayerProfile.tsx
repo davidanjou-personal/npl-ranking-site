@@ -65,7 +65,7 @@ const positionLabels: Record<string, string> = {
   fourth: "4th Place",
   quarterfinalist: "Quarter Finalist",
   round_of_16: "Round of 16",
-  event_win: "Points Awarded",
+  points_awarded: "Points Awarded",
 };
 
 export default function PlayerProfile() {
@@ -144,11 +144,11 @@ export default function PlayerProfile() {
     const totalEvents = matchResults.length;
     const totalPoints = matchResults.reduce((sum, r) => sum + r.points_awarded, 0);
     
-    // Best finish
-    const finishOrder = ['winner', 'second', 'third', 'fourth', 'quarterfinalist', 'round_of_16', 'event_win'];
+    // Best finish - exclude points_awarded (non-competitive)
+    const finishOrder = ['winner', 'second', 'third', 'fourth', 'quarterfinalist', 'round_of_16'];
     const bestFinish = finishOrder.find(pos => 
       matchResults.some(r => r.finishing_position === pos)
-    ) || 'event_win';
+    ) || null;
     
     // Recent form (last 5 events) - calculate percentage based on points vs max possible
     const recentEvents = matchResults.slice(0, 5);

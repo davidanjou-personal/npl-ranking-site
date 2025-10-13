@@ -17,7 +17,7 @@ This is the official National Pickleball League (NPL) ranking system that tracks
 ### Points Calculation
 Points are awarded based on:
 - **Tournament Tier**: Tier 1 (1000 base points) down to Tier 4 (100 points)
-- **Finishing Position**: Winner (100%), 2nd (80%), 3rd (60%), down to Event Participation (5%)
+- **Finishing Position**: Winner (100%), 2nd (80%), 3rd (60%), 4th (50%), Quarter-Finalist (30%), Round of 16 (20%), Points Awarded (5%)
 - **Rolling Window**: Points expire 12 months after the event date
 
 [Learn more about how rankings work](https://your-domain.com/how-it-works)
@@ -152,7 +152,12 @@ John Doe,NPL000000001,USA,male,mens_singles,1,2024-10-01,Spring Championship,tie
 
 **Valid Tiers**: `tier1`, `tier2`, `tier3`, `tier4`, `historic`
 
-**Valid Finishing Positions**: `winner`, `second`, `third`, `fourth`, `quarterfinalist`, `round_of_16`, `event_win`
+**Valid Finishing Positions**: `winner`, `second`, `third`, `fourth`, `quarterfinalist`, `round_of_16`, `points_awarded`
+
+**Note:** `points_awarded` represents:
+- Historic points allocation for legacy data
+- 5% participation points for pool play or pre-Round 16 wins
+- This is NOT considered a competitive finish for "Best Finish" stats
 
 ## Support
 

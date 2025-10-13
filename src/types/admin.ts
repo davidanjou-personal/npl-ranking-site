@@ -33,7 +33,7 @@ export interface MatchResult {
   event_id: string; // Renamed from match_id
   match_id?: string; // Backward compatibility
   player_id: string;
-  finishing_position: "winner" | "second" | "third" | "fourth" | "quarterfinalist" | "round_of_16" | "event_win";
+  finishing_position: "winner" | "second" | "third" | "fourth" | "quarterfinalist" | "round_of_16" | "points_awarded";
   points_awarded: number;
   created_at?: string;
 }
@@ -74,7 +74,7 @@ export interface MatchFormData {
   category: "mens_singles" | "womens_singles" | "mens_doubles" | "womens_doubles" | "mens_mixed_doubles" | "womens_mixed_doubles";
   results: Array<{
     player_id: string;
-    finishing_position: "winner" | "second" | "third" | "fourth" | "quarterfinalist" | "round_of_16" | "event_win";
+    finishing_position: "winner" | "second" | "third" | "fourth" | "quarterfinalist" | "round_of_16" | "points_awarded";
   }>;
 }
 

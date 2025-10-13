@@ -20,7 +20,7 @@ const matchSchema = z.object({
   category: z.enum(["mens_singles", "womens_singles", "mens_doubles", "womens_doubles", "mens_mixed_doubles", "womens_mixed_doubles"]),
   results: z.array(z.object({
     player_id: z.string().uuid(),
-    finishing_position: z.enum(["winner", "second", "third", "fourth", "quarterfinalist", "round_of_16", "event_win"])
+    finishing_position: z.enum(["winner", "second", "third", "fourth", "quarterfinalist", "round_of_16", "points_awarded"])
   })).min(1, "At least one result is required")
 });
 
@@ -40,7 +40,7 @@ export function AddMatchResultForm({ players, onMatchAdded }: AddMatchResultForm
     category: "mens_singles",
     results: Array(8).fill(null).map(() => ({
       player_id: "",
-      finishing_position: "event_win" as const,
+      finishing_position: "points_awarded" as const,
     })),
   });
 
@@ -91,7 +91,7 @@ export function AddMatchResultForm({ players, onMatchAdded }: AddMatchResultForm
         category: "mens_singles",
         results: Array(8).fill(null).map(() => ({
           player_id: "",
-          finishing_position: "event_win" as const,
+          finishing_position: "points_awarded" as const,
         })),
       });
       setPlayerResultCount(8);
@@ -111,7 +111,7 @@ export function AddMatchResultForm({ players, onMatchAdded }: AddMatchResultForm
       ...matchData,
       results: [
         ...matchData.results,
-        { player_id: "", finishing_position: "event_win" as const },
+        { player_id: "", finishing_position: "points_awarded" as const },
       ],
     });
     setPlayerResultCount(playerResultCount + 1);
@@ -280,7 +280,7 @@ export function AddMatchResultForm({ players, onMatchAdded }: AddMatchResultForm
                       <SelectItem value="fourth">4th Place</SelectItem>
                       <SelectItem value="quarterfinalist">Quarter Finalist</SelectItem>
                       <SelectItem value="round_of_16">Round of 16</SelectItem>
-                      <SelectItem value="event_win">Points Awarded</SelectItem>
+                      <SelectItem value="points_awarded">Points Awarded</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

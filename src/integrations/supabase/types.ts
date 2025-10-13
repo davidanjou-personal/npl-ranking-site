@@ -760,7 +760,7 @@ export type Database = {
         | "fourth"
         | "quarterfinalist"
         | "round_of_16"
-        | "event_win"
+        | "points_awarded"
       match_result: "win" | "loss"
       player_category:
         | "mens_singles"
@@ -906,7 +906,7 @@ export const Constants = {
         "fourth",
         "quarterfinalist",
         "round_of_16",
-        "event_win",
+        "points_awarded",
       ],
       match_result: ["win", "loss"],
       player_category: [
