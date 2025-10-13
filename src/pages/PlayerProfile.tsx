@@ -144,11 +144,24 @@ export default function PlayerProfile() {
     const totalEvents = matchResults.length;
     const totalPoints = matchResults.reduce((sum, r) => sum + r.points_awarded, 0);
     
-    // Best finish - exclude points_awarded (non-competitive)
+    // Best finish by category - exclude points_awarded (non-competitive)
     const finishOrder = ['winner', 'second', 'third', 'fourth', 'quarterfinalist', 'round_of_16'];
-    const bestFinish = finishOrder.find(pos => 
-      matchResults.some(r => r.finishing_position === pos)
-    ) || null;
+    
+    // Helper function to find best finish for a category group
+    const findBestFinish = (categories: string[]) => {
+      return finishOrder.find(pos => 
+        matchResults.some(r => 
+          categories.includes(r.events.category) && 
+          r.finishing_position === pos
+        )
+      ) || null;
+    };
+    
+    const bestFinishByCategory = {
+      singles: findBestFinish(['mens_singles', 'womens_singles']),
+      doubles: findBestFinish(['mens_doubles', 'womens_doubles']),
+      mixed: findBestFinish(['mens_mixed_doubles', 'womens_mixed_doubles']),
+    };
     
     // Recent form (last 5 events) - calculate percentage based on points vs max possible
     const recentEvents = matchResults.slice(0, 5);
@@ -156,7 +169,7 @@ export default function PlayerProfile() {
     const maxPossible = recentEvents.length * 1000; // Max tier1 winner points
     const recentForm = Math.round((recentPoints / maxPossible) * 100);
 
-    return { totalEvents, totalPoints, bestFinish, recentForm };
+    return { totalEvents, totalPoints, bestFinishByCategory, recentForm };
   }, [matchResults]);
 
   // Transform match results to tournament history format
@@ -306,7 +319,7 @@ export default function PlayerProfile() {
             <PlayerStats
               totalEvents={playerStats.totalEvents}
               totalPoints={playerStats.totalPoints}
-              bestFinish={playerStats.bestFinish}
+              bestFinishByCategory={playerStats.bestFinishByCategory}
               recentForm={playerStats.recentForm}
             />
           </div>

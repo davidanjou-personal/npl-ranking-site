@@ -4,14 +4,18 @@ import { TrendingUp, Trophy, Calendar, Award } from "lucide-react";
 interface PlayerStatsProps {
   totalEvents: number;
   totalPoints: number;
-  bestFinish: string | null;
+  bestFinishByCategory: {
+    singles: string | null;
+    doubles: string | null;
+    mixed: string | null;
+  };
   recentForm: number; // percentage
 }
 
 export const PlayerStats = ({
   totalEvents,
   totalPoints,
-  bestFinish,
+  bestFinishByCategory,
   recentForm,
 }: PlayerStatsProps) => {
   const getFinishLabel = (finish: string | null) => {
@@ -61,10 +65,20 @@ export const PlayerStats = ({
           <Award className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold">{getFinishLabel(bestFinish)}</div>
-          <p className="text-xs text-muted-foreground">
-            {bestFinish === null ? "No competitive finishes recorded" : "Career best"}
-          </p>
+          <div className="space-y-1">
+            <div className="flex justify-between items-center">
+              <span className="text-xs font-medium text-muted-foreground">Singles:</span>
+              <span className="text-sm font-semibold">{getFinishLabel(bestFinishByCategory.singles)}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-xs font-medium text-muted-foreground">Doubles:</span>
+              <span className="text-sm font-semibold">{getFinishLabel(bestFinishByCategory.doubles)}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-xs font-medium text-muted-foreground">Mixed:</span>
+              <span className="text-sm font-semibold">{getFinishLabel(bestFinishByCategory.mixed)}</span>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
