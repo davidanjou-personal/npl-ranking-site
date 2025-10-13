@@ -14,8 +14,8 @@ const categoryLabels: Record<string, string> = {
   womens_singles: "Women's Singles",
   mens_doubles: "Men's Doubles",
   womens_doubles: "Women's Doubles",
-  mens_mixed_doubles: "Men's Mixed Doubles",
-  womens_mixed_doubles: "Women's Mixed Doubles",
+  mens_mixed_doubles: "Men's Mixed",
+  womens_mixed_doubles: "Women's Mixed",
 };
 
 // Map display keys to actual backend categories (now 1:1 mapping)
@@ -114,9 +114,9 @@ export default function Rankings() {
         </div>
 
         <Tabs defaultValue="mens_singles" className="w-full" onValueChange={setCurrentCategory}>
-          <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6 mb-8 h-auto">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 mb-8 h-auto">
             {Object.entries(categoryLabels).map(([key, label]) => (
-              <TabsTrigger key={key} value={key} className="text-xs md:text-sm">
+              <TabsTrigger key={key} value={key} className="text-xs md:text-sm px-2 sm:px-3">
                 {label}
               </TabsTrigger>
             ))}
