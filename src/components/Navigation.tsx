@@ -60,16 +60,19 @@ export const Navigation = () => {
   return (
     <nav className="border-b bg-card/80 backdrop-blur-sm sticky top-0 z-50">
       <div className="container mx-auto px-4 py-3 sm:py-4">
-        <div className="flex items-center justify-between gap-2">
-          <Link to="/" className="flex items-center hover:opacity-90 transition-opacity">
-            <img src={nplLogo} alt="NPL Logo" className="h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0" />
+        <div className="flex items-center justify-between gap-2 sm:gap-4">
+          {/* Left: Logo */}
+          <Link to="/" className="flex items-center hover:opacity-90 transition-opacity flex-shrink-0">
+            <img src={nplLogo} alt="NPL Logo" className="h-8 w-8 sm:h-10 sm:w-10" />
           </Link>
           
-          <h1 className="absolute left-1/2 -translate-x-1/2 text-lg sm:text-xl font-bold font-heading text-foreground">
+          {/* Center: Title */}
+          <h1 className="text-sm sm:text-lg md:text-xl font-bold font-heading text-foreground whitespace-nowrap flex-shrink truncate">
             Pickleball Rankings
           </h1>
           
-          <div className="flex items-center gap-1 sm:gap-2 md:gap-4 flex-wrap justify-end">
+          {/* Right: Navigation */}
+          <div className="flex items-center gap-1 sm:gap-2 md:gap-4 flex-shrink-0">
             <ThemeToggle />
             
             {/* Rankings - always visible */}
