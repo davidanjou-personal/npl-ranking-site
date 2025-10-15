@@ -7,41 +7,67 @@ import { ExternalLink, MapPin } from "lucide-react";
 const MemberOrganizations = () => {
   const members = [
     {
-      name: "NPL Australia",
+      name: "Association of Pickleball Players (APP)",
+      country: "United States",
+      region: "North America",
+      status: "Founding Member",
+      website: "https://theapp.global",
+      description: "Leading professional pickleball tour and player organization in North America",
+      joined: "2025",
+    },
+    {
+      name: "Canadian National Pickleball League (CNPL)",
+      country: "Canada",
+      region: "North America",
+      status: "Founding Member",
+      website: "#",
+      description: "Canada's premier professional pickleball league and ranking system",
+      joined: "2025",
+    },
+    {
+      name: "European Pickleball Federation (EPF)",
+      country: "Europe",
+      region: "Europe",
+      status: "Founding Member",
+      website: "#",
+      description: "Unified federation governing professional pickleball across European nations",
+      joined: "2025",
+    },
+    {
+      name: "Global Sports",
+      country: "India",
+      region: "Asia",
+      status: "Founding Member",
+      website: "#",
+      description: "India's largest tour operator driving professional pickleball growth in South Asia",
+      joined: "2025",
+    },
+    {
+      name: "National Pickleball League (NPL)",
       country: "Australia",
       region: "Asia-Pacific",
       status: "Founding Member",
       website: "https://nplrankings.com",
-      description: "National Pickleball League - Australia's premier pickleball ranking system",
+      description: "Australia's premier professional pickleball league and ranking system",
       joined: "2025",
     },
-    // Placeholder for future members
     {
-      name: "New Zealand Pickleball Federation",
-      country: "New Zealand", 
-      region: "Asia-Pacific",
-      status: "Prospective Member",
+      name: "Pickleball England",
+      country: "England",
+      region: "Europe",
+      status: "Founding Member",
       website: "#",
-      description: "Leading pickleball organization in New Zealand",
-      joined: "TBD",
+      description: "National governing body for pickleball in England",
+      joined: "2025",
     },
     {
-      name: "Singapore Pickleball Association",
-      country: "Singapore",
-      region: "Asia-Pacific",
-      status: "Prospective Member",
+      name: "Pickleball D-Joy",
+      country: "Vietnam",
+      region: "Asia",
+      status: "Founding Member",
       website: "#",
-      description: "Governing body for pickleball in Singapore",
-      joined: "TBD",
-    },
-    {
-      name: "Malaysia Pickleball Association",
-      country: "Malaysia",
-      region: "Asia-Pacific",
-      status: "Prospective Member",
-      website: "#",
-      description: "National federation for pickleball in Malaysia",
-      joined: "TBD",
+      description: "Vietnam's leading pickleball tour operator and development organization",
+      joined: "2025",
     },
   ];
 
@@ -57,7 +83,7 @@ const MemberOrganizations = () => {
               Member Organizations
             </h1>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              National federations united in growing pickleball globally
+              National federations and the world's largest tour operators united in growing pickleball globally
             </p>
           </div>
 
@@ -65,20 +91,20 @@ const MemberOrganizations = () => {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <Card>
               <CardContent className="pt-6 text-center">
-                <div className="text-3xl font-bold text-primary">1</div>
-                <div className="text-sm text-muted-foreground">Active Members</div>
+                <div className="text-3xl font-bold text-primary">7</div>
+                <div className="text-sm text-muted-foreground">Founding Members</div>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="pt-6 text-center">
-                <div className="text-3xl font-bold text-primary">3</div>
-                <div className="text-sm text-muted-foreground">Prospective Members</div>
+                <div className="text-3xl font-bold text-primary">30+</div>
+                <div className="text-sm text-muted-foreground">2026 Events</div>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="pt-6 text-center">
-                <div className="text-3xl font-bold text-primary">2</div>
-                <div className="text-sm text-muted-foreground">Regions</div>
+                <div className="text-3xl font-bold text-primary">4</div>
+                <div className="text-sm text-muted-foreground">Continents</div>
               </CardContent>
             </Card>
             <Card>
@@ -140,7 +166,7 @@ const MemberOrganizations = () => {
             <CardContent className="pt-6 text-center space-y-4">
               <h2 className="text-2xl font-heading font-bold">Interested in Joining?</h2>
               <p className="text-muted-foreground max-w-2xl mx-auto">
-                The GPA welcomes national federations committed to growing pickleball through standardized competition and player development. 
+                The GPA welcomes national federations and the largest tour operators in their regions committed to growing pickleball through standardized competition and player development. 
                 Contact us to learn about membership requirements and benefits.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">

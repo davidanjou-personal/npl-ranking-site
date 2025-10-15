@@ -26,7 +26,7 @@ export const Navigation = () => {
 
   const isGPA = currentOrg?.slug === 'gpa';
   const logo = isGPA ? gpaLogo : nplLogo;
-  const title = isGPA ? 'GPA Rankings' : 'Pickleball Rankings';
+  const title = isGPA ? 'Global Pickleball Alliance' : 'Pickleball Rankings';
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
