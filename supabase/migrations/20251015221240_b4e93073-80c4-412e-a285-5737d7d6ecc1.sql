@@ -1,0 +1,48 @@
+-- Disable RLS on all tables and views to allow unrestricted copying
+ALTER TABLE IF EXISTS public.audit_logs DISABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.email_preferences DISABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.event_results DISABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.events DISABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.import_history DISABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.organizations DISABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.player_accounts DISABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.player_claims DISABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.player_merges DISABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.player_organization_memberships DISABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.player_profile_updates DISABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.players DISABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.profiles DISABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.upcoming_tournaments DISABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.user_roles DISABLE ROW LEVEL SECURITY;
+
+-- Drop all existing policies
+DROP POLICY IF EXISTS "Allow all for anon" ON public.audit_logs;
+DROP POLICY IF EXISTS "Allow all for authenticated" ON public.audit_logs;
+DROP POLICY IF EXISTS "Allow all for anon" ON public.email_preferences;
+DROP POLICY IF EXISTS "Allow all for authenticated" ON public.email_preferences;
+DROP POLICY IF EXISTS "Allow all for anon" ON public.event_results;
+DROP POLICY IF EXISTS "Allow all for authenticated" ON public.event_results;
+DROP POLICY IF EXISTS "Allow all for anon" ON public.events;
+DROP POLICY IF EXISTS "Allow all for authenticated" ON public.events;
+DROP POLICY IF EXISTS "Allow all for anon" ON public.import_history;
+DROP POLICY IF EXISTS "Allow all for authenticated" ON public.import_history;
+DROP POLICY IF EXISTS "Allow all for anon" ON public.organizations;
+DROP POLICY IF EXISTS "Allow all for authenticated" ON public.organizations;
+DROP POLICY IF EXISTS "Allow all for anon" ON public.player_accounts;
+DROP POLICY IF EXISTS "Allow all for authenticated" ON public.player_accounts;
+DROP POLICY IF EXISTS "Allow all for anon" ON public.player_claims;
+DROP POLICY IF EXISTS "Allow all for authenticated" ON public.player_claims;
+DROP POLICY IF EXISTS "Allow all for anon" ON public.player_merges;
+DROP POLICY IF EXISTS "Allow all for authenticated" ON public.player_merges;
+DROP POLICY IF EXISTS "Allow all for anon" ON public.player_organization_memberships;
+DROP POLICY IF EXISTS "Allow all for authenticated" ON public.player_organization_memberships;
+DROP POLICY IF EXISTS "Allow all for anon" ON public.player_profile_updates;
+DROP POLICY IF EXISTS "Allow all for authenticated" ON public.player_profile_updates;
+DROP POLICY IF EXISTS "Allow all for anon" ON public.players;
+DROP POLICY IF EXISTS "Allow all for authenticated" ON public.players;
+DROP POLICY IF EXISTS "Allow all for anon" ON public.profiles;
+DROP POLICY IF EXISTS "Allow all for authenticated" ON public.profiles;
+DROP POLICY IF EXISTS "Allow all for anon" ON public.upcoming_tournaments;
+DROP POLICY IF EXISTS "Allow all for authenticated" ON public.upcoming_tournaments;
+DROP POLICY IF EXISTS "Allow all for anon" ON public.user_roles;
+DROP POLICY IF EXISTS "Allow all for authenticated" ON public.user_roles;
