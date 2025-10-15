@@ -118,6 +118,20 @@ export type Database = {
             foreignKeyName: "match_results_player_id_fkey"
             columns: ["player_id"]
             isOneToOne: false
+            referencedRelation: "current_rankings"
+            referencedColumns: ["player_id"]
+          },
+          {
+            foreignKeyName: "match_results_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "expiring_points"
+            referencedColumns: ["player_id"]
+          },
+          {
+            foreignKeyName: "match_results_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
             referencedRelation: "players"
             referencedColumns: ["id"]
           },
@@ -132,6 +146,7 @@ export type Database = {
           import_id: string | null
           is_public: boolean
           match_date: string
+          organization_id: string
           tier: Database["public"]["Enums"]["tournament_tier"]
           tournament_name: string
         }
@@ -143,6 +158,7 @@ export type Database = {
           import_id?: string | null
           is_public?: boolean
           match_date: string
+          organization_id: string
           tier?: Database["public"]["Enums"]["tournament_tier"]
           tournament_name: string
         }
@@ -154,10 +170,18 @@ export type Database = {
           import_id?: string | null
           is_public?: boolean
           match_date?: string
+          organization_id?: string
           tier?: Database["public"]["Enums"]["tournament_tier"]
           tournament_name?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "events_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "matches_import_id_fkey"
             columns: ["import_id"]
@@ -200,6 +224,51 @@ export type Database = {
         }
         Relationships: []
       }
+      organizations: {
+        Row: {
+          country: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          logo_url: string | null
+          name: string
+          organization_type: Database["public"]["Enums"]["organization_type"]
+          primary_color: string | null
+          settings: Json | null
+          slug: string
+          updated_at: string | null
+          website_url: string | null
+        }
+        Insert: {
+          country?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          logo_url?: string | null
+          name: string
+          organization_type?: Database["public"]["Enums"]["organization_type"]
+          primary_color?: string | null
+          settings?: Json | null
+          slug: string
+          updated_at?: string | null
+          website_url?: string | null
+        }
+        Update: {
+          country?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          logo_url?: string | null
+          name?: string
+          organization_type?: Database["public"]["Enums"]["organization_type"]
+          primary_color?: string | null
+          settings?: Json | null
+          slug?: string
+          updated_at?: string | null
+          website_url?: string | null
+        }
+        Relationships: []
+      }
       player_accounts: {
         Row: {
           created_at: string | null
@@ -226,6 +295,20 @@ export type Database = {
           verified_by?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "player_accounts_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: true
+            referencedRelation: "current_rankings"
+            referencedColumns: ["player_id"]
+          },
+          {
+            foreignKeyName: "player_accounts_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: true
+            referencedRelation: "expiring_points"
+            referencedColumns: ["player_id"]
+          },
           {
             foreignKeyName: "player_accounts_player_id_fkey"
             columns: ["player_id"]
@@ -267,6 +350,20 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "player_claims_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "current_rankings"
+            referencedColumns: ["player_id"]
+          },
+          {
+            foreignKeyName: "player_claims_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "expiring_points"
+            referencedColumns: ["player_id"]
+          },
           {
             foreignKeyName: "player_claims_player_id_fkey"
             columns: ["player_id"]
@@ -317,6 +414,79 @@ export type Database = {
           {
             foreignKeyName: "player_merges_primary_player_id_fkey"
             columns: ["primary_player_id"]
+            isOneToOne: false
+            referencedRelation: "current_rankings"
+            referencedColumns: ["player_id"]
+          },
+          {
+            foreignKeyName: "player_merges_primary_player_id_fkey"
+            columns: ["primary_player_id"]
+            isOneToOne: false
+            referencedRelation: "expiring_points"
+            referencedColumns: ["player_id"]
+          },
+          {
+            foreignKeyName: "player_merges_primary_player_id_fkey"
+            columns: ["primary_player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      player_organization_memberships: {
+        Row: {
+          created_at: string | null
+          id: string
+          joined_at: string | null
+          membership_status: string
+          organization_id: string
+          player_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          joined_at?: string | null
+          membership_status?: string
+          organization_id: string
+          player_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          joined_at?: string | null
+          membership_status?: string
+          organization_id?: string
+          player_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "player_organization_memberships_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "player_organization_memberships_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "current_rankings"
+            referencedColumns: ["player_id"]
+          },
+          {
+            foreignKeyName: "player_organization_memberships_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "expiring_points"
+            referencedColumns: ["player_id"]
+          },
+          {
+            foreignKeyName: "player_organization_memberships_player_id_fkey"
+            columns: ["player_id"]
             isOneToOne: false
             referencedRelation: "players"
             referencedColumns: ["id"]
@@ -447,6 +617,7 @@ export type Database = {
           id: string
           is_featured: boolean | null
           location: string | null
+          organization_id: string
           registration_url: string
           tournament_date: string
           tournament_name: string
@@ -459,6 +630,7 @@ export type Database = {
           id?: string
           is_featured?: boolean | null
           location?: string | null
+          organization_id: string
           registration_url: string
           tournament_date: string
           tournament_name: string
@@ -471,12 +643,21 @@ export type Database = {
           id?: string
           is_featured?: boolean | null
           location?: string | null
+          organization_id?: string
           registration_url?: string
           tournament_date?: string
           tournament_name?: string
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "upcoming_tournaments_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
@@ -507,11 +688,20 @@ export type Database = {
           country: string | null
           gender: string | null
           name: string | null
+          organization_id: string | null
           player_id: string | null
           rank: number | null
           total_points: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "events_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       expiring_points: {
         Row: {
@@ -520,9 +710,18 @@ export type Database = {
           expiring_points: number | null
           name: string | null
           next_expiry_date: string | null
+          organization_id: string | null
           player_id: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "events_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       match_results: {
         Row: {
@@ -569,6 +768,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "matches"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "match_results_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "current_rankings"
+            referencedColumns: ["player_id"]
+          },
+          {
+            foreignKeyName: "match_results_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "expiring_points"
+            referencedColumns: ["player_id"]
           },
           {
             foreignKeyName: "match_results_player_id_fkey"
@@ -672,6 +885,7 @@ export type Database = {
           country: string
           gender: string
           name: string
+          organization_id: string
           player_id: string
           rank: number
           total_points: number
@@ -762,6 +976,7 @@ export type Database = {
         | "round_of_16"
         | "points_awarded"
       match_result: "win" | "loss"
+      organization_type: "national" | "international" | "regional"
       player_category:
         | "mens_singles"
         | "womens_singles"
@@ -909,6 +1124,7 @@ export const Constants = {
         "points_awarded",
       ],
       match_result: ["win", "loss"],
+      organization_type: ["national", "international", "regional"],
       player_category: [
         "mens_singles",
         "womens_singles",

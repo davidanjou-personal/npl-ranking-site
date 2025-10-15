@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { OrganizationProvider } from "@/contexts/OrganizationContext";
 import Index from "./pages/Index";
 import Rankings from "./pages/Rankings";
 import PlayerProfile from "./pages/PlayerProfile";
@@ -15,6 +16,9 @@ import TournamentDetail from "./pages/TournamentDetail";
 import Players from "./pages/Players";
 import ClaimProfile from "./pages/player/ClaimProfile";
 import PlayerProfileManage from "./pages/player/PlayerProfile";
+import GPAAbout from "./pages/gpa/About";
+import GPAMemberOrganizations from "./pages/gpa/MemberOrganizations";
+import GPAGovernance from "./pages/gpa/Governance";
 import WidgetMensSingles from "./pages/widgets/WidgetMensSingles";
 import WidgetWomensSingles from "./pages/widgets/WidgetWomensSingles";
 import WidgetMensDoubles from "./pages/widgets/WidgetMensDoubles";
@@ -29,10 +33,11 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
+    <OrganizationProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/rankings" element={<Rankings />} />
@@ -45,6 +50,11 @@ const App = () => (
           <Route path="/player/profile" element={<PlayerProfileManage />} />
           <Route path="/player/:id" element={<PlayerProfile />} />
           <Route path="/how-it-works" element={<HowItWorks />} />
+          
+          {/* GPA Pages */}
+          <Route path="/about" element={<GPAAbout />} />
+          <Route path="/member-organizations" element={<GPAMemberOrganizations />} />
+          <Route path="/governance" element={<GPAGovernance />} />
           
           {/* Widget Routes */}
           <Route path="/widget/mens-singles" element={<WidgetMensSingles />} />
@@ -61,7 +71,8 @@ const App = () => (
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
-    </TooltipProvider>
+      </TooltipProvider>
+    </OrganizationProvider>
   </QueryClientProvider>
 );
 

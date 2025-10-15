@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useOrganization } from "@/contexts/OrganizationContext";
 
 export interface UpcomingTournament {
   id: string;
@@ -14,12 +15,17 @@ export interface UpcomingTournament {
 }
 
 export const useUpcomingTournaments = () => {
+  const { currentOrg } = useOrganization();
+  
   return useQuery({
-    queryKey: ["upcoming-tournaments"],
+    queryKey: ["upcoming-tournaments", currentOrg?.id],
     queryFn: async () => {
+      if (!currentOrg) return [];
+      
       const { data, error } = await supabase
         .from("upcoming_tournaments")
         .select("*")
+        .eq("organization_id", currentOrg.id)
         .gte("tournament_date", new Date().toISOString().split('T')[0])
         .order("tournament_date", { ascending: true })
         .order("is_featured", { ascending: false });
@@ -27,5 +33,6 @@ export const useUpcomingTournaments = () => {
       if (error) throw error;
       return data as UpcomingTournament[];
     },
+    enabled: !!currentOrg,
   });
 };

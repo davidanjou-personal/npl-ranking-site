@@ -1,10 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useOrganization } from "@/contexts/OrganizationContext";
 
 export const useLatestResults = (limit: number = 5) => {
+  const { currentOrg } = useOrganization();
+  
   return useQuery({
-    queryKey: ["latest-results", limit],
+    queryKey: ["latest-results", limit, currentOrg?.id],
     queryFn: async () => {
+      if (!currentOrg) return [];
+      
       const { data, error } = await supabase
         .from("events")
         .select(`
@@ -20,6 +25,7 @@ export const useLatestResults = (limit: number = 5) => {
             )
           )
         `)
+        .eq("organization_id", currentOrg.id)
         .gte("match_date", new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
         .order("match_date", { ascending: false })
         .limit(limit);
@@ -27,6 +33,7 @@ export const useLatestResults = (limit: number = 5) => {
       if (error) throw error;
       return data || [];
     },
+    enabled: !!currentOrg,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 };

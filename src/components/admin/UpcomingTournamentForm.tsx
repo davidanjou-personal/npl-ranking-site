@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useOrganization } from "@/contexts/OrganizationContext";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -53,6 +54,7 @@ interface UpcomingTournamentFormProps {
 
 export const UpcomingTournamentForm = ({ onSuccess, editData }: UpcomingTournamentFormProps) => {
   const { toast } = useToast();
+  const { currentOrg } = useOrganization();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -78,6 +80,10 @@ export const UpcomingTournamentForm = ({ onSuccess, editData }: UpcomingTourname
     setIsSubmitting(true);
 
     try {
+      if (!currentOrg) {
+        throw new Error("No organization selected");
+      }
+
       const tournamentData = {
         tournament_name: values.tournament_name,
         tournament_date: format(values.tournament_date, "yyyy-MM-dd"),
@@ -85,6 +91,7 @@ export const UpcomingTournamentForm = ({ onSuccess, editData }: UpcomingTourname
         location: values.location || null,
         description: values.description || null,
         is_featured: values.is_featured,
+        organization_id: currentOrg.id,
       };
 
       if (editData) {

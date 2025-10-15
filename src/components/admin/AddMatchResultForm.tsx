@@ -8,6 +8,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useOrganization } from "@/contexts/OrganizationContext";
 import { z } from "zod";
 import { Plus, Trash2, Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -31,6 +32,7 @@ interface AddMatchResultFormProps {
 
 export function AddMatchResultForm({ players, onMatchAdded }: AddMatchResultFormProps) {
   const { toast } = useToast();
+  const { currentOrg } = useOrganization();
   const [playerResultCount, setPlayerResultCount] = useState(8);
   const [openPlayerId, setOpenPlayerId] = useState<number | null>(null);
   const [matchData, setMatchData] = useState<MatchFormData>({
@@ -54,6 +56,10 @@ export function AddMatchResultForm({ players, onMatchAdded }: AddMatchResultForm
         results: filteredResults,
       });
 
+      if (!currentOrg) {
+        throw new Error("No organization selected");
+      }
+
       const { data: match, error: matchError } = await supabase
         .from("events")
         .insert([{
@@ -61,6 +67,7 @@ export function AddMatchResultForm({ players, onMatchAdded }: AddMatchResultForm
           match_date: validatedData.match_date,
           tier: validatedData.tier,
           category: validatedData.category,
+          organization_id: currentOrg.id,
         }])
         .select()
         .single();

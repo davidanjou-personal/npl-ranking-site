@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useOrganization } from "@/contexts/OrganizationContext";
 
 export interface RankingData {
   player_id: string;
@@ -64,12 +65,17 @@ export function useNationalRankings(
 }
 
 export function useCurrentRankings() {
+  const { currentOrg } = useOrganization();
+  
   return useQuery({
-    queryKey: ['rankings', 'current'],
+    queryKey: ['rankings', 'current', currentOrg?.id],
     queryFn: async () => {
+      if (!currentOrg) return [];
+      
       const { data, error } = await supabase
         .from('current_rankings')
         .select('*')
+        .eq('organization_id', currentOrg.id)
         .order('category')
         .order('rank')
         .range(0, 9999);
@@ -77,6 +83,7 @@ export function useCurrentRankings() {
       if (error) throw error;
       return data as RankingData[];
     },
+    enabled: !!currentOrg,
     staleTime: 5 * 60 * 1000, // 5 minutes
     refetchOnWindowFocus: true,
     refetchOnMount: 'always',
@@ -84,9 +91,13 @@ export function useCurrentRankings() {
 }
 
 export function useAllTimeRankings() {
+  const { currentOrg } = useOrganization();
+  
   return useQuery({
-    queryKey: ['rankings', 'lifetime'],
+    queryKey: ['rankings', 'lifetime', currentOrg?.id],
     queryFn: async () => {
+      if (!currentOrg) return [];
+      
       const { data: rankings, error: rankingsError } = await supabase
         .from('player_rankings')
         .select('player_id, category, total_points, rank')
@@ -129,23 +140,30 @@ export function useAllTimeRankings() {
         };
       }) as RankingData[];
     },
+    enabled: !!currentOrg,
     staleTime: 5 * 60 * 1000,
   });
 }
 
 export function useCurrentRankingsByCategory(category: string) {
+  const { currentOrg } = useOrganization();
+  
   return useQuery({
-    queryKey: ['rankings', 'current', category],
+    queryKey: ['rankings', 'current', category, currentOrg?.id],
     queryFn: async () => {
+      if (!currentOrg) return [];
+      
       const { data, error } = await supabase
         .from('current_rankings')
         .select('*')
         .eq('category', category as any)
+        .eq('organization_id', currentOrg.id)
         .order('rank')
         .range(0, 9999);
       if (error) throw error;
       return data as RankingData[];
     },
+    enabled: !!currentOrg,
     staleTime: 0,
     refetchOnWindowFocus: true,
     refetchOnMount: 'always',
@@ -153,9 +171,13 @@ export function useCurrentRankingsByCategory(category: string) {
 }
 
 export function useAllTimeRankingsByCategory(category: string) {
+  const { currentOrg } = useOrganization();
+  
   return useQuery({
-    queryKey: ['rankings', 'lifetime', category],
+    queryKey: ['rankings', 'lifetime', category, currentOrg?.id],
     queryFn: async () => {
+      if (!currentOrg) return [];
+      
       const { data: rankings, error: rankingsError } = await supabase
         .from('player_rankings')
         .select('player_id, category, total_points, rank')
@@ -198,6 +220,7 @@ export function useAllTimeRankingsByCategory(category: string) {
         };
       }) as RankingData[];
     },
+    enabled: !!currentOrg,
     staleTime: 0,
     refetchOnWindowFocus: true,
     refetchOnMount: 'always',
