@@ -1,0 +1,1 @@
+DELETE FROM user_roles WHERE role = 'admin'
