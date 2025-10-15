@@ -45,7 +45,7 @@ export const OrganizationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         let orgSlug = 'npl'; // Default fallback
 
         // Detection logic
-        if (hostname.includes('gpa') || hostname.includes('global')) {
+        if (hostname.includes('gpa') || hostname.includes('global') || hostname.includes('gpapickleball')) {
           orgSlug = 'gpa';
         } else if (hostname.includes('npl')) {
           orgSlug = 'npl';
