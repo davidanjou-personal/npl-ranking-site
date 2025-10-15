@@ -94,6 +94,15 @@ All colors MUST be HSL.
     --shadow-hover: 0 8px 30px -4px hsl(0 0% 0% / 0.5);
     --shadow-premium: 0 10px 40px -8px hsl(0 0% 0% / 0.4);
     --shadow-premium-lg: 0 20px 50px -12px hsl(0 0% 0% / 0.6);
+    
+    /* GPA Premium Theme Variables */
+    --gpa-primary: 158 88% 42%;
+    --gpa-primary-glow: 158 88% 55%;
+    --gpa-accent: 45 70% 52%;
+    --gpa-accent-glow: 45 85% 65%;
+    --gpa-navy: 221 83% 33%;
+    --gpa-gradient-hero: linear-gradient(135deg, hsl(var(--gpa-primary)) 0%, hsl(var(--gpa-navy)) 100%);
+    --gpa-gradient-premium: linear-gradient(135deg, hsl(var(--gpa-accent)) 0%, hsl(var(--gpa-primary)) 100%);
   }
 }
 

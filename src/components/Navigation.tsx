@@ -1,9 +1,11 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { LogOut, LayoutDashboard, Code2, Menu, UserPlus, Trophy, Users, Info, User as UserIcon, Calendar } from "lucide-react";
+import { LogOut, LayoutDashboard, Code2, Menu, UserPlus, Trophy, Users, Info, User as UserIcon, Calendar, Globe, Building2, Scale } from "lucide-react";
 import nplLogo from "@/assets/npl-logo.svg";
+import gpaLogo from "@/assets/gpa-logo.svg";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
+import { useOrganization } from "@/contexts/OrganizationContext";
 import {
   Sheet,
   SheetContent,
@@ -17,9 +19,14 @@ import { Separator } from "@/components/ui/separator";
 
 export const Navigation = () => {
   const navigate = useNavigate();
+  const { currentOrg } = useOrganization();
   const [user, setUser] = useState<User | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  const isGPA = currentOrg?.slug === 'gpa';
+  const logo = isGPA ? gpaLogo : nplLogo;
+  const title = isGPA ? 'GPA Rankings' : 'Pickleball Rankings';
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -63,12 +70,12 @@ export const Navigation = () => {
         <div className="flex items-center justify-between gap-2 sm:gap-4">
           {/* Left: Logo */}
           <Link to="/" className="flex items-center hover:opacity-90 transition-opacity flex-shrink-0">
-            <img src={nplLogo} alt="NPL Logo" className="h-8 w-8 sm:h-10 sm:w-10" />
+            <img src={logo} alt={`${currentOrg?.name} Logo`} className="h-8 w-8 sm:h-10 sm:w-10" />
           </Link>
           
           {/* Center: Title */}
           <h1 className="text-sm sm:text-lg md:text-xl font-bold font-heading text-foreground whitespace-nowrap flex-shrink truncate">
-            Pickleball Rankings
+            {title}
           </h1>
           
           {/* Right: Navigation */}
@@ -87,9 +94,22 @@ export const Navigation = () => {
             <Link to="/players" className="hidden lg:block">
               <Button variant="ghost" size="sm" className="text-xs sm:text-sm px-2 sm:px-4">Players</Button>
             </Link>
-            <Link to="/how-it-works" className="hidden lg:block">
-              <Button variant="ghost" size="sm" className="text-xs sm:text-sm">How It Works</Button>
-            </Link>
+            
+            {/* GPA-specific links */}
+            {isGPA ? (
+              <>
+                <Link to="/about" className="hidden lg:block">
+                  <Button variant="ghost" size="sm" className="text-xs sm:text-sm">About</Button>
+                </Link>
+                <Link to="/member-organizations" className="hidden lg:block">
+                  <Button variant="ghost" size="sm" className="text-xs sm:text-sm">Members</Button>
+                </Link>
+              </>
+            ) : (
+              <Link to="/how-it-works" className="hidden lg:block">
+                <Button variant="ghost" size="sm" className="text-xs sm:text-sm">How It Works</Button>
+              </Link>
+            )}
             
             {user ? (
               <>
@@ -171,12 +191,37 @@ export const Navigation = () => {
                       Players
                     </Button>
                   </Link>
-                  <Link to="/how-it-works" onClick={() => setIsMenuOpen(false)}>
-                    <Button variant="ghost" size="sm" className="w-full justify-start">
-                      <Info className="mr-2 h-4 w-4" />
-                      How It Works
-                    </Button>
-                  </Link>
+                  
+                  {/* Organization-specific links */}
+                  {isGPA ? (
+                    <>
+                      <Link to="/about" onClick={() => setIsMenuOpen(false)}>
+                        <Button variant="ghost" size="sm" className="w-full justify-start">
+                          <Info className="mr-2 h-4 w-4" />
+                          About GPA
+                        </Button>
+                      </Link>
+                      <Link to="/member-organizations" onClick={() => setIsMenuOpen(false)}>
+                        <Button variant="ghost" size="sm" className="w-full justify-start">
+                          <Building2 className="mr-2 h-4 w-4" />
+                          Member Organizations
+                        </Button>
+                      </Link>
+                      <Link to="/governance" onClick={() => setIsMenuOpen(false)}>
+                        <Button variant="ghost" size="sm" className="w-full justify-start">
+                          <Scale className="mr-2 h-4 w-4" />
+                          Governance
+                        </Button>
+                      </Link>
+                    </>
+                  ) : (
+                    <Link to="/how-it-works" onClick={() => setIsMenuOpen(false)}>
+                      <Button variant="ghost" size="sm" className="w-full justify-start">
+                        <Info className="mr-2 h-4 w-4" />
+                        How It Works
+                      </Button>
+                    </Link>
+                  )}
                   
                   {user ? (
                     <>

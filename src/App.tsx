@@ -19,6 +19,7 @@ import PlayerProfileManage from "./pages/player/PlayerProfile";
 import GPAAbout from "./pages/gpa/About";
 import GPAMemberOrganizations from "./pages/gpa/MemberOrganizations";
 import GPAGovernance from "./pages/gpa/Governance";
+import GPAHowItWorks from "./pages/gpa/HowItWorks";
 import WidgetMensSingles from "./pages/widgets/WidgetMensSingles";
 import WidgetWomensSingles from "./pages/widgets/WidgetWomensSingles";
 import WidgetMensDoubles from "./pages/widgets/WidgetMensDoubles";
@@ -55,6 +56,7 @@ const App = () => (
           <Route path="/about" element={<GPAAbout />} />
           <Route path="/member-organizations" element={<GPAMemberOrganizations />} />
           <Route path="/governance" element={<GPAGovernance />} />
+          <Route path="/gpa/how-it-works" element={<GPAHowItWorks />} />
           
           {/* Widget Routes */}
           <Route path="/widget/mens-singles" element={<WidgetMensSingles />} />

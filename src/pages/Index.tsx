@@ -4,30 +4,54 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Trophy, TrendingUp, Users, Award } from "lucide-react";
 import nplLogo from "@/assets/npl-logo-light.svg";
+import gpaLogo from "@/assets/gpa-logo-light.svg";
 import { LatestResults } from "@/components/home/LatestResults";
 import { UpcomingTournaments } from "@/components/home/UpcomingTournaments";
+import { useOrganization } from "@/contexts/OrganizationContext";
 
 const Index = () => {
+  const { currentOrg, isLoading } = useOrganization();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-center">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const isGPA = currentOrg?.slug === 'gpa';
+  const logo = isGPA ? gpaLogo : nplLogo;
+  const heroGradient = isGPA ? 'var(--gpa-gradient-hero)' : 'var(--gradient-hero)';
+  const title = isGPA ? 'Global Pickleball Alliance' : 'Pickleball Rankings';
+  const description = isGPA 
+    ? 'Uniting pickleball federations worldwide with standardized international rankings. Track players competing across member nations.'
+    : "Australia's premier pickleball competition. Track player ratings and follow the best place to play pickleball in Australia.";
+
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
 
       <section
         className="py-16 sm:py-20 md:py-28 px-4 relative overflow-hidden"
-        style={{ background: "var(--gradient-hero)" }}
+        style={{ background: heroGradient }}
       >
         <div className="container mx-auto text-center relative z-10">
           <img
-            src={nplLogo}
-            alt="NPL Logo"
+            src={logo}
+            alt={`${currentOrg?.name} Logo`}
             className="h-32 w-32 sm:h-40 sm:w-40 mx-auto mb-6 sm:mb-8 drop-shadow-lg animate-fade-in"
           />
           <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-heading font-bold text-primary-foreground mb-6 sm:mb-8 px-2 tracking-tight">
-            Pickleball Rankings
+            {title}
           </h1>
           <p className="text-lg sm:text-xl md:text-2xl text-primary-foreground/95 mb-8 sm:mb-10 max-w-3xl mx-auto px-2 leading-relaxed">
-            Australia's premier pickleball competition. Track player ratings and follow the best place to play
-            pickleball in Australia.
+            {description}
           </p>
           <div className="flex justify-center gap-4">
             <Link to="/rankings">
