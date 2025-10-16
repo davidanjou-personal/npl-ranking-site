@@ -116,7 +116,7 @@ const WidgetEmbedGuide = () => {
                 Shows all 5 categories in tabs. Recommended for main rankings pages.
               </p>
               <CodeBlock code={embedCodes.allCategories} id="all-categories" />
-              <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-950 rounded-lg">
+              <div className="mt-4 p-4 bg-primary/10 rounded-lg">
                 <p className="text-sm font-medium">
                   💡 Recommended height: 650px
                 </p>
@@ -155,7 +155,7 @@ const WidgetEmbedGuide = () => {
                   code={embedCodes[category.key as keyof typeof embedCodes]}
                   id={category.key}
                 />
-                <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-950 rounded-lg">
+                <div className="mt-4 p-4 bg-primary/10 rounded-lg">
                   <p className="text-sm font-medium">
                     💡 Recommended height: 550px
                   </p>

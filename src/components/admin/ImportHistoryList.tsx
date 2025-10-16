@@ -117,7 +117,7 @@ export function ImportHistoryList({ imports, onRefresh }: ImportHistoryListProps
                   <Badge variant="outline">
                     Total: {importRecord.total_rows} rows
                   </Badge>
-                  <Badge variant="default" className="bg-green-600">
+                  <Badge variant="default" className="bg-primary">
                     <CheckCircle2 className="h-3 w-3 mr-1" />
                     Success: {importRecord.successful_rows}
                   </Badge>

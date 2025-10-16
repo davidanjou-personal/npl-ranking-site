@@ -24,7 +24,7 @@ export function RankingChangeIndicator({
 
   const getRankChangeIcon = () => {
     if (rankChange > 0) {
-      return <TrendingUp className="h-3 w-3 text-green-500" />;
+      return <TrendingUp className="h-3 w-3 text-primary" />;
     } else if (rankChange < 0) {
       return <TrendingDown className="h-3 w-3 text-red-500" />;
     }

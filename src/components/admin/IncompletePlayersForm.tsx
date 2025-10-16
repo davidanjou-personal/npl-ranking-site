@@ -93,14 +93,14 @@ export function IncompletePlayersForm({
             const complete = isComplete(player);
 
             return (
-              <Card key={player.csv_row} className={complete ? "border-green-500" : "border-destructive"}>
+              <Card key={player.csv_row} className={complete ? "border-primary" : "border-destructive"}>
                 <CardHeader className="pb-3">
                   <CardTitle className="text-base flex items-center justify-between">
                     <span>
                       Row {player.csv_row}: {player.player_name || '[No Name]'}
                     </span>
                     {complete && (
-                      <span className="text-xs font-normal text-green-600 bg-green-50 px-2 py-1 rounded">
+                      <span className="text-xs font-normal text-primary bg-primary/10 px-2 py-1 rounded">
                         ✓ Complete
                       </span>
                     )}
