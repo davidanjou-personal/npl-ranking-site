@@ -18,7 +18,7 @@ All colors MUST be HSL.
     --popover-foreground: 217 33% 17%;
 
     /* NPL Brand Colors - Green/Lime Tones (Default) */
-    --primary: 151 62% 44%;
+    --primary: 151 75% 48%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 140 65% 50%;
@@ -35,21 +35,21 @@ All colors MUST be HSL.
 
     --border: 140 25% 91%;
     --input: 140 25% 91%;
-    --ring: 151 62% 44%;
+    --ring: 151 75% 48%;
 
     --radius: 0.75rem;
 
     /* Premium NPL Gradients */
-    --gradient-hero: linear-gradient(135deg, hsl(151 62% 44%) 0%, hsl(120 70% 50%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(151 75% 48%) 0%, hsl(120 70% 50%) 100%);
     --gradient-card: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(140 30% 98%) 100%);
     --gradient-accent: linear-gradient(135deg, hsl(140 65% 50%) 0%, hsl(120 70% 55%) 100%);
     --gradient-glass: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%);
     
     /* Premium Shadows */
-    --shadow-card: 0 4px 20px -2px hsl(151 62% 44% / 0.1);
-    --shadow-hover: 0 8px 30px -4px hsl(151 62% 44% / 0.2);
-    --shadow-premium: 0 10px 40px -8px hsl(151 62% 44% / 0.15);
-    --shadow-premium-lg: 0 20px 50px -12px hsl(151 62% 44% / 0.25);
+    --shadow-card: 0 4px 20px -2px hsl(151 75% 48% / 0.1);
+    --shadow-hover: 0 8px 30px -4px hsl(151 75% 48% / 0.2);
+    --shadow-premium: 0 10px 40px -8px hsl(151 75% 48% / 0.15);
+    --shadow-premium-lg: 0 20px 50px -12px hsl(151 75% 48% / 0.25);
     
     /* Transitions */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -98,7 +98,7 @@ All colors MUST be HSL.
     --popover-foreground: 210 40% 98%;
 
     /* NPL Dark Mode Colors */
-    --primary: 151 62% 50%;
+    --primary: 151 75% 52%;
     --primary-foreground: 0 0% 100%;
 
     --secondary: 140 65% 50%;
@@ -115,9 +115,9 @@ All colors MUST be HSL.
 
     --border: 217 33% 20%;
     --input: 217 33% 20%;
-    --ring: 151 62% 50%;
+    --ring: 151 75% 52%;
 
-    --gradient-hero: linear-gradient(135deg, hsl(151 62% 44%) 0%, hsl(120 70% 50%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(151 75% 48%) 0%, hsl(120 70% 50%) 100%);
     --gradient-card: linear-gradient(180deg, hsl(217 33% 14%) 0%, hsl(217 33% 18%) 100%);
     --gradient-accent: linear-gradient(135deg, hsl(140 65% 50%) 0%, hsl(120 70% 55%) 100%);
     --gradient-glass: linear-gradient(135deg, rgba(23, 37, 50, 0.95) 0%, rgba(23, 37, 50, 0.8) 100%);
