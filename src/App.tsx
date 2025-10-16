@@ -38,6 +38,10 @@ const AppContent = () => {
   
   useEffect(() => {
     if (currentOrg) {
+      // Set organization attribute for theme switching
+      document.documentElement.setAttribute('data-org', currentOrg.slug);
+      
+      // Update document title
       const isGPA = currentOrg.slug === 'gpa';
       document.title = isGPA 
         ? 'Global Pickleball Alliance - Official Rankings'

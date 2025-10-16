@@ -17,6 +17,47 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 217 33% 17%;
 
+    /* NPL Brand Colors - Green/Lime Tones (Default) */
+    --primary: 151 62% 44%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 140 65% 50%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 140 30% 96%;
+    --muted-foreground: 140 10% 45%;
+
+    --accent: 120 70% 50%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 140 25% 91%;
+    --input: 140 25% 91%;
+    --ring: 151 62% 44%;
+
+    --radius: 0.75rem;
+
+    /* Premium NPL Gradients */
+    --gradient-hero: linear-gradient(135deg, hsl(151 62% 44%) 0%, hsl(120 70% 50%) 100%);
+    --gradient-card: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(140 30% 98%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(140 65% 50%) 0%, hsl(120 70% 55%) 100%);
+    --gradient-glass: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%);
+    
+    /* Premium Shadows */
+    --shadow-card: 0 4px 20px -2px hsl(151 62% 44% / 0.1);
+    --shadow-hover: 0 8px 30px -4px hsl(151 62% 44% / 0.2);
+    --shadow-premium: 0 10px 40px -8px hsl(151 62% 44% / 0.15);
+    --shadow-premium-lg: 0 20px 50px -12px hsl(151 62% 44% / 0.25);
+    
+    /* Transitions */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  }
+
+  /* GPA Theme Override */
+  [data-org="gpa"] {
     /* GPA Brand Colors - Blue-Green Tones */
     --primary: 200 91% 35%;
     --primary-foreground: 0 0% 100%;
@@ -30,39 +71,20 @@ All colors MUST be HSL.
     --accent: 160 75% 45%;
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
-
     --border: 214 32% 91%;
     --input: 214 32% 91%;
     --ring: 200 91% 35%;
-
-    --radius: 0.75rem;
 
     /* Premium GPA Gradients */
     --gradient-hero: linear-gradient(135deg, hsl(200 91% 35%) 0%, hsl(160 75% 45%) 100%);
     --gradient-card: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(190 40% 98%) 100%);
     --gradient-accent: linear-gradient(135deg, hsl(190 85% 45%) 0%, hsl(160 75% 50%) 100%);
-    --gradient-glass: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%);
     
     /* Premium Shadows */
     --shadow-card: 0 4px 20px -2px hsl(200 91% 35% / 0.1);
     --shadow-hover: 0 8px 30px -4px hsl(200 91% 35% / 0.2);
     --shadow-premium: 0 10px 40px -8px hsl(200 91% 35% / 0.15);
     --shadow-premium-lg: 0 20px 50px -12px hsl(200 91% 35% / 0.25);
-    
-    /* Transitions */
-    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-bounce: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-    
-    /* GPA Blue-Green Theme Variables */
-    --gpa-primary: 190 85% 45%;
-    --gpa-primary-glow: 190 85% 55%;
-    --gpa-accent: 160 75% 45%;
-    --gpa-accent-glow: 160 80% 55%;
-    --gpa-navy: 220 60% 35%;
-    --gpa-gradient-hero: linear-gradient(135deg, hsl(var(--gpa-primary)) 0%, hsl(var(--gpa-accent)) 100%);
-    --gpa-gradient-premium: linear-gradient(135deg, hsl(var(--gpa-accent)) 0%, hsl(var(--gpa-primary)) 100%);
   }
 
   .dark {
@@ -75,16 +97,17 @@ All colors MUST be HSL.
     --popover: 217 33% 14%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 200 91% 45%;
+    /* NPL Dark Mode Colors */
+    --primary: 151 62% 50%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 190 85% 40%;
+    --secondary: 140 65% 50%;
     --secondary-foreground: 0 0% 100%;
 
     --muted: 217 33% 20%;
     --muted-foreground: 217 13% 65%;
 
-    --accent: 160 75% 50%;
+    --accent: 120 70% 55%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
@@ -92,17 +115,34 @@ All colors MUST be HSL.
 
     --border: 217 33% 20%;
     --input: 217 33% 20%;
-    --ring: 200 91% 45%;
+    --ring: 151 62% 50%;
 
-    --gradient-hero: linear-gradient(135deg, hsl(200 91% 35%) 0%, hsl(160 75% 45%) 100%);
+    --gradient-hero: linear-gradient(135deg, hsl(151 62% 44%) 0%, hsl(120 70% 50%) 100%);
     --gradient-card: linear-gradient(180deg, hsl(217 33% 14%) 0%, hsl(217 33% 18%) 100%);
-    --gradient-accent: linear-gradient(135deg, hsl(190 85% 45%) 0%, hsl(160 75% 50%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(140 65% 50%) 0%, hsl(120 70% 55%) 100%);
     --gradient-glass: linear-gradient(135deg, rgba(23, 37, 50, 0.95) 0%, rgba(23, 37, 50, 0.8) 100%);
 
     --shadow-card: 0 4px 20px -2px hsl(0 0% 0% / 0.3);
     --shadow-hover: 0 8px 30px -4px hsl(0 0% 0% / 0.5);
     --shadow-premium: 0 10px 40px -8px hsl(0 0% 0% / 0.4);
     --shadow-premium-lg: 0 20px 50px -12px hsl(0 0% 0% / 0.6);
+  }
+
+  /* GPA Dark Mode Override */
+  .dark[data-org="gpa"] {
+    --primary: 200 91% 45%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 190 85% 40%;
+    --secondary-foreground: 0 0% 100%;
+
+    --accent: 160 75% 50%;
+    --accent-foreground: 0 0% 100%;
+
+    --ring: 200 91% 45%;
+
+    --gradient-hero: linear-gradient(135deg, hsl(200 91% 35%) 0%, hsl(160 75% 45%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(190 85% 45%) 0%, hsl(160 75% 50%) 100%);
   }
 }
 
