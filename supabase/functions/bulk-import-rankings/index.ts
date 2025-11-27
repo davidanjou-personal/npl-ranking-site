@@ -372,6 +372,12 @@ serve(async (req) => {
         };
 
         const playerName = getCol('player_name') || '';
+        
+        // Skip rows with empty player name (trailing empty rows in CSV)
+        if (!playerName.trim()) {
+          continue;
+        }
+        
         const countryVal = getCol('country') || ''; // nationality alias handled in columnAliases
         const genderVal = getCol('gender');
         const categoryVal = getCol('category');
