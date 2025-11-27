@@ -795,6 +795,19 @@ serve(async (req) => {
               if (record.country) updateData.country = record.country;
               if (record.gender) updateData.gender = record.gender;
               
+              // Add CSV name as alternate name if different from existing player name
+              if (record.player_name && record.player_name.trim()) {
+                const csvName = record.player_name.trim();
+                const existingPlayer = allPlayers.find(p => p.id === playerId);
+                const existingName = existingPlayer?.name || '';
+                
+                // Only add if the CSV name is different from the primary name
+                if (csvName.toLowerCase() !== existingName.toLowerCase()) {
+                  // We'll handle this in a separate update to append to alternate_names array
+                  updateData._addAlternateName = csvName;
+                }
+              }
+              
               if (Object.keys(updateData).length > 0) {
                 playersToUpdate.push({ id: playerId, data: updateData });
                 updatedPlayers++;
@@ -891,16 +904,48 @@ serve(async (req) => {
 
       // Batch update existing players FIRST to avoid later conflicts
       for (const update of playersToUpdate) {
-        const { data: updated, error: updErr } = await supabaseClient
-          .from('players')
-          .update(update.data)
-          .eq('id', update.id)
-          .select('id, player_code, email, dupr_id')
-          .single();
-        if (!updErr && updated) {
-          if (updated.player_code) playersByCode.set(normalizeCode(updated.player_code), updated);
-          if (updated.email) playersByEmail.set(updated.email, updated);
-          if (updated.dupr_id) playersByDuprId.set(updated.dupr_id, updated);
+        const updateData = { ...update.data };
+        const alternateName = updateData._addAlternateName;
+        delete updateData._addAlternateName;
+        
+        // If we need to add an alternate name, fetch current and append
+        if (alternateName) {
+          const { data: currentPlayer } = await supabaseClient
+            .from('players')
+            .select('name, alternate_names')
+            .eq('id', update.id)
+            .single();
+          
+          if (currentPlayer) {
+            const existingAlternates = currentPlayer.alternate_names || [];
+            const normalizedNewName = alternateName.toLowerCase().trim();
+            const normalizedPrimaryName = currentPlayer.name.toLowerCase().trim();
+            
+            // Check if the name already exists (case-insensitive)
+            const alreadyExists = existingAlternates.some(
+              (n: string) => n.toLowerCase().trim() === normalizedNewName
+            ) || normalizedPrimaryName === normalizedNewName;
+            
+            if (!alreadyExists) {
+              updateData.alternate_names = [...existingAlternates, alternateName];
+              console.log(`Adding alternate name "${alternateName}" to player ${currentPlayer.name}`);
+            }
+          }
+        }
+        
+        // Only update if there's data to update
+        if (Object.keys(updateData).length > 0) {
+          const { data: updated, error: updErr } = await supabaseClient
+            .from('players')
+            .update(updateData)
+            .eq('id', update.id)
+            .select('id, player_code, email, dupr_id')
+            .single();
+          if (!updErr && updated) {
+            if (updated.player_code) playersByCode.set(normalizeCode(updated.player_code), updated);
+            if (updated.email) playersByEmail.set(updated.email, updated);
+            if (updated.dupr_id) playersByDuprId.set(updated.dupr_id, updated);
+          }
         }
       }
 
