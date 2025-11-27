@@ -5,10 +5,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { AlertCircle, ChevronDown, ChevronRight } from "lucide-react";
+import { AlertCircle, ChevronDown, ChevronRight, Search } from "lucide-react";
 import type { DuplicatePlayer, BulkImportResolutions, Player } from "@/types/admin";
 import { useToast } from "@/hooks/use-toast";
 import { useMemo, useState, useEffect } from "react";
+import { PlayerSearchDialog } from "./PlayerSearchDialog";
 
 interface DuplicateResolutionListProps {
   duplicates: DuplicatePlayer[];
@@ -30,6 +31,12 @@ export function DuplicateResolutionList({
   const [newDataOpen, setNewDataOpen] = useState(true);
   const [newPlayersOpen, setNewPlayersOpen] = useState(true);
   const [defaultsApplied, setDefaultsApplied] = useState(false);
+  
+  // State for player search dialog
+  const [searchDialogOpen, setSearchDialogOpen] = useState(false);
+  const [searchingForRow, setSearchingForRow] = useState<number | null>(null);
+  const [searchingForName, setSearchingForName] = useState<string>("");
+  const [additionalPlayers, setAdditionalPlayers] = useState<Record<string, Player[]>>({});
 
   const allResolved = duplicates.every((d) => resolutions[`row_${d.csv_row - 2}`]);
 
@@ -93,6 +100,41 @@ export function DuplicateResolutionList({
       setDefaultsApplied(true);
     }
   }, [categorizedDuplicates, defaultsApplied, onResolutionChange, resolutions]);
+
+  const openSearchDialog = (csvRow: number, csvName: string) => {
+    setSearchingForRow(csvRow);
+    setSearchingForName(csvName);
+    setSearchDialogOpen(true);
+  };
+
+  const handlePlayerSelected = (player: Player) => {
+    if (searchingForRow === null) return;
+    
+    const rowKey = `row_${searchingForRow - 2}`;
+    
+    // Add to additional players for this row
+    setAdditionalPlayers((prev) => {
+      const existing = prev[rowKey] || [];
+      // Don't add if already exists
+      if (existing.some((p) => p.id === player.id)) {
+        return prev;
+      }
+      return {
+        ...prev,
+        [rowKey]: [...existing, player],
+      };
+    });
+
+    // Auto-select this player as merge option
+    const newResolutions = { ...resolutions };
+    newResolutions[rowKey] = `merge_${player.id}`;
+    onResolutionChange(newResolutions);
+
+    toast({
+      title: "Player Found",
+      description: `Added "${player.name}" as merge option. You can now merge or use existing.`,
+    });
+  };
 
   const applyToAllByName = (csvName: string) => {
     const newResolutions = { ...resolutions };
@@ -209,6 +251,13 @@ export function DuplicateResolutionList({
   const renderDuplicateCard = (dup: DuplicatePlayer, index: number, showDiff: boolean = false) => {
     const rowKey = `row_${dup.csv_row - 2}`;
     const diffs = showDiff && dup.existing_players.length > 0 ? getDataDiff(dup) : [];
+    
+    // Combine existing players with any manually-searched players
+    const manuallyAdded = additionalPlayers[rowKey] || [];
+    const allPlayers = [
+      ...dup.existing_players,
+      ...manuallyAdded.filter((p) => !dup.existing_players.some((ep) => ep.id === p.id)),
+    ];
 
     return (
       <Card key={index}>
@@ -228,6 +277,14 @@ export function DuplicateResolutionList({
                 </div>
               )}
             </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => openSearchDialog(dup.csv_row, dup.csv_name)}
+            >
+              <Search className="h-4 w-4 mr-1" />
+              Search Player
+            </Button>
           </div>
 
           <div className="space-y-2">
@@ -245,14 +302,16 @@ export function DuplicateResolutionList({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="new">Create New Player</SelectItem>
-                {dup.existing_players.map((player) => (
+                {allPlayers.map((player) => (
                   <SelectItem key={player.id} value={player.id}>
                     Use Existing: {player.name} ({player.player_code})
+                    {manuallyAdded.some((p) => p.id === player.id) && " (searched)"}
                   </SelectItem>
                 ))}
-                {dup.existing_players.map((player) => (
+                {allPlayers.map((player) => (
                   <SelectItem key={`merge_${player.id}`} value={`merge_${player.id}`}>
                     Merge with: {player.name} ({player.player_code})
+                    {manuallyAdded.some((p) => p.id === player.id) && " (searched)"}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -264,10 +323,12 @@ export function DuplicateResolutionList({
               <strong>CSV Data:</strong> {dup.csv_data.country}, {dup.csv_data.gender}
               {dup.csv_data.player_code && `, Code: ${dup.csv_data.player_code}`}
             </p>
-            {dup.existing_players.map((player) => (
+            {allPlayers.map((player) => (
               <p key={player.id}>
-                <strong>Existing:</strong> {player.name} - {player.country}, {player.gender}, 
-                Code: {player.player_code}
+                <strong>
+                  {manuallyAdded.some((p) => p.id === player.id) ? "Found via Search:" : "Existing:"}
+                </strong>{" "}
+                {player.name} - {player.country}, {player.gender}, Code: {player.player_code}
               </p>
             ))}
           </div>
@@ -277,105 +338,115 @@ export function DuplicateResolutionList({
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <AlertCircle className="h-5 w-5 text-yellow-500" />
-          Resolve Duplicate Players ({duplicates.length} total)
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <Alert>
-          <AlertDescription>
-            Duplicates are categorized below. Most common actions are pre-selected for you.
-          </AlertDescription>
-        </Alert>
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <AlertCircle className="h-5 w-5 text-yellow-500" />
+            Resolve Duplicate Players ({duplicates.length} total)
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <Alert>
+            <AlertDescription>
+              Duplicates are categorized below. Most common actions are pre-selected for you.
+              Use "Search Player" to find and merge with players not automatically detected.
+            </AlertDescription>
+          </Alert>
 
-        {/* Section 1: Exact Matches */}
-        {categorizedDuplicates.exactMatches.length > 0 && (
-          <div className="border rounded-lg p-4 space-y-4">
-            <Collapsible open={exactMatchesOpen} onOpenChange={setExactMatchesOpen}>
-              <div className="flex items-center justify-between">
-                <CollapsibleTrigger className="flex items-center gap-2 hover:underline">
-                  {exactMatchesOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                  <h3 className="text-lg font-semibold">
-                    Exact Matches ({categorizedDuplicates.exactMatches.length})
-                  </h3>
-                  <Badge variant="secondary">Auto-selected</Badge>
-                </CollapsibleTrigger>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => applyUseExistingForCategory(categorizedDuplicates.exactMatches)}
-                >
-                  Use Existing for All ({categorizedDuplicates.exactMatches.length})
-                </Button>
-              </div>
-              <CollapsibleContent className="space-y-4 mt-4">
-                {categorizedDuplicates.exactMatches.map((dup, index) => renderDuplicateCard(dup, index, false))}
-              </CollapsibleContent>
-            </Collapsible>
-          </div>
-        )}
+          {/* Section 1: Exact Matches */}
+          {categorizedDuplicates.exactMatches.length > 0 && (
+            <div className="border rounded-lg p-4 space-y-4">
+              <Collapsible open={exactMatchesOpen} onOpenChange={setExactMatchesOpen}>
+                <div className="flex items-center justify-between">
+                  <CollapsibleTrigger className="flex items-center gap-2 hover:underline">
+                    {exactMatchesOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                    <h3 className="text-lg font-semibold">
+                      Exact Matches ({categorizedDuplicates.exactMatches.length})
+                    </h3>
+                    <Badge variant="secondary">Auto-selected</Badge>
+                  </CollapsibleTrigger>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => applyUseExistingForCategory(categorizedDuplicates.exactMatches)}
+                  >
+                    Use Existing for All ({categorizedDuplicates.exactMatches.length})
+                  </Button>
+                </div>
+                <CollapsibleContent className="space-y-4 mt-4">
+                  {categorizedDuplicates.exactMatches.map((dup, index) => renderDuplicateCard(dup, index, false))}
+                </CollapsibleContent>
+              </Collapsible>
+            </div>
+          )}
 
-        {/* Section 2: New Data Being Added */}
-        {categorizedDuplicates.newData.length > 0 && (
-          <div className="border rounded-lg p-4 space-y-4">
-            <Collapsible open={newDataOpen} onOpenChange={setNewDataOpen}>
-              <div className="flex items-center justify-between">
-                <CollapsibleTrigger className="flex items-center gap-2 hover:underline">
-                  {newDataOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                  <h3 className="text-lg font-semibold">
-                    New Data Being Added ({categorizedDuplicates.newData.length})
-                  </h3>
-                  <Badge variant="default">Review Recommended</Badge>
-                </CollapsibleTrigger>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => applyMergeForCategory(categorizedDuplicates.newData)}
-                >
-                  Merge All with New Data ({categorizedDuplicates.newData.length})
-                </Button>
-              </div>
-              <CollapsibleContent className="space-y-4 mt-4">
-                {categorizedDuplicates.newData.map((dup, index) => renderDuplicateCard(dup, index, true))}
-              </CollapsibleContent>
-            </Collapsible>
-          </div>
-        )}
+          {/* Section 2: New Data Being Added */}
+          {categorizedDuplicates.newData.length > 0 && (
+            <div className="border rounded-lg p-4 space-y-4">
+              <Collapsible open={newDataOpen} onOpenChange={setNewDataOpen}>
+                <div className="flex items-center justify-between">
+                  <CollapsibleTrigger className="flex items-center gap-2 hover:underline">
+                    {newDataOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                    <h3 className="text-lg font-semibold">
+                      New Data Being Added ({categorizedDuplicates.newData.length})
+                    </h3>
+                    <Badge variant="default">Review Recommended</Badge>
+                  </CollapsibleTrigger>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => applyMergeForCategory(categorizedDuplicates.newData)}
+                  >
+                    Merge All with New Data ({categorizedDuplicates.newData.length})
+                  </Button>
+                </div>
+                <CollapsibleContent className="space-y-4 mt-4">
+                  {categorizedDuplicates.newData.map((dup, index) => renderDuplicateCard(dup, index, true))}
+                </CollapsibleContent>
+              </Collapsible>
+            </div>
+          )}
 
-        {/* Section 3: Completely New Players */}
-        {categorizedDuplicates.newPlayers.length > 0 && (
-          <div className="border rounded-lg p-4 space-y-4">
-            <Collapsible open={newPlayersOpen} onOpenChange={setNewPlayersOpen}>
-              <div className="flex items-center justify-between">
-                <CollapsibleTrigger className="flex items-center gap-2 hover:underline">
-                  {newPlayersOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
-                  <h3 className="text-lg font-semibold">
-                    New Players ({categorizedDuplicates.newPlayers.length})
-                  </h3>
-                  <Badge variant="secondary">Auto-selected</Badge>
-                </CollapsibleTrigger>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => applyCreateNewForCategory(categorizedDuplicates.newPlayers)}
-                >
-                  Create All New Players ({categorizedDuplicates.newPlayers.length})
-                </Button>
-              </div>
-              <CollapsibleContent className="space-y-4 mt-4">
-                {categorizedDuplicates.newPlayers.map((dup, index) => renderDuplicateCard(dup, index, false))}
-              </CollapsibleContent>
-            </Collapsible>
-          </div>
-        )}
+          {/* Section 3: Completely New Players */}
+          {categorizedDuplicates.newPlayers.length > 0 && (
+            <div className="border rounded-lg p-4 space-y-4">
+              <Collapsible open={newPlayersOpen} onOpenChange={setNewPlayersOpen}>
+                <div className="flex items-center justify-between">
+                  <CollapsibleTrigger className="flex items-center gap-2 hover:underline">
+                    {newPlayersOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                    <h3 className="text-lg font-semibold">
+                      New Players ({categorizedDuplicates.newPlayers.length})
+                    </h3>
+                    <Badge variant="secondary">Auto-selected</Badge>
+                  </CollapsibleTrigger>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => applyCreateNewForCategory(categorizedDuplicates.newPlayers)}
+                  >
+                    Create All New Players ({categorizedDuplicates.newPlayers.length})
+                  </Button>
+                </div>
+                <CollapsibleContent className="space-y-4 mt-4">
+                  {categorizedDuplicates.newPlayers.map((dup, index) => renderDuplicateCard(dup, index, false))}
+                </CollapsibleContent>
+              </Collapsible>
+            </div>
+          )}
 
-        <Button onClick={onResolve} disabled={!allResolved || isResolving} className="w-full">
-          {isResolving ? "Resolving..." : "Resolve and Import"}
-        </Button>
-      </CardContent>
-    </Card>
+          <Button onClick={onResolve} disabled={!allResolved || isResolving} className="w-full">
+            {isResolving ? "Resolving..." : "Resolve and Import"}
+          </Button>
+        </CardContent>
+      </Card>
+
+      <PlayerSearchDialog
+        open={searchDialogOpen}
+        onOpenChange={setSearchDialogOpen}
+        onSelectPlayer={handlePlayerSelected}
+        csvPlayerName={searchingForName}
+      />
+    </>
   );
 }
