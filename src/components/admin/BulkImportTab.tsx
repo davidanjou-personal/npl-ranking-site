@@ -36,6 +36,35 @@ export function BulkImportTab({ onImportComplete }: BulkImportTabProps) {
     window.URL.revokeObjectURL(url);
   };
 
+  const downloadHistoricTemplate = () => {
+    const headers = [
+      "player_name",
+      "player_code", 
+      "country",
+      "gender",
+      "category",
+      "finishing_position",
+      "points",
+      "event_date",
+      "tournament_name",
+      "tier"
+    ];
+    const exampleRows = [
+      "John Doe,NPL000000001,Australia,male,mens_singles,points_awarded,150,2023-06-15,Historic Championship 2023,historic",
+      "Jane Smith,NPL000000002,USA,female,womens_singles,points_awarded,200,2023-07-20,Summer Classic 2023,historic",
+      "Mike Johnson,,New Zealand,male,mens_doubles,points_awarded,100,2023-08-10,Winter Open 2023,historic"
+    ];
+    const csvContent = headers.join(",") + "\n" + exampleRows.join("\n");
+    
+    const blob = new Blob([csvContent], { type: "text/csv" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "historic_points_import_template.csv";
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
   const handleBulkImport = async () => {
     if (!bulkImportFile) {
       toast({
@@ -153,10 +182,14 @@ export function BulkImportTab({ onImportComplete }: BulkImportTabProps) {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div>
+          <div className="flex flex-wrap gap-2">
             <Button variant="outline" onClick={downloadCSVTemplate}>
               <Download className="h-4 w-4 mr-2" />
-              Download CSV Template
+              Player Import Template
+            </Button>
+            <Button variant="outline" onClick={downloadHistoricTemplate}>
+              <Download className="h-4 w-4 mr-2" />
+              Historic Points Template
             </Button>
           </div>
 

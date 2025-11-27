@@ -882,12 +882,9 @@ export type Database = {
         }
         Returns: undefined
       }
-      generate_player_code: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      generate_player_code: { Args: never; Returns: string }
       get_current_rankings: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           category: Database["public"]["Enums"]["player_category"]
           country: string
@@ -899,12 +896,9 @@ export type Database = {
           total_points: number
         }[]
       }
-      get_current_user_id: {
-        Args: Record<PropertyKey, never>
-        Returns: string
-      }
+      get_current_user_id: { Args: never; Returns: string }
       get_expiring_points: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           category: Database["public"]["Enums"]["player_category"]
           country: string
@@ -929,7 +923,7 @@ export type Database = {
         }[]
       }
       get_player_rankings: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           category: Database["public"]["Enums"]["player_category"]
           country: string
@@ -944,7 +938,7 @@ export type Database = {
         }[]
       }
       get_players_public_data: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           avatar_url: string
           country: string
@@ -968,10 +962,7 @@ export type Database = {
         Args: { duplicate_player_id: string; primary_player_id: string }
         Returns: Json
       }
-      update_player_rankings: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      update_player_rankings: { Args: never; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "user"
