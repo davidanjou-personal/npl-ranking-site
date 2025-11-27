@@ -48,6 +48,16 @@ interface DuplicateMatch {
 // Normalization helpers
 const allowedCategories = new Set(['mens_singles','womens_singles','mens_doubles','womens_doubles','mens_mixed_doubles','womens_mixed_doubles','mixed_doubles']);
 
+// Normalize names for matching - handles hyphen vs space variations and multiple spaces
+function normalizeNameForMatching(name: string): string {
+  if (!name) return '';
+  return name
+    .toLowerCase()
+    .replace(/-/g, ' ')      // Replace hyphens with spaces
+    .replace(/\s+/g, ' ')    // Collapse multiple spaces into single space
+    .trim();
+}
+
 function normalizeGender(value?: string): 'male' | 'female' | null {
   if (!value) return null;
   const v = value.trim().toLowerCase();
@@ -456,8 +466,8 @@ serve(async (req) => {
         // Index by dupr_id
         if (player.dupr_id) playersByDuprId.set(player.dupr_id, player);
         
-        // Index by name (for fallback matching)
-        const normalizedName = player.name.toLowerCase().trim();
+        // Index by name (for fallback matching) - using normalized name for better matching
+        const normalizedName = normalizeNameForMatching(player.name);
         const existing = playersByName.get(normalizedName) || [];
         existing.push(player);
         playersByName.set(normalizedName, existing);
@@ -466,7 +476,7 @@ serve(async (req) => {
         if (player.alternate_names && Array.isArray(player.alternate_names)) {
           for (const altName of player.alternate_names) {
             if (altName && typeof altName === 'string') {
-              const normalizedAlt = altName.toLowerCase().trim();
+              const normalizedAlt = normalizeNameForMatching(altName);
               if (normalizedAlt) {
                 const existingAlts = playersByName.get(normalizedAlt) || [];
                 existingAlts.push(player);
@@ -541,15 +551,16 @@ serve(async (req) => {
         // 4. Check by player_name (including alternate names - fallback)
         // Note: This checks both primary names and alternate names in the same lookup
         // Multiple players could have the same name or alternate name (e.g., two "Joey Wilds")
+        // Uses normalizeNameForMatching to handle hyphen/space variations
         if (!matchedPlayer && record.player_name && record.player_name.trim() !== '') {
-          const normalizedName = record.player_name.toLowerCase().trim();
+          const normalizedName = normalizeNameForMatching(record.player_name);
           const existingPlayers = playersByName.get(normalizedName);
           if (existingPlayers && existingPlayers.length > 0) {
             // Check if any match is via alternate name for logging
             const altMatches = existingPlayers.filter(p => 
               p.alternate_names && 
               Array.isArray(p.alternate_names) && 
-              p.alternate_names.some((alt: string) => alt.toLowerCase().trim() === normalizedName)
+              p.alternate_names.some((alt: string) => normalizeNameForMatching(alt) === normalizedName)
             );
             if (altMatches.length > 0) {
               console.log(`Row ${i + 2} (${record.player_name}): Matched by alternate name to ${altMatches.length} existing player(s): ${altMatches.map(p => p.name).join(', ')}`);
