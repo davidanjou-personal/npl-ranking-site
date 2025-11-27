@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { DuplicateResolutionList } from "./DuplicateResolutionList";
 import { IncompletePlayersForm } from "./IncompletePlayersForm";
+import { useOrganization } from "@/contexts/OrganizationContext";
 import type { DuplicatePlayer, BulkImportResolutions, IncompletePlayer, NewPlayerCompletions } from "@/types/admin";
 
 interface BulkImportMatchesTabProps {
@@ -15,6 +16,7 @@ interface BulkImportMatchesTabProps {
 
 export function BulkImportMatchesTab({ onImportComplete }: BulkImportMatchesTabProps) {
   const { toast } = useToast();
+  const { currentOrg } = useOrganization();
   const [file, setFile] = useState<File | null>(null);
   const [importing, setImporting] = useState(false);
   const [duplicates, setDuplicates] = useState<DuplicatePlayer[]>([]);
@@ -64,7 +66,13 @@ Sarah Lee,NPL000000004,Canada,female,womens_doubles,round_of_16,2024-10-01,Sprin
       const text = await file.text();
       
       const { data, error } = await supabase.functions.invoke('bulk-import-rankings', {
-        body: { csvText: text, fileName: file.name, duplicateResolutions: null, newPlayerCompletions: null }
+        body: { 
+          csvText: text, 
+          fileName: file.name, 
+          duplicateResolutions: null, 
+          newPlayerCompletions: null,
+          organizationId: currentOrg?.id 
+        }
       });
 
       if (error) throw error;
@@ -121,7 +129,8 @@ Sarah Lee,NPL000000004,Canada,female,womens_doubles,round_of_16,2024-10-01,Sprin
           csvText: text, 
           fileName: file.name, 
           duplicateResolutions: resolutions,
-          newPlayerCompletions: completions
+          newPlayerCompletions: completions,
+          organizationId: currentOrg?.id
         }
       });
 

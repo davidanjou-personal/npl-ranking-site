@@ -237,6 +237,7 @@ serve(async (req) => {
     let fileName = 'upload.csv';
     let resolutionMap: Record<string, string> | null = null;
     let newPlayerCompletions: Record<string, any> | null = null;
+    let organizationId: string | null = null;
 
     // Security limits
     const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -250,6 +251,7 @@ serve(async (req) => {
       fileName = (payload.fileName ?? fileName).toString();
       resolutionMap = payload.duplicateResolutions ?? null;
       newPlayerCompletions = payload.newPlayerCompletions ?? null;
+      organizationId = payload.organizationId ?? null;
       if (!csvText) {
         throw new Error('No CSV content provided');
       }
@@ -265,8 +267,10 @@ serve(async (req) => {
       const file = formData.get('file') as File | null;
       const duplicateResolutions = formData.get('duplicateResolutions');
       const playerCompletions = formData.get('newPlayerCompletions');
+      const orgId = formData.get('organizationId');
       resolutionMap = duplicateResolutions ? JSON.parse(duplicateResolutions as string) : null;
       newPlayerCompletions = playerCompletions ? JSON.parse(playerCompletions as string) : null;
+      organizationId = orgId ? orgId.toString() : null;
 
       if (!file) {
         throw new Error('No file provided');
@@ -1289,7 +1293,19 @@ serve(async (req) => {
           console.log(`Deleted old results for match ${matchId}`);
         }
       } else {
-        // Create new match
+        // Create new match - organization_id is required
+        if (!organizationId) {
+          console.error(`Cannot create event for ${eventKey}: organization_id is required`);
+          results.forEach(r => {
+            errors.push({
+              row: r.rowIndex + 2,
+              error: 'Organization ID is required to create new events'
+            });
+            failed++;
+          });
+          continue;
+        }
+        
         const { data: newMatch, error: matchError } = await supabaseClient
           .from('events')
           .insert({
@@ -1298,6 +1314,7 @@ serve(async (req) => {
             category: category,
             tier: matchTier,
             import_id: importId,
+            organization_id: organizationId,
           })
           .select('id')
           .single();
