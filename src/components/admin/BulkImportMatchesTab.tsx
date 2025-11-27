@@ -163,6 +163,18 @@ Sarah Lee,NPL000000004,Canada,female,womens_doubles,round_of_16,2024-10-01,Sprin
     }
   };
 
+  const handleConvertToMerge = (rowKey: string, playerId: string, playerName: string) => {
+    // Remove from incomplete players by filtering out the converted row
+    const csvRow = parseInt(rowKey.replace('row_', '')) + 2;
+    setIncompletePlayers(prev => prev.filter(p => p.csv_row !== csvRow));
+    
+    // Add to resolutions as a merge
+    setResolutions(prev => ({
+      ...prev,
+      [rowKey]: `merge_${playerId}`
+    }));
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -226,6 +238,7 @@ Sarah Lee,NPL000000004,Canada,female,womens_doubles,round_of_16,2024-10-01,Sprin
                 incompletePlayers={incompletePlayers}
                 completions={completions}
                 onCompletionsChange={setCompletions}
+                onConvertToMerge={handleConvertToMerge}
               />
             )}
           </div>
