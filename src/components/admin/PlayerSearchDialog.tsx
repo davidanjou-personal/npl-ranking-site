@@ -17,6 +17,7 @@ interface PlayerSearchDialogProps {
   onOpenChange: (open: boolean) => void;
   onSelectPlayer: (player: Player) => void;
   csvPlayerName: string;
+  genderFilter?: string;
 }
 
 export function PlayerSearchDialog({
@@ -24,9 +25,10 @@ export function PlayerSearchDialog({
   onOpenChange,
   onSelectPlayer,
   csvPlayerName,
+  genderFilter,
 }: PlayerSearchDialogProps) {
   const [searchTerm, setSearchTerm] = useState(csvPlayerName);
-  const { data: searchResults, isLoading } = usePlayerSearch(searchTerm, open);
+  const { data: searchResults, isLoading } = usePlayerSearch(searchTerm, open, genderFilter);
 
   const handleSelect = (result: any) => {
     // Transform the search result to match Player type

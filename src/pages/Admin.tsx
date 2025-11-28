@@ -18,7 +18,7 @@ import { BulkEditPlayers } from "@/components/admin/BulkEditPlayers";
 import { UpcomingTournamentForm } from "@/components/admin/UpcomingTournamentForm";
 import { UpcomingTournamentsList } from "@/components/admin/UpcomingTournamentsList";
 import { PlayerMergeDialog } from "@/components/admin/PlayerMergeDialog";
-import { CombinedDoublesTab } from "@/components/admin/CombinedDoublesTab";
+import { PartnershipCalculatorTab } from "@/components/admin/PartnershipCalculatorTab";
 import { Button } from "@/components/ui/button";
 import { Download, Users } from "lucide-react";
 import { exportPlayers, exportRankings, exportTournaments } from "@/utils/csvExport";
@@ -226,7 +226,7 @@ export default function Admin() {
         <Tabs defaultValue="dashboard" className="w-full">
           <TabsList className="flex flex-wrap gap-1 mb-8">
             <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-            <TabsTrigger value="combined-doubles">Combined Doubles</TabsTrigger>
+            <TabsTrigger value="combined-doubles">Partnership Calculator</TabsTrigger>
             <TabsTrigger value="add-player">Add Player</TabsTrigger>
             <TabsTrigger value="add-result">Record Event</TabsTrigger>
             <TabsTrigger value="bulk-import-players">Import Players</TabsTrigger>
@@ -245,7 +245,7 @@ export default function Admin() {
           </TabsContent>
 
           <TabsContent value="combined-doubles">
-            <CombinedDoublesTab />
+            <PartnershipCalculatorTab />
           </TabsContent>
 
           <TabsContent value="add-player">
