@@ -18,6 +18,7 @@ import { BulkEditPlayers } from "@/components/admin/BulkEditPlayers";
 import { UpcomingTournamentForm } from "@/components/admin/UpcomingTournamentForm";
 import { UpcomingTournamentsList } from "@/components/admin/UpcomingTournamentsList";
 import { PlayerMergeDialog } from "@/components/admin/PlayerMergeDialog";
+import { CombinedDoublesTab } from "@/components/admin/CombinedDoublesTab";
 import { Button } from "@/components/ui/button";
 import { Download, Users } from "lucide-react";
 import { exportPlayers, exportRankings, exportTournaments } from "@/utils/csvExport";
@@ -223,8 +224,9 @@ export default function Admin() {
         <h1 className="text-4xl font-bold mb-8 text-foreground">Admin Dashboard</h1>
 
         <Tabs defaultValue="dashboard" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-12 mb-8 overflow-x-auto">
+          <TabsList className="flex flex-wrap gap-1 mb-8">
             <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+            <TabsTrigger value="combined-doubles">Combined Doubles</TabsTrigger>
             <TabsTrigger value="add-player">Add Player</TabsTrigger>
             <TabsTrigger value="add-result">Record Event</TabsTrigger>
             <TabsTrigger value="bulk-import-players">Import Players</TabsTrigger>
@@ -240,6 +242,10 @@ export default function Admin() {
 
           <TabsContent value="dashboard">
             <AdminDashboard />
+          </TabsContent>
+
+          <TabsContent value="combined-doubles">
+            <CombinedDoublesTab />
           </TabsContent>
 
           <TabsContent value="add-player">
