@@ -13,7 +13,9 @@ import {
 import { Download, Plus, Trash2, Search } from "lucide-react";
 import { usePlayerDoublesRanking, DoublesCategory } from "@/hooks/usePlayerDoublesRanking";
 import { PlayerSearchDialog } from "./PlayerSearchDialog";
-
+import { supabase } from "@/integrations/supabase/client";
+import { exportRankings } from "@/utils/csvExport";
+import { useToast } from "@/hooks/use-toast";
 interface Player {
   id: string;
   name: string;
@@ -31,6 +33,7 @@ interface Partnership {
 }
 
 export function PartnershipCalculatorTab() {
+  const { toast } = useToast();
   const [category, setCategory] = useState<DoublesCategory>("mens_doubles");
   const [partnerships, setPartnerships] = useState<Partnership[]>([]);
   
@@ -76,7 +79,7 @@ export function PartnershipCalculatorTab() {
     setPartnerships([]);
   };
 
-  const handleExport = () => {
+  const handleExportPartnerships = () => {
     if (rankedPartnerships.length === 0) return;
 
     const categoryLabel = category.replace("_", " ").replace(/\b\w/g, (c) => c.toUpperCase());
@@ -100,6 +103,29 @@ export function PartnershipCalculatorTab() {
     a.download = `partnership-rankings-${categoryLabel.toLowerCase().replace(" ", "-")}.csv`;
     a.click();
     window.URL.revokeObjectURL(url);
+  };
+
+  const handleExportRankings = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("current_rankings")
+        .select("*")
+        .order("category")
+        .order("rank");
+
+      if (error) throw error;
+
+      if (!data || data.length === 0) {
+        toast({ title: "No rankings data to export", variant: "destructive" });
+        return;
+      }
+
+      exportRankings(data, "current");
+      toast({ title: "Rankings exported successfully" });
+    } catch (error) {
+      console.error("Error exporting rankings:", error);
+      toast({ title: "Failed to export rankings", variant: "destructive" });
+    }
   };
 
   const handleCategoryChange = (newCategory: string) => {
@@ -135,9 +161,13 @@ export function PartnershipCalculatorTab() {
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Partnership Rankings Calculator</CardTitle>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={handleExport} disabled={rankedPartnerships.length === 0}>
+          <Button variant="outline" size="sm" onClick={handleExportRankings}>
             <Download className="h-4 w-4 mr-2" />
-            Export CSV
+            Export Rankings
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleExportPartnerships} disabled={rankedPartnerships.length === 0}>
+            <Download className="h-4 w-4 mr-2" />
+            Export Partnerships
           </Button>
         </div>
       </CardHeader>
