@@ -189,6 +189,34 @@ function normalizeTier(value?: string): string {
   return validTiers.includes(normalized) ? normalized : 'historic';
 }
 
+// Calculate points based on tier and finishing position
+function calculatePoints(tier: string, finishingPosition: string): number {
+  // Base points per tier
+  const tierPoints: Record<string, number> = {
+    'tier1': 1000,
+    'tier2': 500,
+    'tier3': 250,
+    'tier4': 100,
+    'historic': 0,
+  };
+
+  // Percentage multipliers per finishing position
+  const positionPercentage: Record<string, number> = {
+    'winner': 1.0,
+    'second': 0.8,
+    'third': 0.6,
+    'fourth': 0.5,
+    'quarterfinalist': 0.3,
+    'round_of_16': 0.2,
+    'points_awarded': 0.05,
+  };
+
+  const basePoints = tierPoints[tier] || 0;
+  const percentage = positionPercentage[finishingPosition] || 0.05;
+  
+  return Math.round(basePoints * percentage);
+}
+
 // Server
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -1423,7 +1451,7 @@ serve(async (req) => {
         event_id: matchId,
         player_id: r.playerId,
         finishing_position: r.finishingPosition,
-        points_awarded: r.points,
+        points_awarded: r.points || calculatePoints(r.tier, r.finishingPosition),
       }));
       
       const { error: resultsError } = await supabaseClient
